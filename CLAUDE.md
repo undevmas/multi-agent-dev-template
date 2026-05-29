@@ -28,11 +28,12 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
 
 Antes de cualquier tarea, leer en este orden:
 
-1. IA_Memoria/progreso.md       → Saber qué está hecho y qué sigue
-2. IA_Memoria/arquitectura.md   → Entender cada pieza del sistema
-3. IA_Memoria/convenciones.md   → Respetar naming y estructura
-4. Features/[feature].md        → Si la tarea involucra un módulo específico
-5. IA_Skill/[skill].md          → Leer la skill relevante antes de codificar
+1. IA_Memoria/progreso.md        → Saber qué está hecho y qué sigue
+2. IA_Memoria/arquitectura.md    → Entender cada pieza del sistema
+3. IA_Memoria/convenciones.md    → Respetar naming y estructura
+4. Features/[feature].md         → Si la tarea involucra un módulo específico
+   Features/[feature].spec.md    → Además, si existe y su Estado es `ready` o `in-progress`
+5. IA_Skill/[skill].md           → Leer la skill relevante antes de codificar
 
 Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica:
 
@@ -93,7 +94,8 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 
 | Situación | Skill a leer |
 |---|---|
-| Implementar un módulo completo de principio a fin | IA_Skill/SKILL-mvc-feature.md |
+| Implementar una feature con `Features/[mod].spec.md` en estado `ready` | IA_Skill/SKILL-implementation.md |
+| Implementar un módulo completo de principio a fin (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
 
 ### Seguridad
@@ -112,6 +114,12 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 |---|---|
 | Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
 | Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
+
+### Especificaciones
+
+| Situación | Skill a leer |
+|---|---|
+| Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 
 ### Herramientas del agente
 
@@ -163,6 +171,40 @@ workspace-proyecto/
 
 Las carpetas IA_Skill, IA_Memoria, Insumos, Features e Issues
 NO se suben al repositorio de código.
+
+---
+
+## Política de trabajo con código legado
+
+Aplica cuando el proyecto tiene código existente que no sigue al 100% las convenciones
+del template. Las convenciones del template no se bajan para acomodar el legado —
+se aplican donde es posible sin romper lo que funciona.
+
+### Zona verde — código nuevo (estándar completo siempre)
+Archivos que no existían antes. Seguir las convenciones del template al 100%
+aunque estén en un módulo legado. No heredar antipatrones del código de al lado.
+- UUID/GUID siempre, aunque la tabla vecina use int secuencial
+- Soft delete, response estandarizada, guards en todos los endpoints nuevos
+- Naming en inglés, estructura de carpetas según convenciones
+
+### Zona ámbar — código existente que hay que modificar
+Tocar solo lo mínimo necesario para la tarea. No aprovechar para "mejorar" lo que no pidieron.
+- Agregar el nuevo método siguiendo convenciones, sin cambiar los métodos existentes
+- Si el archivo tiene DELETE directo en BD, el nuevo código usa soft delete — el viejo queda igual
+- Si un cambio rompería la interfaz existente — PARAR y consultar al dev antes de continuar
+- No refactorizar oportunistamente sin ticket explícito
+
+### Zona roja — código que no se toca sin ticket explícito
+Código legado que funciona pero no sigue convenciones. Detectar, documentar, dejar como está.
+- No modificar migraciones ya aplicadas en producción
+- No cambiar IDs de int a UUID en tablas existentes con datos
+- No renombrar endpoints que ya consumen clientes externos
+- Registrar en `IA_Memoria/deuda-tecnica.md` con impacto y condición de salida
+
+### Regla de desempate
+Cuando spec y código real se contradicen en un módulo legado:
+el código real gana. La contradicción va a `IA_Memoria/deuda-tecnica.md`.
+No modificar el código existente, no falsificar la spec — consultar al dev.
 
 ---
 

@@ -1,8 +1,12 @@
 # SKILL — Crear una Feature Completa (Full Stack)
 
 ## Cuándo usar esta skill
-Cada vez que se implemente un módulo nuevo de principio a fin.
+Cuando se implementa un módulo nuevo de principio a fin **sin spec previa**.
 Leer ANTES de escribir cualquier línea de código de una feature nueva.
+
+> Si existe `Features/[mod].spec.md` en estado `ready`, usar
+> `IA_Skill/SKILL-implementation.md` en su lugar — esa skill consume el contrato
+> técnico ya generado. Esta skill es para implementación directa sin spec.
 
 ---
 
@@ -22,7 +26,10 @@ Leer ANTES de escribir cualquier línea de código de una feature nueva.
    └── DTOs (Request/Response) → Controller → Documentar endpoints
 
 5. Contrato API
-   └── Actualizar Features/[feature].md con endpoints, payloads, respuestas
+   └── Crear o actualizar Features/[feature].spec.md con los endpoints, payloads
+       y respuestas implementados — el contrato técnico vive en .spec.md, no en .md
+       Si Features/[feature].md no existe, crearlo con Estado: in-progress y
+       descripción del módulo en lenguaje de negocio (sin endpoints ni SQL)
 
 6. Frontend — integración
    └── Modelo TypeScript → Servicio HTTP → Store/State
@@ -162,5 +169,6 @@ updated_by  UUID              NULL  REFERENCES users(id)
 - [ ] Paginación implementada en endpoints de listado
 - [ ] Los 4 estados de UI: loading, empty, error, success
 - [ ] Responsive verificado en móvil (375px mínimo)
-- [ ] `Features/[nombre].md` actualizado con endpoints documentados
-- [ ] `IA_Memoria/progreso.md` actualizado
+- [ ] `Features/[nombre].spec.md` existe con los contratos de API y reglas de negocio implementados
+- [ ] `Features/[nombre].md` actualizado con Estado: in-review (fuente de verdad — actualizar primero)
+- [ ] `IA_Memoria/progreso.md` sincronizado con el estado de `Features/[nombre].md`

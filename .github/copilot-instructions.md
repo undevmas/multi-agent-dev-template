@@ -27,7 +27,7 @@ Antes de codificar, leer en este orden:
 1. IA_Memoria/progreso.md
 2. IA_Memoria/arquitectura.md
 3. IA_Memoria/convenciones.md
-4. Features/[feature].md (si aplica)
+4. Features/[feature].md (si aplica) + Features/[feature].spec.md si existe en estado `ready` o `in-progress`
 5. IA_Skill/[skill].md relevante
 
 Regla de snapshot (Repomix) — solo cuando la tarea lo justifica:
@@ -45,11 +45,12 @@ No iniciar código sin haber leído al menos 1, 2 y 3.
 Consultar IA_Skill solo cuando la tarea lo requiera por dominio técnico.
 
 Mapa rápido:
+- Specs y especificaciones: SKILL-spec-generator.md
 - Frontend UI/UX: SKILL-frontend-design.md, SKILL-ui-ux-pro-max.md, SKILL-impeccable.md
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
 - Backend .NET: SKILL-dotnet-best-practices.md, SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md
 - Backend NestJS: SKILL-nestjs-best-practices.md, SKILL-nestjs-clean-typescript.md, SKILL-nestjs-patterns.md, SKILL-nestjs-test-frameworks.md
-- Full stack / BD: SKILL-mvc-feature.md, SKILL-database-migrations.md
+- Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
 - Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
 - Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md
 - Soporte: SKILL-web-search.md, SKILL-caveman.md
@@ -69,6 +70,12 @@ Cuándo NO consultar skills:
 - Proteger todos los endpoints con guard/middleware excepto login
 - Migraciones versionadas para todo cambio de BD
 - IDs UUID/GUID (no enteros secuenciales)
+
+## Política de código legado
+- Código nuevo: seguir convenciones del template al 100%, sin importar el entorno
+- Código existente a modificar: solo lo mínimo necesario, no refactorizar sin ticket explícito
+- Código intocable: detectar antipatrones, registrar en `IA_Memoria/deuda-tecnica.md`, no tocar
+- Desempate: código real gana sobre spec en legado → registrar deuda, consultar al dev
 
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno

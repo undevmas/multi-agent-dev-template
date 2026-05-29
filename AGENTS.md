@@ -32,6 +32,7 @@ Antes de cualquier tarea, leer en este orden:
 2. `IA_Memoria/arquitectura.md` — cada pieza del sistema
 3. `IA_Memoria/convenciones.md` — naming y estructura
 4. `Features/[feature].md` — si la tarea involucra un módulo específico
+   `Features/[feature].spec.md` — además, si existe y su Estado es `ready` o `in-progress`
 5. `IA_Skill/[skill].md` — la skill relevante antes de codificar
 
 Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
@@ -93,7 +94,8 @@ Después de leer el snapshot, ANTES de codificar:
 
 | Situación | Skill a leer |
 |---|---|
-| Implementar un módulo completo de principio a fin | IA_Skill/SKILL-mvc-feature.md |
+| Implementar una feature con `Features/[mod].spec.md` en estado `ready` | IA_Skill/SKILL-implementation.md |
+| Implementar un módulo completo de principio a fin (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
 
 ### Seguridad
@@ -104,6 +106,13 @@ Después de leer el snapshot, ANTES de codificar:
 | Seguridad en cualquier endpoint o middleware .NET | IA_Skill/SKILL-security-dotnet.md |
 | Seguridad en cualquier endpoint, guard o pipe NestJS | IA_Skill/SKILL-security-nestjs.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
+| Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
+
+### Especificaciones
+
+| Situación | Skill a leer |
+|---|---|
+| Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 
 ### Texto y documentación
 
@@ -165,6 +174,40 @@ workspace-proyecto/
 ```
 
 Las carpetas IA_Skill, IA_Memoria, Insumos, Features e Issues NO se suben al repositorio.
+
+---
+
+## Política de trabajo con código legado
+
+Aplica cuando el proyecto tiene código existente que no sigue al 100% las convenciones
+del template. Las convenciones del template no se bajan para acomodar el legado —
+se aplican donde es posible sin romper lo que funciona.
+
+### Zona verde — código nuevo (estándar completo siempre)
+Archivos que no existían antes. Seguir las convenciones del template al 100%
+aunque estén en un módulo legado. No heredar antipatrones del código de al lado.
+- UUID/GUID siempre, aunque la tabla vecina use int secuencial
+- Soft delete, response estandarizada, guards en todos los endpoints nuevos
+- Naming en inglés, estructura de carpetas según convenciones
+
+### Zona ámbar — código existente que hay que modificar
+Tocar solo lo mínimo necesario para la tarea. No aprovechar para "mejorar" lo que no pidieron.
+- Agregar el nuevo método siguiendo convenciones, sin cambiar los métodos existentes
+- Si el archivo tiene DELETE directo en BD, el nuevo código usa soft delete — el viejo queda igual
+- Si un cambio rompería la interfaz existente — PARAR y consultar al dev antes de continuar
+- No refactorizar oportunistamente sin ticket explícito
+
+### Zona roja — código que no se toca sin ticket explícito
+Código legado que funciona pero no sigue convenciones. Detectar, documentar, dejar como está.
+- No modificar migraciones ya aplicadas en producción
+- No cambiar IDs de int a UUID en tablas existentes con datos
+- No renombrar endpoints que ya consumen clientes externos
+- Registrar en `IA_Memoria/deuda-tecnica.md` con impacto y condición de salida
+
+### Regla de desempate
+Cuando spec y código real se contradicen en un módulo legado:
+el código real gana. La contradicción va a `IA_Memoria/deuda-tecnica.md`.
+No modificar el código existente, no falsificar la spec — consultar al dev.
 
 ---
 

@@ -60,19 +60,25 @@ workspace-proyecto/
 │   └── GEMINI.md                      ← Gemini CLI
 │
 ├── IA_Skill/                          ← Guías técnicas por dominio (no va a git)
+│   ├── SKILL-spec-generator.md        ← Genera specs desde cualquier insumo
+│   ├── SKILL-implementation.md        ← Implementa features desde spec
 │   ├── SKILL-frontend-design.md
 │   ├── SKILL-dotnet-best-practices.md
 │   ├── SKILL-nestjs-best-practices.md
 │   ├── SKILL-database-migrations.md
-│   └── ... (24 skills en total)
+│   └── ... (26 skills en total)
 │
 ├── IA_Memoria/                        ← Estado del proyecto (no va a git)
-│   ├── progreso.md                    ← Qué está hecho y qué sigue
+│   ├── progreso.md                    ← Vista agregada: qué está hecho y qué sigue
 │   ├── arquitectura.md                ← Decisiones técnicas y estructura
 │   ├── convenciones.md                ← Naming, commits, reglas
+│   ├── deuda-tecnica.md               ← Inventario de código legado con antipatrones
 │   └── snapshots/                     ← Snapshots de Repomix (no va a git)
 │
-├── Features/                          ← Definición de cada módulo (no va a git)
+├── Features/                          ← Especificaciones de módulos (no va a git)
+│   ├── [mod].md                       ← Requisitos de negocio + estado del ciclo
+│   ├── [mod].spec.md                  ← Contrato técnico: API, entidades, reglas
+│   └── [mod].checks.md                ← Verificación post-implementación
 ├── Issues/                            ← Bugs registrados (no va a git)
 ├── Insumos/                           ← Mockups y specs (no va a git)
 │
@@ -92,18 +98,23 @@ workspace-proyecto/
 
 ## Cómo funciona
 
-El template opera en tres capas de contexto que el agente consume antes de tocar código:
+El template opera en cuatro capas de contexto que el agente consume antes de tocar código:
 
 ```
 Capa 1 — IA_Memoria/
   Contexto narrativo del proyecto: qué está hecho, convenciones,
   decisiones de arquitectura. Lo escriben humanos; el agente lo actualiza.
 
-Capa 2 — IA_Skill/
-  24 guías técnicas especializadas: testing, seguridad, migraciones, UX...
-  El agente lee solo la que corresponde a la tarea del momento.
+Capa 2 — Features/
+  Especificaciones de cada módulo: requisitos de negocio, contratos técnicos
+  y listas de verificación. El agente spec las genera; el agente de
+  implementación las consume. Ninguno toca código sin leerlas.
 
-Capa 3 — Snapshots Repomix
+Capa 3 — IA_Skill/
+  26 guías técnicas especializadas: specs, implementación, testing, seguridad,
+  migraciones, UX... El agente lee solo la que corresponde a la tarea.
+
+Capa 4 — Snapshots Repomix
   Dump comprimido del codebase real, generado bajo demanda.
   El agente lo lee únicamente cuando la tarea abarca múltiples módulos.
 ```
@@ -172,11 +183,12 @@ Las Skills son guías técnicas que el agente consulta según la tarea. No las l
 
 | Área | Skills disponibles |
 |---|---|
+| **Especificaciones** | Generar specs desde cualquier insumo (Word, mockups, notas, código) |
+| **Full Stack** | Implementar desde spec · Módulo MVC completo · Migraciones de BD |
 | **Frontend** | Componentes visuales · UX y formularios · Code review · SEO · Tests Angular · Tests React |
 | **Backend .NET** | Best practices · Design patterns · Tests unitarios e integración · Upgrade de versión |
 | **Backend NestJS** | Best practices · CQRS / eventos / colas · TypeScript estricto · Tests |
-| **Full Stack** | Módulo MVC completo · Migraciones de BD (EF Core, TypeORM, Prisma, Sequelize) |
-| **Seguridad** | Angular · .NET · NestJS · Checklist OWASP pre-producción |
+| **Seguridad** | Angular · .NET · NestJS · Checklist OWASP pre-producción · Compliance agentes |
 | **Texto y docs** | Mensajes UI / emails para usuario final · Documentar features terminadas |
 | **Herramientas** | Búsqueda web para versiones y CVEs · Modo ultra-conciso en sesiones largas |
 
@@ -219,18 +231,38 @@ Los snapshots le dan al agente una visión comprimida de todo el código sin que
 
 ## Flujo de sesión recomendado
 
+### Flujo spec-driven (recomendado para features nuevas)
+
+```
+1. Dev entrega insumo al agente spec (Word, mockup, notas, código)
+        ↓
+2. Agente spec lee SKILL-spec-generator → genera Features/[mod].md
+   + Features/[mod].spec.md + Features/[mod].checks.md
+        ↓
+3. Dev revisa y aprueba la spec (estado pasa a ready)
+        ↓
+4. Agente de implementación lee SKILL-implementation → implementa
+   siguiendo Features/[mod].spec.md como contrato
+        ↓
+5. Agente completa Features/[mod].checks.md → marca in-review
+        ↓
+6. Dev revisa → marca done en Features/[mod].md
+```
+
+### Flujo de sesión estándar
+
 ```
 1. Regenerar snapshot (si hay cambios desde la última sesión)
         ↓
 2. El agente lee: progreso → arquitectura → convenciones
         ↓
-3. Si aplica: leer Features/[feature].md del módulo involucrado
+3. Si aplica: leer Features/[mod].md + Features/[mod].spec.md (si existe en ready/in-progress)
         ↓
 4. El agente consulta la Skill técnica relevante
         ↓
 5. Implementación dentro de Codigo/ únicamente
         ↓
-6. Al cerrar: el agente actualiza IA_Memoria/progreso.md
+6. Al cerrar: actualizar Features/[mod].md (estado) → sincronizar IA_Memoria/progreso.md
 ```
 
 ---
@@ -264,22 +296,28 @@ Estas reglas están declaradas en todos los archivos de instrucciones y el agent
 
 ---
 
-## Checklist para publicar como template
+## Checklist antes de versionar tu workspace
 
-- [ ] Sin secretos en ningún archivo (keys, tokens, passwords)
-- [ ] `IA_Memoria/` sin datos internos de clientes
-- [ ] Descripciones genéricas en `arquitectura.md` y `progreso.md`
-- [ ] `Codigo/.gitignore` actualizado
-- [ ] Licencia incluida (ej. MIT)
+Cuando tu equipo decida subir el workspace a un repositorio compartido o público,
+verificar que no se filtre contexto del proyecto:
+
+- [ ] Ningún archivo contiene secretos (API keys, tokens, passwords)
+- [ ] `IA_Memoria/` no tiene datos internos de clientes o información sensible del negocio
+- [ ] `arquitectura.md` y `progreso.md` no exponen detalles confidenciales si el repo es público
+- [ ] `Codigo/.gitignore` excluye snapshots, archivos generados y variables de entorno
+- [ ] Si el repo es público, incluir una licencia (ej. MIT)
 
 ---
 
 ## Roadmap
 
 - [x] Soporte para Claude Code, Copilot, Gemini CLI, OpenCode, Codex CLI
-- [x] 24 Skills técnicas por dominio
+- [x] 26 Skills técnicas por dominio
 - [x] Sistema de snapshots con Repomix (condicional, por módulo)
 - [x] Protocolo post-snapshot para mantener memoria sincronizada
+- [x] Flujo spec-driven completo: SKILL-spec-generator → SKILL-implementation → checks
+- [x] Política de trabajo con código legado (zonas verde / ámbar / roja)
+- [x] Inventario de deuda técnica (`IA_Memoria/deuda-tecnica.md`)
 - [ ] Integración con MCP servers (ej. CodeGraph para navegación semántica del código)
 - [ ] CLI / script de setup automatizado
 - [ ] Skills adicionales: Docker, Azure DevOps Pipelines

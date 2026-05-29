@@ -28,6 +28,7 @@ Antes de cualquier tarea leer:
 2. `IA_Memoria/arquitectura.md` — cada pieza del sistema
 3. `IA_Memoria/convenciones.md` — naming y estructura
 4. `Features/[feature].md` — si la tarea involucra un módulo específico
+   `Features/[feature].spec.md` — además, si existe y su Estado es `ready` o `in-progress`
 5. `IA_Skill/[skill].md` — la skill relevante antes de codificar
 
 Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica:
@@ -62,7 +63,8 @@ Después de leer el snapshot, ANTES de codificar:
 | Tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
 | Página pública / SEO | IA_Skill/SKILL-seo.md |
-| Módulo completo full stack | IA_Skill/SKILL-mvc-feature.md |
+| Implementar feature con spec en estado `ready` | IA_Skill/SKILL-implementation.md |
+| Módulo completo full stack (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
 | Crear/modificar backend .NET | IA_Skill/SKILL-dotnet-best-practices.md |
 | Code review .NET | IA_Skill/SKILL-dotnet-design-pattern-review.md |
@@ -77,6 +79,7 @@ Después de leer el snapshot, ANTES de codificar:
 | Seguridad en NestJS | IA_Skill/SKILL-security-nestjs.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
 | Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
+| Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 | Texto visible al usuario final (mensajes UI) | IA_Skill/SKILL-humanizer.md |
 | Documentar feature terminada | IA_Skill/SKILL-docs-feature.md |
 | Búsqueda web y fuentes externas actualizadas | IA_Skill/SKILL-web-search.md |
@@ -125,6 +128,17 @@ workspace-proyecto/
 ├── Issues/          ← Bugs registrados (no subir a git)
 └── Insumos/         ← Mockups y specs (no subir a git)
 ```
+
+---
+
+## Política de trabajo con código legado
+
+Las convenciones del template no se adaptan al legado — se aplican donde es posible.
+
+- **Zona verde — código nuevo:** estándar completo siempre, sin importar el entorno
+- **Zona ámbar — código existente a modificar:** solo lo mínimo necesario, sin refactorizar sin ticket
+- **Zona roja — código intocable sin ticket:** detectar, registrar en `IA_Memoria/deuda-tecnica.md`, no modificar
+- **Regla de desempate:** código real > spec. Si contradicen en legado → registrar deuda, consultar al dev.
 
 ---
 
