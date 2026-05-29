@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET="${1:-all}"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CODIGO_DIR="$ROOT_DIR/Codigo"
+SNAPSHOTS_DIR="$ROOT_DIR/IA_Memoria/snapshots"
+CONFIG_PATH="$CODIGO_DIR/repomix.config.json"
+
+FULL=false
+NO_COMPRESS=false
+# Nota: el contexto git (diffs y logs) se controla en repomix.config.json
+# mediante git.includeDiffs y git.includeLogs — no hay flags CLI equivalentes en repomix.
+
+for arg in "$@"; do
+  case "$arg" in
+    --full) FULL=true ;;
+    --no-compress) NO_COMPRESS=true ;;
+  esac
+done
+
+info() { echo "[INFO] $1"; }
+warn() { echo "[WARN] $1"; }
+ok() { echo "[OK]   $1"; }
+
+if [[ ! -d "$CODIGO_DIR" ]]; then
+  warn "No se encontro la carpeta Codigo/."
+  exit 0
+fi
+
+if ! command -v npx >/dev/null 2>&1; then
+  echo "[ERROR] npx no encontrado. Instala Node.js para usar repomix."
+  exit 1
+fi
+
+mkdir -p "$SNAPSHOTS_DIR"
+
+compress_enabled=true
+if [[ "$NO_COMPRESS" == true || "$FULL" == true ]]; then
+  compress_enabled=false
+fi
+
+timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+invoke_scan() {
+  local source_path="$1"
+  local output_path="$2"
+  local label="$3"
+  local ignore_patterns="${4:-}"
+
+  # Siempre pasar directorio y output explícito para todos los targets
+  local args=("repomix@latest" "$source_path" "--output" "$output_path")
+
+  if [[ -f "$CONFIG_PATH" ]]; then
+    # Heredar style, compress, ignore patterns y security-check del config
+    args+=("--config" "$CONFIG_PATH")
+    # Respetar --full / --no-compress del usuario sobre lo que define el config
+    if [[ "$compress_enabled" == false ]]; then
+      args+=("--no-compress")
+    fi
+  else
+    args+=("--style" "markdown")
+    if [[ "$compress_enabled" == true ]]; then
+      args+=("--compress")
+    fi
+  fi
+
+  if [[ -n "$ignore_patterns" ]]; then
+    args+=("--ignore" "$ignore_patterns")
+  fi
+
+  info "Escaneando $label ..."
+  (
+    cd "$CODIGO_DIR"
+    npx "${args[@]}"
+  )
+
+  if [[ ! -f "$output_path" ]]; then
+    echo "[ERROR] No se genero el snapshot esperado: $output_path"
+    exit 1
+  fi
+
+  local size_bytes
+  size_bytes="$(wc -c < "$output_path" | xargs)"
+  local meta_path="${output_path%.md}.meta.json"
+
+  cat > "$meta_path" <<EOF
+{
+  "label": "$label",
+  "generatedAt": "$timestamp",
+  "source": "$source_path",
+  "output": "$output_path",
+  "compress": $compress_enabled,
+  "sizeBytes": $size_bytes
+}
+EOF
+
+  ok "Snapshot: $output_path"
+  ok "Meta: $meta_path"
+}
+
+has_code="$(find "$CODIGO_DIR" -mindepth 1 -not -name ".gitignore" | head -n 1 || true)"
+if [[ -z "$has_code" ]]; then
+  warn "Codigo/ esta vacio. Agrega codigo y vuelve a ejecutar."
+  exit 0
+fi
+
+case "$TARGET" in
+  backend-net|--backend-net)
+    if [[ ! -d "$CODIGO_DIR/backend-net" ]]; then warn "No existe backend-net/."; exit 0; fi
+    invoke_scan "backend-net" "$SNAPSHOTS_DIR/snapshot-backend-net.md" "backend-net" "**/bin/**,**/obj/**,**/*.user,**/.vs/**"
+    ;;
+  backend-nestjs|--backend-nestjs)
+    if [[ ! -d "$CODIGO_DIR/backend-nestjs" ]]; then warn "No existe backend-nestjs/."; exit 0; fi
+    invoke_scan "backend-nestjs" "$SNAPSHOTS_DIR/snapshot-backend-nestjs.md" "backend-nestjs" "**/node_modules/**,**/dist/**,**/build/**,**/coverage/**"
+    ;;
+  frontend|--frontend)
+    if [[ ! -d "$CODIGO_DIR/frontend-angular" ]]; then warn "No existe frontend-angular/."; exit 0; fi
+    invoke_scan "frontend-angular" "$SNAPSHOTS_DIR/snapshot-frontend.md" "frontend-angular" "**/node_modules/**,**/dist/**,**/build/**,**/.angular/**,**/coverage/**"
+    ;;
+  all|--all|"")
+    invoke_scan "." "$SNAPSHOTS_DIR/snapshot-latest.md" "codigo-completo"
+    ;;
+  *)
+    echo "Uso: ./repomix-scan.sh [all|backend-net|backend-nestjs|frontend] [--full] [--no-compress]"
+    exit 1
+    ;;
+esac
+
+echo ""
+echo "================================================================"
+echo "  PROMPT DE INSPECCION — copiar y pegar en tu agente IA"
+echo "================================================================"
+echo ""
+cat <<'PROMPT'
+Lee IA_Memoria/snapshots/snapshot-latest.md e inspecciona el codigo en Codigo/.
+Actualiza estos tres archivos con lo que encuentres en el codigo real.
+No inventes ni asumas nada que no este en el codigo:
+
+1. IA_Memoria/arquitectura.md
+   - Tecnologias y versiones reales detectadas
+   - Modulos y servicios existentes con su estado actual
+   - Puertos en docker-compose o archivos de configuracion
+   - Variables de entorno en .env.example o en el codigo
+
+2. IA_Memoria/progreso.md
+   - Marca [x] solo los modulos/features que realmente existan en el codigo
+   - Deja [ ] los que no esten implementados
+   - Si el proyecto esta vacio: escribe "Proyecto nuevo, sin modulos implementados"
+   - Reemplaza los pendientes de ejemplo con los reales del proyecto
+
+3. IA_Memoria/convenciones.md
+   - Confirma o corrige los patrones de naming detectados en el codigo real
+   - Deja [COMPLETAR] donde no puedas inferirlo del codigo
+
+Al terminar, reporta: cuantos modulos encontraste implementados,
+que tecnologias detectaste y si hay alguna inconsistencia con
+lo que ya estaba declarado en los archivos de memoria.
+PROMPT
+echo ""
+echo "================================================================"
+echo ""

@@ -1,0 +1,177 @@
+# AGENTS.md — Instrucciones del Proyecto
+
+> Este archivo es leído automáticamente por **OpenCode** y **Codex CLI (OpenAI)**.
+> Leer antes de cualquier acción en el workspace.
+> Fuente de verdad: `CLAUDE.md`. En caso de conflicto, prevalece CLAUDE.md.
+
+---
+
+## Stack tecnológico (reglas duras — no sugerir alternativas)
+
+| Capa | Tecnología aprobada |
+|---|---|
+| Frontend | Angular 17+ · React 18+ |
+| Backend | .NET 8+ (C#) · NestJS 10+ (TypeScript) |
+| Base de datos | SQL Server 2019+ · PostgreSQL 15+ |
+| ORM / acceso a datos | Entity Framework Core · TypeORM · Prisma |
+| Autenticación | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
+| Contenedores | Docker · Docker Compose |
+| CI/CD | Azure DevOps Pipelines |
+| Testing unitario | xUnit (.NET) · Jest (TS/JS) |
+| Testing E2E | Cypress |
+| Documentación API | Swagger / OpenAPI |
+
+No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobación explícita.
+
+---
+
+## Protocolo de inicio
+
+Antes de cualquier tarea, leer en este orden:
+1. `IA_Memoria/progreso.md` — qué está hecho y qué sigue
+2. `IA_Memoria/arquitectura.md` — cada pieza del sistema
+3. `IA_Memoria/convenciones.md` — naming y estructura
+4. `Features/[feature].md` — si la tarea involucra un módulo específico
+5. `IA_Skill/[skill].md` — la skill relevante antes de codificar
+
+Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
+
+### Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica
+
+Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna de estas condiciones:
+- La tarea afecta más de un módulo o capa (frontend + backend, backend + BD, etc.).
+- Es la primera sesión en el proyecto o no hay contexto previo del código.
+- Se toma una decisión de arquitectura o refactor amplio.
+- Se depura un bug cuya causa no es evidente en un solo archivo.
+
+NO leer el snapshot para: fix puntual en un archivo conocido, cambio de texto/estilo, modificación de config aislada.
+
+Si el snapshot no existe o tiene más de 7 días, sugerir al usuario ejecutar:
+- Windows: `.\repomix-scan.ps1`
+- Linux/macOS: `./repomix-scan.sh`
+
+Protocolo post-snapshot (obligatorio al leer el snapshot):
+Después de leer el snapshot, ANTES de codificar:
+1. Comparar contra `IA_Memoria/arquitectura.md` — actualizar módulos, dependencias o estructura que hayan cambiado.
+2. Comparar contra `IA_Memoria/progreso.md` — marcar como hecho lo que ya existe en el código aunque no estuviera registrado.
+3. Solo después de actualizar ambos archivos, proceder con la tarea solicitada.
+
+---
+
+## Cuándo leer cada Skill
+
+### Frontend
+
+| Situación | Skill a leer |
+|---|---|
+| Crear o modificar componente visual (Angular/React) | IA_Skill/SKILL-frontend-design.md |
+| Diseñar formulario, flujo o pantalla UX | IA_Skill/SKILL-ui-ux-pro-max.md |
+| Code review o QA de código Angular/React | IA_Skill/SKILL-impeccable.md |
+| Crear página pública indexable | IA_Skill/SKILL-seo.md |
+| Escribir tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
+| Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
+
+### Backend .NET
+
+| Situación | Skill a leer |
+|---|---|
+| Crear o modificar cualquier archivo .NET (controller, service, repository) | IA_Skill/SKILL-dotnet-best-practices.md |
+| Code review o refactorizar código .NET existente | IA_Skill/SKILL-dotnet-design-pattern-review.md |
+| Escribir tests unitarios o de integración en .NET | IA_Skill/SKILL-dotnet-test-frameworks.md |
+| Migrar el proyecto a una nueva versión de .NET | IA_Skill/SKILL-dotnet-upgrade.md |
+
+### Backend NestJS
+
+| Situación | Skill a leer |
+|---|---|
+| Crear o modificar módulo, controller, service o guard en NestJS | IA_Skill/SKILL-nestjs-best-practices.md |
+| Implementar CQRS, eventos de dominio, colas o caching en NestJS | IA_Skill/SKILL-nestjs-patterns.md |
+| Mejorar calidad o revisión de TypeScript en NestJS | IA_Skill/SKILL-nestjs-clean-typescript.md |
+| Escribir tests unitarios o de integración en NestJS | IA_Skill/SKILL-nestjs-test-frameworks.md |
+
+### Full Stack
+
+| Situación | Skill a leer |
+|---|---|
+| Implementar un módulo completo de principio a fin | IA_Skill/SKILL-mvc-feature.md |
+| Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
+
+### Seguridad
+
+| Situación | Skill a leer |
+|---|---|
+| Crear guard, interceptor o manejar tokens en Angular | IA_Skill/SKILL-security-angular.md |
+| Seguridad en cualquier endpoint o middleware .NET | IA_Skill/SKILL-security-dotnet.md |
+| Seguridad en cualquier endpoint, guard o pipe NestJS | IA_Skill/SKILL-security-nestjs.md |
+| Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
+
+### Texto y documentación
+
+| Situación | Skill a leer |
+|---|---|
+| Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
+| Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
+
+### Herramientas del agente
+
+| Situación | Skill a leer |
+|---|---|
+| Necesitar información externa actualizada (versiones, CVEs, docs) | IA_Skill/SKILL-web-search.md |
+| Activar respuestas ultra-concisas para sesiones largas | IA_Skill/SKILL-caveman.md |
+
+---
+
+## Reglas de codificación
+
+### General
+- Código en inglés (variables, funciones, clases, tablas)
+- Comentarios y documentación en español
+- Nunca hardcodear credenciales, URLs base ni valores de entorno
+- Toda configuración sensible va en variables de entorno
+- Todo cambio de base de datos debe tener su migración versionada
+- IDs siempre UUID/GUID (nunca int secuencial)
+
+### Soft delete obligatorio
+Nunca ejecutar DELETE en tablas de negocio.
+Siempre: `IsActive = 0` (SQL Server) o `is_active = false` (PostgreSQL).
+
+### Respuesta estandarizada de API
+```json
+{ "success": true/false, "data": {}, "message": "texto en español", "errors": [] }
+```
+
+### Autenticación
+- JWT en header: `Authorization: Bearer [token]`
+- Refresh token en cookie HttpOnly
+- Guard/middleware en TODOS los endpoints excepto login
+
+---
+
+## Estructura del workspace
+
+```
+workspace-proyecto/
+├── Codigo/              ← ÚNICO que se versiona en GitHub / Azure DevOps
+│   ├── frontend-angular/
+│   ├── backend-net/
+│   ├── backend-nestjs/
+│   └── database/
+├── IA_Skill/            ← Skills permanentes del proyecto
+├── IA_Memoria/          ← Estado y contexto del proyecto
+├── Insumos/             ← Mockups, specs, datos de prueba
+├── Features/            ← Definición detallada de cada módulo
+├── Issues/              ← Bugs y problemas registrados
+└── AGENTS.md            ← Este archivo (bridge para OpenCode)
+```
+
+Las carpetas IA_Skill, IA_Memoria, Insumos, Features e Issues NO se suben al repositorio.
+
+---
+
+## NUNCA sin confirmación explícita
+
+- Modificar `.env`, `appsettings.json` o cualquier archivo de entorno
+- Ejecutar `DROP TABLE`, `DELETE FROM` o borrar migraciones
+- Cambiar tecnologías o instalar librerías fuera del stack aprobado
+- Modificar pipelines de CI/CD
+- Subir archivos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/`, `Insumos/` al repositorio

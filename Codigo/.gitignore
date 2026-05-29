@@ -1,0 +1,114 @@
+# ─── Dependencias ───────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Build / Compilación ────────────────────────────────────────
+dist/
+build/
+.next/
+out/
+bin/
+obj/
+publish/
+*.nupkg
+
+# ─── Variables de entorno (NUNCA subir al repo) ─────────────────
+.env
+.env.*
+!.env.example
+
+# ─── .NET — Configuración local ─────────────────────────────────
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+# Subir solo la estructura base sin valores:
+# appsettings.json  →  NO ignorar
+
+# ─── .NET — IDE y compilación ───────────────────────────────────
+*.user
+*.suo
+.vs/
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# ─── TypeScript ─────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Angular ────────────────────────────────────────────────────
+.angular/
+
+# ─── Cobertura de tests ─────────────────────────────────────────
+coverage/
+.nyc_output/
+lcov.info
+TestResults/
+*.trx
+
+# ─── Logs ───────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── OS ─────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─── Archivos subidos por usuarios ──────────────────────────────
+uploads/
+
+# ─── Secretos y certificados ────────────────────────────────────
+secrets/
+keys/
+*.pfx
+*.p12
+*.key
+*.pem
+!certs/.gitkeep
+
+# ─── IDEs ───────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── Agentes IA — caché y sesiones locales ──────────────────────
+.opencode/
+.codex/
+
+# ─── Carpas de la capa IA (nunca subir) ─────────────────────────
+IA_Skill/
+IA_Memoria/
+Features/
+Issues/
+Insumos/
+
+# ─── NO ignorar (deben subirse) ─────────────────────────────────
+# .env.example           → estructura sin valores
+# appsettings.json       → estructura base sin valores sensibles
+# docker-compose.yml     → configuración de contenedores
+# Dockerfile             → imagen del contenedor
+# workflows/             → pipelines de CI/CD
+# docs/                  → documentación generada

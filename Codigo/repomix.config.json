@@ -1,0 +1,43 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "output": {
+    "filePath": "../IA_Memoria/snapshots/snapshot-latest.md",
+    "style": "markdown",
+    "compress": true,
+    "copyToClipboard": false,
+    "showLineNumbers": false,
+    "topFilesLength": 10,
+    "tokenCountTree": true,
+    "git": {
+      "includeDiffs": false,
+      "includeLogs": false,
+      "includeLogsCount": 30
+    }
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDotIgnore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/bin/**",
+      "**/obj/**",
+      "**/.vs/**",
+      "**/*.user",
+      "**/coverage/**",
+      "**/.nyc_output/**",
+      "**/*.log",
+      "**/uploads/**",
+      "**/secrets/**",
+      "**/keys/**"
+    ]
+  },
+  "security": {
+    "enableSecurityCheck": true
+  },
+  "tokenCount": {
+    "encoding": "o200k_base"
+  }
+}
