@@ -76,9 +76,11 @@ workspace-proyecto/
 │   └── snapshots/                     ← Snapshots de Repomix (no va a git)
 │
 ├── Features/                          ← Especificaciones de módulos (no va a git)
-│   ├── [mod].md                       ← Requisitos de negocio + estado del ciclo
-│   ├── [mod].spec.md                  ← Contrato técnico: API, entidades, reglas
-│   └── [mod].checks.md                ← Verificación post-implementación
+│   ├── README.md                      ← Ciclo de vida y patrón de 3 archivos (leer primero)
+│   ├── auth.md / auth.spec.md / auth.checks.md  ← Ejemplo canónico del formato
+│   ├── [mod].md                       ← Tu feature: requisitos de negocio + estado del ciclo
+│   ├── [mod].spec.md                  ← Tu feature: contrato técnico: API, entidades, reglas
+│   └── [mod].checks.md                ← Tu feature: verificación post-implementación
 ├── Issues/                            ← Bugs registrados (no va a git)
 ├── Insumos/                           ← Mockups y specs (no va a git)
 │

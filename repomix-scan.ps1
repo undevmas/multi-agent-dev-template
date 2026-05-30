@@ -157,9 +157,16 @@ No inventes ni asumas nada que no este en el codigo:
    - Confirma o corrige los patrones de naming detectados en el codigo real
    - Deja [COMPLETAR] donde no puedas inferirlo del codigo
 
+4. IA_Memoria/deuda-tecnica.md (solo si el proyecto tiene codigo existente)
+   - Si detectas antipatrones en el codigo (int secuenciales como IDs, DELETE directo
+     en tablas de negocio, response sin estructura estandar, credenciales hardcodeadas)
+   - Agregar una entrada por cada antipatron siguiendo el formato del archivo
+   - Si el proyecto esta vacio o el codigo sigue las convenciones: no agregar nada
+
 Al terminar, reporta: cuantos modulos encontraste implementados,
-que tecnologias detectaste y si hay alguna inconsistencia con
-lo que ya estaba declarado en los archivos de memoria.
+que tecnologias detectaste, si hay alguna inconsistencia con
+lo que ya estaba declarado en los archivos de memoria,
+y si registraste deuda tecnica (si/no y cuantas entradas).
 "@
 
 Write-Host ""
