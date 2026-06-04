@@ -105,27 +105,18 @@ if [[ -z "$has_code" ]]; then
   exit 0
 fi
 
-case "$TARGET" in
-  backend-net|--backend-net)
-    if [[ ! -d "$CODIGO_DIR/backend-net" ]]; then warn "No existe backend-net/."; exit 0; fi
-    invoke_scan "backend-net" "$SNAPSHOTS_DIR/snapshot-backend-net.md" "backend-net" "**/bin/**,**/obj/**,**/*.user,**/.vs/**"
-    ;;
-  backend-nestjs|--backend-nestjs)
-    if [[ ! -d "$CODIGO_DIR/backend-nestjs" ]]; then warn "No existe backend-nestjs/."; exit 0; fi
-    invoke_scan "backend-nestjs" "$SNAPSHOTS_DIR/snapshot-backend-nestjs.md" "backend-nestjs" "**/node_modules/**,**/dist/**,**/build/**,**/coverage/**"
-    ;;
-  frontend|--frontend)
-    if [[ ! -d "$CODIGO_DIR/frontend-angular" ]]; then warn "No existe frontend-angular/."; exit 0; fi
-    invoke_scan "frontend-angular" "$SNAPSHOTS_DIR/snapshot-frontend.md" "frontend-angular" "**/node_modules/**,**/dist/**,**/build/**,**/.angular/**,**/coverage/**"
-    ;;
-  all|--all|"")
-    invoke_scan "." "$SNAPSHOTS_DIR/snapshot-latest.md" "codigo-completo"
-    ;;
-  *)
-    echo "Uso: ./repomix-scan.sh [all|backend-net|backend-nestjs|frontend] [--full] [--no-compress]"
-    exit 1
-    ;;
-esac
+if [[ "$TARGET" == "all" || "$TARGET" == "--all" || "$TARGET" == "" ]]; then
+  invoke_scan "." "$SNAPSHOTS_DIR/snapshot-latest.md" "codigo-completo"
+else
+  TARGET="${TARGET#--}"
+  if [[ ! -d "$CODIGO_DIR/$TARGET" ]]; then
+    warn "No existe Codigo/$TARGET/."
+    exit 0
+  fi
+  safe_name="${TARGET//[^a-zA-Z0-9_-]/-}"
+  ignore_all="**/bin/**,**/obj/**,**/*.user,**/.vs/**,**/node_modules/**,**/dist/**,**/build/**,**/.angular/**,**/coverage/**"
+  invoke_scan "$TARGET" "$SNAPSHOTS_DIR/snapshot-${safe_name}.md" "$TARGET" "$ignore_all"
+fi
 
 echo ""
 echo "================================================================"
@@ -138,6 +129,7 @@ Actualiza estos tres archivos con lo que encuentres en el codigo real.
 No inventes ni asumas nada que no este en el codigo:
 
 1. IA_Memoria/arquitectura.md
+   - Estructura de Codigo/: listar cada subcarpeta encontrada, su contenido y tecnologia detectada
    - Tecnologias y versiones reales detectadas
    - Modulos y servicios existentes con su estado actual
    - Puertos en docker-compose o archivos de configuracion

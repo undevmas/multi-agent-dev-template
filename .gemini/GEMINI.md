@@ -118,15 +118,14 @@ Siempre: `IsActive = 0` (SQL Server) o `is_active = false` (PostgreSQL).
 ```
 workspace-proyecto/
 ├── Codigo/          ← ÚNICO que va a git
-│   ├── frontend-angular/
-│   ├── backend-net/
-│   ├── backend-nestjs/
-│   └── database/
+│   └── [nombre-proyecto]/   ← estructura interna libre; rutas reales en IA_Memoria/arquitectura.md
 ├── IA_Skill/        ← Skills del agente (no subir a git)
 ├── IA_Memoria/      ← Estado del proyecto (no subir a git)
 ├── Features/        ← Definición de módulos (no subir a git)
 ├── Issues/          ← Bugs registrados (no subir a git)
 └── Insumos/         ← Mockups y specs (no subir a git)
+
+No asumir estructura interna de Codigo/ — leer IA_Memoria/arquitectura.md.
 ```
 
 ---

@@ -80,7 +80,7 @@ Cuándo NO consultar skills:
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno
 - Ejecutar DROP TABLE, DELETE FROM o borrar migraciones
-- Modificar pipelines de CI/CD (Codigo/workflows/)
+- Modificar pipelines de CI/CD
 - Incluir en commits archivos de IA_Skill, IA_Memoria, Features, Issues, Insumos
 
 ## Contexto adicional

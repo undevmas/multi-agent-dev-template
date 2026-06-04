@@ -2,7 +2,7 @@
 
 > Este archivo es para Claude, no para los agentes del template.
 > Pégalo al inicio de una sesión nueva para continuar sin perder contexto.
-> Última actualización: Mayo 2025
+> Última actualización: Junio 2026
 
 ---
 
@@ -20,10 +20,10 @@ y quiere que el template acelere el onboarding de cualquier dev con cualquier ag
 
 ## Repositorio
 
-**GitHub:** `multi-agent-dev-template-main` (compartido como .zip en sesiones)
-**Estado actual:** v2, funcional de punta a punta
+**GitHub:** `multi-agent-dev-template` (en c:\devops\IA\multi-agent-dev-template)
+**Estado actual:** v3, funcional de punta a punta — Codigo/ es ahora completamente genérico
 
-### Estructura del template (lo que existe hoy)
+### Estructura del template (estado actual)
 
 ```
 workspace/
@@ -33,14 +33,24 @@ workspace/
 ├── .github/copilot-instructions.md  ← Copilot (versión compacta, límite contexto)
 ├── IA_Skill/              ← 27 skills técnicas
 ├── IA_Memoria/            ← Estado del proyecto (templates vacíos)
+│   ├── arquitectura.md    ← Reescrito: genérico con [COMPLETAR], nueva sección "Estructura de Codigo/"
+│   ├── progreso.md
+│   ├── convenciones.md
+│   └── deuda-tecnica.md
 ├── Features/              ← Specs de features (patrón 3 archivos)
 ├── Issues/                ← Template de bug report
 ├── Insumos/               ← Mockups y HUs del dev
 ├── Codigo/                ← ÚNICO que va a git
-├── repomix-scan.ps1/.sh   ← Genera snapshot + prompt de inspección
-├── README.md              ← Documentación pública
-└── GUIDE.md               ← Guía práctica de 5 pasos con prompts por agente
+│   ├── .gitignore         ← Cubre .NET + Node/TS + Angular + Docker + OS
+│   └── repomix.config.json ← Config del scanner (genérico)
+├── repomix-scan.ps1/.sh   ← Genera snapshot + prompt de inspección (genérico)
+├── README.md
+├── GUIDE.md
+└── CLAUDE-session-memory.md ← Este archivo
 ```
+
+**Nota:** `Codigo/` ya no tiene subcarpetas hardcodeadas. El dev pega su proyecto
+directamente dentro con el nombre que quiera.
 
 ---
 
@@ -48,9 +58,7 @@ workspace/
 
 ### Fase 1 — Limpieza y flujo base
 - Se limpió `IA_Memoria/progreso.md` de contenido específico del proyecto original
-- Se mejoró el prompt de inspección en `repomix-scan.ps1/.sh` — el agente ahora
-  sabe exactamente qué escribir en cada archivo de memoria y cómo manejar
-  proyectos vacíos vs proyectos con código existente
+- Se mejoró el prompt de inspección en `repomix-scan.ps1/.sh`
 
 ### Fase 2 — Política de código legado
 **Decisión de diseño clave:** las convenciones del template nunca se bajan
@@ -61,22 +69,16 @@ Tres zonas definidas en `CLAUDE.md` y replicadas a todos los bridges:
 - **Zona ámbar:** código existente a modificar → mínimo necesario, sin refactorizar sin ticket
 - **Zona roja:** código intocable sin ticket → detectar, documentar, no tocar
 
-Se creó `IA_Memoria/deuda-tecnica.md` — inventario separado de `progreso.md`.
-Cada entrada tiene: descripción, ubicación, impacto, riesgo, política aplicada,
-y **condición de salida obligatoria** (sin esto no es deuda, es queja).
+Se creó `IA_Memoria/deuda-tecnica.md`.
 
 ### Fase 3 — Spec-Driven Development (inspirado en spec-kit de GitHub)
 Se analizó el repo `github/spec-kit`. Decisión: absorber principios, no el sistema.
 
-**Lo adoptado de spec-kit:**
-- Separación spec (qué) / plan técnico (cómo) / tasks
-- Marcadores `[NEEDS CLARIFICATION]` — el agente declara sus suposiciones
-- Given/When/Then por User Story como criterios de aceptación ejecutables
-- Criterios de éxito medibles y tech-agnósticos
-- Constitution gates antes de implementar (ahora en CLAUDE.md)
+**Lo adoptado:** separación spec/plan técnico/tasks, marcadores `[NEEDS CLARIFICATION]`,
+Given/When/Then por User Story, criterios de éxito medibles, constitution gates.
 
 **Lo descartado:** CLI `specify`, estructura de carpetas `specs/NNN-feature/`,
-constitution articles incompatibles con stack enterprise (Library-First, CLI-Mandate).
+constitución incompatible con stack enterprise.
 
 ### Fase 4 — Patrón de 3 artefactos por feature
 Cada módulo tiene exactamente 3 archivos en `Features/`:
@@ -87,95 +89,98 @@ Cada módulo tiene exactamente 3 archivos en `Features/`:
 | `[mod].spec.md` | Agente spec | Agente implementación — contrato técnico |
 | `[mod].checks.md` | Agente spec | Agente implementación — verificación |
 
-**Ciclo de vida de la spec:**
-`draft` → `needs-clarification` → `ready` → `in-progress` → `in-review` → `done`
-+ estados especiales: `epic`, `spike`, `legacy-debt`
+**Ciclo de vida:** `draft` → `needs-clarification` → `ready` → `in-progress` → `in-review` → `done`
 
-**Fuente de verdad del estado:** `[mod].md` manda. `progreso.md` es el espejo.
-El agente actualiza primero `[mod].md`, luego sincroniza `progreso.md`.
-
-### Fase 5 — SKILL-spec-generator.md (698 líneas)
-Skill para agente especializado en specs. **No toca código nunca.**
-
-7 pasos: leer contexto → identificar insumo → detectar tamaño → preguntar (máx 3) →
-generar 3 artefactos → registrar en memoria → reportar al dev
-
-4 tipos de insumo que acepta: Word/HU, imágenes/mockups, notas sueltas, código existente
-
-Protocolo para features grandes:
-- Detecta señales (>5 US, >5 días estimados, dependencias internas, etc.)
-- Genera `[mod]-epic.md` con propuesta de descomposición
-- **Espera confirmación del dev** — nunca descompone en silencio
-
-Protocolo para spikes:
-- Si hay incertidumbre técnica que bloquea la spec → genera `[mod]-spike.md`
-- La spec real espera el resultado del spike
-
-El agente spec puede correr en un **chat separado del agente de implementación**:
-acepta cualquier insumo, hace máx 3 preguntas con opciones, produce archivos `.md`.
+### Fase 5 — SKILL-spec-generator.md
+Skill para agente especializado en specs. No toca código nunca. 7 pasos.
+4 tipos de insumo: Word/HU, imágenes/mockups, notas sueltas, código existente.
+Protocolo para epics (espera confirmación), protocolo para spikes.
 
 ### Fase 6 — SKILL-implementation.md
-Skill para el agente de implementación. Cierra el ciclo que spec-generator abre.
-
-8 pasos con regla de bloqueo explícita:
-- Si no existe `[mod].spec.md` con estado `ready` → **PARA, no implementa**
-- Lee los 3 artefactos ANTES de tocar código (checks.md como guía de trabajo, no cierre)
-- Marca `in-progress` en `[mod].md` antes de escribir código
-- Selecciona skill técnica del stack declarado en spec
-- Implementa como traducción directa del contrato — no interpreta, no mejora
-- Corre todos los checks — los de legado van a deuda-tecnica.md, no bloquean
-- Marca `in-review` — nunca `done` (ese estado solo lo asigna el dev)
+Skill para el agente de implementación. 8 pasos. Regla de bloqueo explícita:
+si no existe `[mod].spec.md` con estado `ready` → PARA, no implementa.
+Nunca marca `done` (solo el dev puede).
 
 ### Fase 7 — Ejemplo canónico: auth
 `Features/auth.md` + `auth.spec.md` + `auth.checks.md`
-
-Módulo de autenticación elegido por ser universal en cualquier proyecto enterprise.
-Muestra en la práctica:
-- 3 User Stories con todos sus escenarios de aceptación
-- 3 tablas en BD (Users, RefreshTokens, RevokedTokens) con columnas completas
-- 3 endpoints con contratos exactos de request/response/cookies/errores
-- 8 reglas de negocio numeradas (RN-01 a RN-08) con casos no obvios
-- 30 checks verificables en código organizados por categoría
-- Bloque de reporte que el agente completa antes de marcar in-review
+3 User Stories, 3 tablas en BD, 3 endpoints con contratos completos,
+8 reglas de negocio (RN-01 a RN-08), 30 checks verificables.
 
 ### Fase 8 — README y GUIDE
-Ambos escritos y validados contra el repo real (no documentación inventada).
+Ambos validados contra el repo real.
+**GUIDE:** 5 pasos con prompts listos para copiar/pegar por cada agente.
 
-**README:** problema, agentes soportados, stack, estructura, cómo funciona en 4 capas,
-quick start, flujos spec-driven y estándar, reglas críticas, qué versionar, roadmap.
+### Fase 9 — Genericidad de Codigo/ (Junio 2026)
 
-**GUIDE:** guía de 5 pasos con prompts listos para copiar/pegar por cada agente.
-Incluye variantes para Copilot (con `#file:`) para cada paso.
+**Contexto:** el dev tiene un proyecto con Angular + NestJS en una sola carpeta
+(`gestion-de-proyectos`), Docker sirve el Angular como static desde NestJS.
+La pregunta era si conviene separar en subcarpetas o mantener todo junto.
+
+**Decisiones tomadas:**
+
+1. **Workspace = un sistema cohesionado** (un producto o microservicios relacionados).
+   Múltiples productos sin relación → workspaces separados, no uno combinado.
+
+2. **Codigo/ es ahora completamente genérico** — el dev pega su proyecto con el nombre
+   que quiera, sin convención forzada. La fuente de verdad de rutas es `IA_Memoria/arquitectura.md`.
+
+**Cambios aplicados (7 archivos):**
+
+| Archivo | Cambio |
+|---|---|
+| `CLAUDE.md` | Sección "Estructura del workspace": 4 subcarpetas → `[nombre-proyecto]/` genérico + nota |
+| `AGENTS.md` | Mismo cambio |
+| `.gemini/GEMINI.md` | Mismo cambio |
+| `.github/copilot-instructions.md` | Removido path hardcodeado `(Codigo/workflows/)` en regla NUNCA |
+| `IA_Memoria/arquitectura.md` | Reescritura completa: rutas/puertos/techs → `[COMPLETAR]`, nueva sección "Estructura de Codigo/" |
+| `repomix-scan.ps1` | Eliminado `ValidateSet` fijo; `$Target` libre; `$args` → `$npxArgs` (fix PS warning); prompt actualizado |
+| `repomix-scan.sh` | `case` hardcodeado → lógica genérica; uso actualizado; prompt actualizado |
+
+**Limpieza adicional:** eliminadas de `Codigo/` las carpetas vacías `backend-nestjs/`,
+`backend-net/`, `database/`, `frontend-angular/`, `docs/`.
+
+**Flujo resultante para cualquier proyecto:**
+```
+1. Copiar template
+2. Pegar código en Codigo/<nombre-que-quieras>/
+3. .\repomix-scan.ps1                      ← escanea todo
+   .\repomix-scan.ps1 -Target mi-proyecto  ← escanea solo esa carpeta
+4. Copiar el prompt → agente llena IA_Memoria/
+5. Listo para trabajar features
+```
 
 ---
 
 ## Decisiones de diseño importantes (para no repetir discusiones)
 
 **Por qué 3 archivos separados en vez de un .md con secciones:**
-Un `.md` que hace 3 roles (requisitos, técnico, checks) crea conflictos de
-propiedad (¿quién lo modifica?), de estado (¿cuál es la fuente de verdad?)
-y de scope (los checks de legado bloquearían features nuevas).
+Conflictos de propiedad, estado y scope. Los checks de legado bloquearían features nuevas.
 
 **Por qué no adoptar spec-kit completo:**
-Está diseñado para proyectos de librería/CLI greenfield. Su constitución asume
-"Library-First, CLI-Mandate" que rompe el stack enterprise del template.
-No tiene concepto de legado, deuda técnica ni convenciones de equipo.
+Diseñado para proyectos de librería/CLI greenfield. Asume "Library-First, CLI-Mandate"
+que rompe el stack enterprise. No tiene concepto de legado ni convenciones de equipo.
 
 **Por qué el agente spec no toca código nunca:**
-Separación limpia de responsabilidades. Permite que un PM o analista
-itere sobre la spec sin necesidad de un dev. El dev aprueba antes de
-que cualquier código se toque.
+Separación limpia. Permite que un PM o analista itere la spec sin un dev.
+El dev aprueba antes de que cualquier código se toque.
 
 **Por qué `done` solo lo asigna el dev:**
-El agente de implementación puede declarar que está listo (`in-review`)
-pero no puede saber si el resultado cumple las expectativas del negocio.
+El agente puede declarar `in-review` pero no puede saber si cumple expectativas de negocio.
 Ese juicio siempre es humano.
 
 **Por qué la política de legado no negocia las convenciones:**
 El código nuevo es el ejemplo de cómo debería ser el viejo.
-La inconsistencia entre módulos legados y nuevos es intencional y temporal.
-Si el agente adoptara los antipatrones del entorno para "ser consistente",
-la deuda se perpetuaría indefinidamente.
+Si el agente adoptara los antipatrones del entorno, la deuda se perpetuaría.
+
+**Por qué Codigo/ es genérico y no tiene subcarpetas fijas:**
+El agente no navega por nombres de carpeta hardcodeados — navega por `IA_Memoria/arquitectura.md`.
+Forzar nombres como `frontend-angular/` crea fricción cuando el proyecto se llama distinto
+o tiene una estructura compuesta. La genericidad no sacrifica funcionalidad.
+
+**Por qué un workspace = un sistema cohesionado:**
+`IA_Memoria/` está diseñado para un sistema: arquitectura.md describe "el" sistema,
+progreso.md trackea "el" avance, el snapshot repomix es coherente. Mezclar productos
+no relacionados rompe esa coherencia y hace el contexto del agente inútil.
 
 ---
 
@@ -186,18 +191,20 @@ la deuda se perpetuaría indefinidamente.
 - [ ] **Skills faltantes:** Docker, Azure DevOps Pipelines
 - [ ] **Segundo ejemplo canónico** — `auth` está hecho, podría añadirse uno
       con Epic descompuesto en slices para mostrar ese flujo
+- [ ] **README y GUIDE** — pendiente actualizar para reflejar que Codigo/ es genérico
+      (el flujo de 5 pasos en GUIDE.md aún puede mencionar las carpetas viejas)
 
 ---
 
 ## Cómo continuar una sesión
 
-Si el dev comparte el .zip del repo actualizado, leerlo antes de proponer cambios.
-El repo cambia entre sesiones — no asumir que el último estado analizado aquí es el actual.
+El repo está en `c:\devops\IA\multi-agent-dev-template`.
+No hace falta compartir .zip — leer directamente del repo.
 
 Preguntas útiles para arrancar:
-- ¿Hay un .zip nuevo del repo?
 - ¿Qué gap o feature quiere atacar hoy?
 - ¿Hay feedback de devs que usaron el template?
+- ¿Va a probar el template con su proyecto `gestion-de-proyectos`?
 
 El dev trabaja de forma iterativa: analiza → diseña → valida → genera archivos.
 Prefiere entender el "por qué" antes de generar código/archivos.

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("all", "backend-net", "backend-nestjs", "frontend")]
+    # "all" escanea Codigo/ completo; cualquier otro valor escanea Codigo/<Target>/
     [string]$Target = "all",
     [switch]$Full,
     [switch]$NoCompress
@@ -57,30 +57,30 @@ function Invoke-RepomixScan {
     )
 
     # Siempre pasar directorio y output explícito para todos los targets
-    $args = @($repomixArgsBase) + @($SourcePath, "--output", $OutputPath)
+    $npxArgs = @($repomixArgsBase) + @($SourcePath, "--output", $OutputPath)
 
     if (Test-Path $ConfigPath) {
         # Heredar style, compress, ignore patterns y security-check del config
-        $args += @("--config", $ConfigPath)
+        $npxArgs += @("--config", $ConfigPath)
         # Respetar --full / --no-compress del usuario sobre lo que define el config
         if (-not $compressEnabled) {
-            $args += "--no-compress"
+            $npxArgs += "--no-compress"
         }
     }
     else {
-        $args += @("--style", $style)
-        if ($compressEnabled) { $args += "--compress" }
+        $npxArgs += @("--style", $style)
+        if ($compressEnabled) { $npxArgs += "--compress" }
     }
 
     if ($IgnorePatterns -ne "") {
-        $args += @("--ignore", $IgnorePatterns)
+        $npxArgs += @("--ignore", $IgnorePatterns)
     }
 
     Write-Info "Escaneando $Label ..."
 
     Push-Location $CodigoDir
     try {
-        & npx @args
+        & npx @npxArgs
     }
     finally {
         Pop-Location
@@ -142,6 +142,7 @@ Actualiza estos tres archivos con lo que encuentres en el codigo real.
 No inventes ni asumas nada que no este en el codigo:
 
 1. IA_Memoria/arquitectura.md
+   - Estructura de Codigo/: listar cada subcarpeta encontrada, su contenido y tecnologia detectada
    - Tecnologias y versiones reales detectadas
    - Modulos y servicios existentes con su estado actual
    - Puertos en docker-compose o archivos de configuracion

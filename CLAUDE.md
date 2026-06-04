@@ -158,10 +158,7 @@ Todos los endpoints deben retornar:
 
 workspace-proyecto/
 ├── Codigo/              ← ÚNICO que se versiona en GitHub / Azure DevOps
-│   ├── frontend-angular/
-│   ├── backend-net/
-│   ├── backend-nestjs/
-│   └── database/
+│   └── [nombre-proyecto]/   ← estructura interna libre; rutas reales en IA_Memoria/arquitectura.md
 ├── IA_Skill/            ← Skills permanentes del proyecto
 ├── IA_Memoria/          ← Estado y contexto del proyecto
 ├── Insumos/             ← Mockups, specs, datos de prueba
@@ -169,6 +166,7 @@ workspace-proyecto/
 ├── Issues/              ← Bugs y problemas registrados
 └── CLAUDE.md            ← Este archivo
 
+No asumir estructura interna de Codigo/ — leer IA_Memoria/arquitectura.md.
 Las carpetas IA_Skill, IA_Memoria, Insumos, Features e Issues
 NO se suben al repositorio de código.
 
