@@ -5,7 +5,7 @@ param(
     [switch]$NoCompress
 )
 # Nota: el contexto git (diffs y logs) se controla en repomix.config.json
-# mediante git.includeDiffs y git.includeLogs — no hay flags CLI equivalentes en repomix.
+# mediante git.includeDiffs y git.includeLogs - no hay flags CLI equivalentes en repomix.
 
 $ErrorActionPreference = "Stop"
 
@@ -172,7 +172,7 @@ y si registraste deuda tecnica (si/no y cuantas entradas).
 
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Magenta
-Write-Host "  PROMPT DE INSPECCION — copiar y pegar en tu agente IA" -ForegroundColor Magenta
+Write-Host "  PROMPT DE INSPECCION - copiar y pegar en tu agente IA" -ForegroundColor Magenta
 Write-Host "================================================================" -ForegroundColor Magenta
 Write-Host ""
 Write-Host $prompt -ForegroundColor White
