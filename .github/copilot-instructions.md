@@ -37,7 +37,11 @@ Adjuntar IA_Memoria/snapshots/snapshot-latest.md con #file: SOLO si:
 - Se toma una decisión de arquitectura o refactor amplio.
 NO adjuntar para fixes puntuales, cambios de texto o config aislada.
 Si el snapshot no existe o tiene más de 7 días, pedir al usuario ejecutar repomix-scan.ps1 (Windows) o repomix-scan.sh (Linux/macOS).
-Al leer el snapshot, ANTES de codificar: actualizar IA_Memoria/arquitectura.md con cambios reales del código y marcar en IA_Memoria/progreso.md lo que ya existe aunque no esté registrado.
+Al leer el snapshot, ANTES de codificar:
+1. Actualizar IA_Memoria/arquitectura.md con cambios reales detectados en el snapshot.
+2. Marcar en IA_Memoria/progreso.md lo que ya existe aunque no esté registrado.
+3. Si el proyecto tiene código existente, actualizar IA_Memoria/convenciones.md con los patrones arquitectónicos detectados — solo agregar lo que no esté ya documentado, nunca reemplazar entradas ya completas: estructura de capas, patrón de acceso a datos, estructura de carpetas por capa, manejo de excepciones y validaciones, formato de responses en controllers.
+4. Solo después de los tres pasos anteriores, proceder con la tarea.
 
 No iniciar código sin haber leído al menos 1, 2 y 3.
 
@@ -53,7 +57,7 @@ Mapa rápido:
 - Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
 - Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
 - Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md
-- Soporte: SKILL-web-search.md, SKILL-caveman.md
+- Soporte: SKILL-web-search.md, SKILL-caveman.md, SKILL-pr-review-fixes.md
 
 Cuándo NO consultar skills:
 - Tareas triviales o mecánicas (renombrar variable, ajuste menor de texto, formateo local, cambio de ruta simple)
@@ -80,6 +84,7 @@ Cuándo NO consultar skills:
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno
 - Ejecutar DROP TABLE, DELETE FROM o borrar migraciones
+- Cambiar tecnologías o instalar librerías fuera del stack aprobado
 - Modificar pipelines de CI/CD
 - Incluir en commits archivos de IA_Skill, IA_Memoria, Features, Issues, Insumos
 

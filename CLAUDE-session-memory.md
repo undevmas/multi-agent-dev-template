@@ -191,8 +191,7 @@ no relacionados rompe esa coherencia y hace el contexto del agente inútil.
 - [ ] **Skills faltantes:** Docker, Azure DevOps Pipelines
 - [ ] **Segundo ejemplo canónico** — `auth` está hecho, podría añadirse uno
       con Epic descompuesto en slices para mostrar ese flujo
-- [ ] **README y GUIDE** — pendiente actualizar para reflejar que Codigo/ es genérico
-      (el flujo de 5 pasos en GUIDE.md aún puede mencionar las carpetas viejas)
+- [x] **README y GUIDE** — actualizados: Codigo/ es genérico, prompts de inspección apuntan solo al snapshot (sin inspección directa de Codigo/), conteo de skills corregido a 27
 
 ---
 

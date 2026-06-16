@@ -49,7 +49,13 @@ Protocolo post-snapshot (obligatorio al leer el snapshot):
 Después de leer el snapshot, ANTES de codificar:
 1. Comparar contra `IA_Memoria/arquitectura.md` — actualizar módulos, dependencias o estructura que hayan cambiado.
 2. Comparar contra `IA_Memoria/progreso.md` — marcar como hecho lo que ya existe en el código aunque no estuviera registrado.
-3. Solo después de actualizar ambos archivos, proceder con la tarea solicitada.
+3. Si el proyecto tiene código existente, actualizar `IA_Memoria/convenciones.md` con los patrones arquitectónicos detectados en el snapshot — solo agregar lo que no esté ya documentado, nunca reemplazar entradas ya completas:
+   - Estructura de capas detectada (Clean Architecture, N-capas, Vertical Slice, etc.)
+   - Patrón de acceso a datos (Repository, DbContext directo, CQRS + MediatR, etc.)
+   - Estructura de carpetas dentro de cada capa
+   - Patrón de manejo de excepciones y validaciones
+   - Formato de responses detectado en controllers existentes
+4. Solo después de actualizar los tres archivos, proceder con la tarea solicitada.
 
 ---
 
@@ -84,6 +90,7 @@ Después de leer el snapshot, ANTES de codificar:
 | Documentar feature terminada | IA_Skill/SKILL-docs-feature.md |
 | Búsqueda web y fuentes externas actualizadas | IA_Skill/SKILL-web-search.md |
 | Respuestas ultra-concisas en sesiones largas | IA_Skill/SKILL-caveman.md |
+| Resolver comentarios de revisión de PR en GitHub | IA_Skill/SKILL-pr-review-fixes.md |
 
 ---
 

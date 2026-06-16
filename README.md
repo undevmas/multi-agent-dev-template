@@ -66,7 +66,7 @@ workspace-proyecto/
 │   ├── SKILL-dotnet-best-practices.md
 │   ├── SKILL-nestjs-best-practices.md
 │   ├── SKILL-database-migrations.md
-│   └── ... (26 skills en total)
+│   └── ... (27 skills en total)
 │
 ├── IA_Memoria/                        ← Estado del proyecto (no va a git)
 │   ├── progreso.md                    ← Vista agregada: qué está hecho y qué sigue
@@ -163,7 +163,7 @@ Al terminar, el script imprime un **prompt de inspección** listo para copiar y 
 
 ### 4. Pega el prompt en tu agente y deja que inspeccione
 
-El agente leerá el snapshot e inspeccionará el código real para llenar automáticamente los tres archivos de memoria:
+El agente leerá el snapshot para llenar automáticamente los tres archivos de memoria:
 
 | Archivo | Qué escribe el agente |
 |---|---|

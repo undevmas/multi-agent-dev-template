@@ -85,7 +85,7 @@ El snapshot se guarda en `IA_Memoria/snapshots/snapshot-latest.md`.
 Al terminar el scan, el script imprime un **prompt listo para copiar**.
 Cópialo y pégalo en tu agente para que llene la memoria del proyecto.
 
-El agente leerá el snapshot e inspeccionará `Codigo/` para llenar automáticamente:
+El agente leerá el snapshot para llenar automáticamente:
 
 | Archivo | Qué escribe el agente |
 |---|---|
@@ -103,24 +103,24 @@ Si el proyecto está vacío, el agente lo indica — no inventa estructura.
 El script ya imprime el prompt. Copiarlo y pegarlo es suficiente:
 
 ```
-Lee IA_Memoria/snapshots/snapshot-latest.md e inspecciona el codigo en Codigo/.
-Actualiza estos tres archivos con lo que encuentres en el codigo real.
-No inventes ni asumas nada que no este en el codigo:
+Lee IA_Memoria/snapshots/snapshot-latest.md.
+Actualiza estos tres archivos con lo que encuentres en el snapshot.
+No inventes ni asumas nada que no este en el snapshot:
 
 1. IA_Memoria/arquitectura.md
    - Tecnologias y versiones reales detectadas
    - Modulos y servicios existentes con su estado actual
    - Puertos en docker-compose o archivos de configuracion
-   - Variables de entorno en .env.example o en el codigo
+   - Variables de entorno en .env.example o en el snapshot
 
 2. IA_Memoria/progreso.md
-   - Marca [x] solo los modulos/features que realmente existan en el codigo
+   - Marca [x] solo los modulos/features que realmente existan en el snapshot
    - Deja [ ] los que no esten implementados
    - Si el proyecto esta vacio: escribe "Proyecto nuevo, sin modulos implementados"
 
 3. IA_Memoria/convenciones.md
-   - Confirma o corrige los patrones de naming detectados en el codigo real
-   - Deja [COMPLETAR] donde no puedas inferirlo del codigo
+   - Confirma o corrige los patrones de naming detectados en el snapshot
+   - Deja [COMPLETAR] donde no puedas inferirlo del snapshot
 ```
 
 **GitHub Copilot**
@@ -130,13 +130,13 @@ Copilot no puede leer archivos por sí solo. Adjuntar manualmente:
 ```
 #file:IA_Memoria/snapshots/snapshot-latest.md
 
-Inspecciona el snapshot adjunto e inspecciona el código en Codigo/.
-Actualiza los tres archivos de memoria con lo que encuentres en el código real.
-No inventes ni asumas nada que no esté en el código:
+Inspecciona el snapshot adjunto.
+Actualiza los tres archivos de memoria con lo que encuentres en el snapshot.
+No inventes ni asumas nada que no esté en el snapshot:
 
 1. IA_Memoria/arquitectura.md — tecnologías, módulos, puertos, variables de entorno
-2. IA_Memoria/progreso.md — marca solo lo que realmente exista en el código
-3. IA_Memoria/convenciones.md — patrones de naming detectados en el código real
+2. IA_Memoria/progreso.md — marca solo lo que realmente exista en el snapshot
+3. IA_Memoria/convenciones.md — patrones de naming detectados en el snapshot
 ```
 
 ---

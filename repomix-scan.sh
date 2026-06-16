@@ -124,9 +124,9 @@ echo "  PROMPT DE INSPECCION — copiar y pegar en tu agente IA"
 echo "================================================================"
 echo ""
 cat <<'PROMPT'
-Lee IA_Memoria/snapshots/snapshot-latest.md e inspecciona el codigo en Codigo/.
-Actualiza estos tres archivos con lo que encuentres en el codigo real.
-No inventes ni asumas nada que no este en el codigo:
+Lee IA_Memoria/snapshots/snapshot-latest.md.
+Actualiza estos tres archivos con lo que encuentres en el snapshot.
+No inventes ni asumas nada que no este en el snapshot:
 
 1. IA_Memoria/arquitectura.md
    - Estructura de Codigo/: listar cada subcarpeta encontrada, su contenido y tecnologia detectada
@@ -142,8 +142,8 @@ No inventes ni asumas nada que no este en el codigo:
    - Reemplaza los pendientes de ejemplo con los reales del proyecto
 
 3. IA_Memoria/convenciones.md
-   - Confirma o corrige los patrones de naming detectados en el codigo real
-   - Deja [COMPLETAR] donde no puedas inferirlo del codigo
+   - Confirma o corrige los patrones de naming detectados en el snapshot
+   - Deja [COMPLETAR] donde no puedas inferirlo del snapshot
 
 4. IA_Memoria/deuda-tecnica.md (solo si el proyecto tiene codigo existente)
    - Si detectas antipatrones en el codigo (int secuenciales como IDs, DELETE directo
