@@ -69,7 +69,7 @@ Cuándo NO consultar skills:
 - Comentarios y documentación en español
 - Nunca hardcodear credenciales, URLs base ni valores de entorno
 - Soft delete obligatorio: IsActive = 0 / is_active = false (nunca DELETE en negocio)
-- Todos los endpoints retornan: { success, data, message, errors }
+- Todos los endpoints retornan la misma estructura de respuesta — la forma concreta vive en IA_Memoria/convenciones.md (si no hay convención definida, usar `{ success, data, message, errors }` como punto de partida)
 - JWT: Authorization Bearer token; refresh token en cookie HttpOnly
 - Proteger todos los endpoints con guard/middleware excepto login
 - Migraciones versionadas para todo cambio de BD

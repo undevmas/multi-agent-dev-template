@@ -133,7 +133,7 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 |---|---|
 | **Soft delete obligatorio** | Nunca `DELETE FROM` en tablas de negocio — usar `is_active = false` |
 | **IDs UUID/GUID** | Nunca enteros secuenciales |
-| **Respuesta de API estandarizada** | `{ success, data, message, errors }` en todos los endpoints |
+| **Respuesta de API estandarizada** | Misma estructura en todos los endpoints — la forma concreta vive en `IA_Memoria/convenciones.md` |
 | **Endpoints protegidos** | Guard/middleware en todo excepto login |
 | **Sin hardcodeo** | Credenciales y URLs siempre en variables de entorno |
 | **Migraciones versionadas** | Todo cambio de BD requiere su migración |

@@ -56,6 +56,29 @@ perf:      mejoras de performance
 
 ---
 
+## Formato de respuesta API
+
+> El agente detecta y escribe esta sección al leer el snapshot. No modificar manualmente salvo excepción documentada.
+
+[COMPLETAR — el agente lo llena al inspeccionar los controllers en el snapshot]
+
+Incluir: campos de la respuesta, estructura del objeto de error, campos adicionales (traceId, paginación, etc.)
+
+---
+
+## Arquitectura y patrones detectados
+
+> El agente detecta y escribe esta sección al leer el snapshot.
+
+| Aspecto | Patrón detectado |
+|---|---|
+| Arquitectura de capas | [COMPLETAR] |
+| Patrón de acceso a datos | [COMPLETAR] |
+| Manejo de excepciones | [COMPLETAR] |
+| Estructura de carpetas por capa | [COMPLETAR] |
+
+---
+
 ## Versionado de API
 
 - Prefijo: `/api/v1/`

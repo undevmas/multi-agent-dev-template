@@ -109,9 +109,11 @@ Nunca ejecutar DELETE en tablas de negocio.
 Siempre: `IsActive = 0` (SQL Server) o `is_active = false` (PostgreSQL).
 
 ### Respuesta estandarizada de API
-```json
-{ "success": true/false, "data": {}, "message": "texto en español", "errors": [] }
-```
+Todos los endpoints deben retornar la misma estructura de respuesta — sin excepciones y sin inventar formatos nuevos por endpoint.
+La forma concreta (campos, anidamiento, errores, paginación) la define el proyecto en `IA_Memoria/convenciones.md`.
+Si el proyecto aún no tiene convención definida, usar como punto de partida:
+`{ "success": true/false, "data": {}, "message": "texto", "errors": [] }`
+Si el código existente ya usa otra forma, registrarla en convenciones.md y usarla consistentemente — no mezclar formas dentro del mismo proyecto.
 
 ### Autenticación
 - JWT en header: `Authorization: Bearer [token]`

@@ -137,9 +137,26 @@ switch ($Target) {
 }
 
 $prompt = @"
-Lee IA_Memoria/snapshots/snapshot-latest.md.
-Actualiza estos tres archivos con lo que encuentres en el snapshot.
-No inventes ni asumas nada que no este en el snapshot:
+Lee IA_Memoria/snapshots/snapshot-latest.md usando lectura estrategica por secciones:
+
+PASO 1 — Leer las primeras 300 lineas del snapshot.
+  Repomix siempre coloca el arbol de archivos y el resumen de tokens al inicio.
+  Con eso sabes que modulos existen y cuales son los archivos mas pesados.
+  No leas mas hasta completar este paso.
+
+PASO 2 — Con el arbol como mapa, leer selectivamente solo las secciones utiles:
+  - Archivos .csproj / package.json / *.sln  → tecnologias y versiones
+  - docker-compose.yml / appsettings*.json / .env.example → puertos y variables
+  - Controllers o endpoints (buscar "Controller", "router", "@Controller")
+    → formato real de respuesta API (campos, estructura de error, traceId, etc.)
+  - Archivos base / middleware / filtros de excepciones → patron de errores
+  - Carpetas de modulos → cuales estan implementados vs scaffolding vacio
+  - Migraciones o esquemas de BD → tipo de IDs, soft delete
+
+  Si el snapshot supera 400 lineas: NO leerlo completo de corrido.
+  Saltar directamente a los bloques de cada archivo usando el arbol del PASO 1.
+
+PASO 3 — Con la informacion recopilada, actualizar los archivos de memoria:
 
 1. IA_Memoria/arquitectura.md
    - Estructura de Codigo/: listar cada subcarpeta encontrada, su contenido y tecnologia detectada
@@ -155,12 +172,20 @@ No inventes ni asumas nada que no este en el snapshot:
    - Reemplaza los pendientes de ejemplo con los reales del proyecto
 
 3. IA_Memoria/convenciones.md
-   - Confirma o corrige los patrones de naming detectados en el snapshot
-   - Deja [COMPLETAR] donde no puedas inferirlo del snapshot
+   - Detectar y documentar el formato real de respuesta API usado en los controllers
+     (campos exactos, estructura del objeto error, traceId, paginacion — lo que este en el codigo)
+   - Detectar la arquitectura de capas usada (Clean Architecture, N-capas, Vertical Slice, etc.)
+   - Detectar el patron de acceso a datos (Repository, DbContext directo, CQRS + MediatR, etc.)
+   - Detectar el patron de manejo de excepciones y validaciones
+   - Detectar la estructura de carpetas dentro de cada capa
+   - Confirmar o corregir los patrones de naming ya declarados en el archivo
+   - Deja [COMPLETAR] solo donde no puedas inferirlo del snapshot
 
 4. IA_Memoria/deuda-tecnica.md (solo si el proyecto tiene codigo existente)
-   - Si detectas antipatrones en el codigo (int secuenciales como IDs, DELETE directo
-     en tablas de negocio, response sin estructura estandar, credenciales hardcodeadas)
+   - Registrar antipatrones reales: IDs enteros secuenciales, DELETE directo en tablas de negocio,
+     credenciales hardcodeadas, endpoints que mezclan formatos de response distintos entre si
+   - NO registrar como deuda: que el formato de response sea distinto al ejemplo del template
+     (el formato real ya queda documentado en convenciones.md y es la fuente de verdad)
    - Agregar una entrada por cada antipatron siguiendo el formato del archivo
    - Si el proyecto esta vacio o el codigo sigue las convenciones: no agregar nada
 
