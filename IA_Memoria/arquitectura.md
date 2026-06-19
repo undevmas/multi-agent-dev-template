@@ -3,6 +3,10 @@
 > Mantener actualizado. El agente lee este archivo al inicio de cada sesión.
 > Es la fuente de verdad sobre qué hace cada parte del sistema.
 > Se completa la primera vez ejecutando repomix y el prompt de inspección.
+>
+> Si las secciones "Ruta raíz del proyecto" o "Mapa de rutas por capa" están en `[COMPLETAR]`,
+> volver a correr repomix antes de iniciar cualquier sesión de implementación.
+> Sin esos datos, el agente de implementación explorará el filesystem a ciegas.
 
 ---
 
@@ -16,10 +20,32 @@ asignación a responsables y generación de reportes ejecutivos."
 
 ---
 
+## Ruta raíz del proyecto
+
+> Campo crítico — el agente lo usa para acceder a cualquier archivo sin explorar.
+
+```
+Codigo/[COMPLETAR — nombre exacto de la carpeta del proyecto, ej: MiProyecto/]
+```
+
+Ruta completa al código fuente: `Codigo/[COMPLETAR]/src/` (o la que corresponda si no usa /src)
+
+---
+
+## Mapa de rutas por capa
+
+> El agente completa esta sección al correr repomix. Son las rutas reales desde la raíz del workspace.
+> Con este mapa, cualquier agente puede acceder a cualquier archivo sin explorar.
+
+| Capa | Ruta desde Codigo/ | Notas |
+|---|---|---|
+| [COMPLETAR] | [COMPLETAR] | — |
+
+---
+
 ## Estructura de Codigo/
 
-> El agente completa esta sección al correr repomix por primera vez.
-> Documentar cada carpeta que exista dentro de Codigo/ con su contenido y tecnología.
+> Resumen de carpetas de primer nivel dentro de Codigo/.
 
 | Carpeta en Codigo/ | Contenido | Tecnología detectada |
 |---|---|---|

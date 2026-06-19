@@ -95,6 +95,12 @@ Después de leer la spec, leer en este orden:
 
 Si alguno no existe, continuar con lo disponible y anotarlo.
 
+**Regla de navegación — no explorar si el dato ya está en memoria:**
+Si `arquitectura.md` tiene la sección "Ruta raíz del proyecto" y "Mapa de rutas por capa" completas,
+acceder directamente a los archivos usando esas rutas. No correr `ls`, `find` ni bash exploratorio
+salvo que un archivo específico no aparezca donde arquitectura.md indica.
+Explorar a ciegas consume contexto que se necesita para codificar.
+
 ---
 
 ## Paso 3 — Marcar in-progress y declarar el plan
@@ -122,6 +128,30 @@ Plan:
   4. Verificación: [mod].checks.md al terminar
 ```
 Si el dev no corrige el plan en 2 turnos, proceder.
+
+### Features largas — implementación por lotes
+
+Si el plan suma **más de 6 archivos** nuevos o modificados, ejecutar por capas.
+Completar y verificar cada capa antes de pasar a la siguiente:
+
+```
+Lote 1 — Dominio y contratos  (interfaces, entidades, value objects)
+Lote 2 — Infraestructura      (repositorios, migraciones, módulos DI)
+Lote 3 — API y servicios      (controllers, use cases, middlewares)
+Lote 4 — Config y cierre      (appsettings, checks.md, progreso)
+```
+
+Al terminar cada lote, anotar brevemente en el chat: "Lote N completo — [qué se hizo]".
+Esto crea puntos de recuperación visibles si el contexto se agota antes del final.
+
+**Si el contexto se agota a mitad de la implementación:**
+1. Completar el archivo que se esté editando en ese momento
+2. Marcar en `Features/[mod].checks.md` cuáles checks ya pasan (con evidencia)
+3. Agregar al final de `Features/[mod].md`:
+   ```
+   **Implementación pausada:** [lista de archivos pendientes]
+   ```
+4. El dev puede retomar con: `"Continúa la implementación de [mod] desde donde quedó"`
 
 ---
 

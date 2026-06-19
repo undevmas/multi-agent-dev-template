@@ -159,7 +159,11 @@ PASO 2 — Con el arbol como mapa, leer selectivamente solo las secciones utiles
 PASO 3 — Con la informacion recopilada, actualizar los archivos de memoria:
 
 1. IA_Memoria/arquitectura.md
-   - Estructura de Codigo/: listar cada subcarpeta encontrada, su contenido y tecnologia detectada
+   - Ruta raiz del proyecto: el nombre exacto de la carpeta dentro de Codigo/ donde vive el proyecto
+     (ej: si el arbol muestra "Codigo/MiApp/src/...", la raiz es "Codigo/MiApp/" y el src es "Codigo/MiApp/src/")
+   - Mapa de rutas por capa: para cada capa (Domain, Application, Infrastructure, API, etc.)
+     documentar su ruta completa desde Codigo/ para que cualquier agente pueda acceder sin explorar
+   - Estructura de Codigo/: subcarpetas de primer nivel con contenido y tecnologia detectada
    - Tecnologias y versiones reales detectadas
    - Modulos y servicios existentes con su estado actual
    - Puertos en docker-compose o archivos de configuracion
