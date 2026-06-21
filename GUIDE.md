@@ -13,8 +13,11 @@
 | **Gemini CLI** | `.gemini/GEMINI.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
 | **OpenCode** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
 | **Codex CLI** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
+| **Cursor** | `.cursor/rules/project.mdc` | ✅ Sí, automático | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto |
 | **GitHub Copilot** | `.github/copilot-instructions.md` | ✅ Sí, automático | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente |
 
+> **Nota Cursor:** las instrucciones base (`.cursor/rules/project.mdc`) se cargan automáticamente. Skills, specs y snapshots se adjuntan arrastrando el archivo al chat o usando `@archivo` en el prompt.
+>
 > **Nota Copilot:** las instrucciones base se cargan solas, pero todo archivo adicional (skills, specs, snapshots) debe adjuntarse explícitamente con `#file:ruta/archivo`. Los prompts de Copilot en esta guía ya incluyen los `#file:` necesarios.
 
 ---
@@ -123,6 +126,22 @@ No inventes ni asumas nada que no este en el snapshot:
    - Deja [COMPLETAR] donde no puedas inferirlo del snapshot
 ```
 
+**Cursor**
+
+Adjuntar el snapshot desde el chat (`@IA_Memoria/snapshots/snapshot-latest.md`) y pegar el mismo prompt de Claude Code / Gemini CLI:
+
+```
+@IA_Memoria/snapshots/snapshot-latest.md
+
+Lee el snapshot adjunto.
+Actualiza estos tres archivos con lo que encuentres en el snapshot.
+No inventes ni asumas nada que no esté en el snapshot:
+
+1. IA_Memoria/arquitectura.md
+2. IA_Memoria/progreso.md
+3. IA_Memoria/convenciones.md
+```
+
 **GitHub Copilot**
 
 Copilot no puede leer archivos por sí solo. Adjuntar manualmente:
@@ -203,6 +222,17 @@ Lee IA_Skill/SKILL-spec-generator.md y genera la spec de [nombre del módulo].
 Insumo: [adjunta el archivo o pega el texto aquí]
 ```
 
+**Cursor**
+
+Adjuntar la skill arrastrándola al contexto o con `@`:
+
+```
+@IA_Skill/SKILL-spec-generator.md
+
+Genera la spec de [nombre del módulo] siguiendo SKILL-spec-generator.md.
+Insumo: [adjunta el archivo con @ o pega el texto aquí]
+```
+
 **GitHub Copilot**
 
 Adjuntar la skill y el insumo manualmente:
@@ -261,6 +291,17 @@ Lee IA_Skill/SKILL-implementation.md e implementa Features/[mod]
 
 ```
 Lee IA_Skill/SKILL-implementation.md e implementa Features/[mod]
+```
+
+**Cursor**
+
+```
+@IA_Skill/SKILL-implementation.md
+@Features/[mod].md
+@Features/[mod].spec.md
+@Features/[mod].checks.md
+
+Implementa Features/[mod] siguiendo SKILL-implementation.md.
 ```
 
 **GitHub Copilot**
@@ -322,19 +363,19 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-27 skills organizadas por dominio. El agente lee solo la que corresponde a la tarea actual.
+33 skills organizadas por dominio. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
 | **Especificaciones** | `SKILL-spec-generator.md` |
 | **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` |
-| **Frontend** | `SKILL-frontend-design.md` · `SKILL-ui-ux-pro-max.md` · `SKILL-impeccable.md` · `SKILL-seo.md` |
+| **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
 | **Testing frontend** | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md` |
 | **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
 | **Seguridad** | `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
 | **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
-| **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` |
+| **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` |
 
 Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` antes del prompt.
 

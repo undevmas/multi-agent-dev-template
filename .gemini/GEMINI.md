@@ -63,12 +63,17 @@ Después de leer el snapshot, ANTES de codificar:
 
 | Situación | Skill |
 |---|---|
-| Componente visual (Angular/React) | IA_Skill/SKILL-frontend-design.md |
-| Formulario, flujo, UX avanzado | IA_Skill/SKILL-ui-ux-pro-max.md |
-| Code review o QA de código Angular/React | IA_Skill/SKILL-impeccable.md |
+| Componente reutilizable con variantes | IA_Skill/frontend-design/SKILL-component-patterns.md |
+| Tokens de diseño (color, espaciado, radio, sombras) | IA_Skill/frontend-design/SKILL-design-tokens.md |
+| Sistema tipográfico del proyecto | IA_Skill/frontend-design/SKILL-typography-system.md |
+| Layout, grid o sistema de espaciado | IA_Skill/frontend-design/SKILL-layout-spacing-system.md |
+| Identidad visual (paleta, radius, iconografía) | IA_Skill/frontend-design/SKILL-visual-identity-override.md |
+| Dark mode o theming (claro/oscuro, multi-tenant) | IA_Skill/frontend-design/SKILL-dark-mode-theming.md |
+| Diseño responsive o patrones PWA | IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md |
+| Animaciones o micro-interacciones | IA_Skill/frontend-design/SKILL-animation-microinteractions.md |
+| Accesibilidad (a11y / WCAG AA) | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
-| Página pública / SEO | IA_Skill/SKILL-seo.md |
 | Implementar feature con spec en estado `ready` | IA_Skill/SKILL-implementation.md |
 | Módulo completo full stack (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |

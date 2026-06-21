@@ -31,7 +31,8 @@ workspace/
 ├── AGENTS.md              ← OpenCode + Codex CLI (paridad con CLAUDE.md)
 ├── .gemini/GEMINI.md      ← Gemini CLI (versión media)
 ├── .github/copilot-instructions.md  ← Copilot (versión compacta, límite contexto)
-├── IA_Skill/              ← 27 skills técnicas
+├── .cursor/rules/project.mdc        ← Cursor (alwaysApply: true — agregado junio 2026)
+├── IA_Skill/              ← 33 skills técnicas (9 en frontend-design/)
 ├── IA_Memoria/            ← Estado del proyecto (templates vacíos)
 │   ├── arquitectura.md    ← Reescrito: genérico con [COMPLETAR], nueva sección "Estructura de Codigo/"
 │   ├── progreso.md
@@ -191,7 +192,10 @@ no relacionados rompe esa coherencia y hace el contexto del agente inútil.
 - [ ] **Skills faltantes:** Docker, Azure DevOps Pipelines
 - [ ] **Segundo ejemplo canónico** — `auth` está hecho, podría añadirse uno
       con Epic descompuesto en slices para mostrar ese flujo
-- [x] **README y GUIDE** — actualizados: Codigo/ es genérico, prompts de inspección apuntan solo al snapshot (sin inspección directa de Codigo/), conteo de skills corregido a 27
+- [x] **README y GUIDE** — actualizados: Codigo/ es genérico, prompts de inspección apuntan solo al snapshot, conteo de skills corregido
+- [x] **SKILL-pr-review-fixes.md** — agregada y ruteada en los 5 bridge files
+- [x] **Cursor bridge** — `.cursor/rules/project.mdc` creado (alwaysApply: true); agente y prompts agregados a GUIDE.md
+- [x] **frontend-design/** — nueva estrategia frontend: 9 skills especializadas en `IA_Skill/frontend-design/`. Skills antiguas (SKILL-frontend-design, SKILL-ui-ux-pro-max, SKILL-impeccable, SKILL-seo, DesignApple/) eliminadas. Routing actualizado en los 5 bridge files. Conteo de skills a 33.
 
 ---
 
