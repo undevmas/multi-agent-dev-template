@@ -9,15 +9,20 @@
 | Capa | Tecnología aprobada |
 |---|---|
 | Frontend | Angular 17+ · React 18+ |
-| Backend | .NET 8+ (C#) · NestJS 10+ (TypeScript) |
+| Backend | .NET 8+ (C#) · NestJS 10+ (TypeScript) · Python 3.11+ (FastAPI) — solo para tooling interno / scripts de reporting, no para apps de línea de negocio |
 | Base de datos | SQL Server 2019+ · PostgreSQL 15+ |
 | ORM / acceso a datos | Entity Framework Core · TypeORM · Prisma |
 | Autenticación | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
 | Contenedores | Docker · Docker Compose |
 | CI/CD | Azure DevOps Pipelines |
-| Testing unitario | xUnit (.NET) · Jest (TS/JS) |
+| Testing unitario | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
 | Testing E2E | Cypress |
 | Documentación API | Swagger / OpenAPI |
+
+> **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
+> `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
+> (`ado_reporte.py`). Reutiliza esa base en vez de .NET/NestJS. No usar Python
+> como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
 ---
 
@@ -74,6 +79,7 @@ Después de leer el snapshot, ANTES de codificar:
 | Accesibilidad (a11y / WCAG AA) | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
+| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md → IA_Skill/SKILL-animation-microinteractions.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 | Implementar feature con spec en estado `ready` | IA_Skill/SKILL-implementation.md |
 | Módulo completo full stack (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
@@ -85,9 +91,12 @@ Después de leer el snapshot, ANTES de codificar:
 | Patrones avanzados NestJS (CQRS, eventos, colas) | IA_Skill/SKILL-nestjs-patterns.md |
 | TypeScript estricto en NestJS | IA_Skill/SKILL-nestjs-clean-typescript.md |
 | Tests en NestJS (Jest + Supertest) | IA_Skill/SKILL-nestjs-test-frameworks.md |
+| Crear/modificar backend Python de ReporteadorV2 (router, service, cliente HTTP) | IA_Skill/SKILL-python-fastapi-best-practices.md |
+| Tests en el backend Python | IA_Skill/SKILL-python-test-frameworks.md |
 | Seguridad en Angular | IA_Skill/SKILL-security-angular.md |
 | Seguridad en .NET | IA_Skill/SKILL-security-dotnet.md |
 | Seguridad en NestJS | IA_Skill/SKILL-security-nestjs.md |
+| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
 | Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
 | Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
@@ -124,6 +133,12 @@ Si el código existente ya usa otra forma, registrarla en convenciones.md y usar
 - JWT en header: `Authorization: Bearer [token]`
 - Refresh token en cookie HttpOnly
 - Guard/middleware en TODOS los endpoints excepto login
+
+### Python (FastAPI — tooling interno)
+- El Dockerfile y docker-compose.yml son entregable obligatorio en todo proyecto FastAPI
+- Documentar los pasos de deploy en un README.md dentro de la carpeta del proyecto
+- El deploy real en la VM lo ejecuta el dev manualmente — el agente no hace push ni accede a servidores remotos
+- Frontend servido por FastAPI: HTML/JS vanilla únicamente — sin npm, sin build step, sin frameworks JS
 
 ---
 
@@ -162,3 +177,4 @@ Las convenciones del template no se adaptan al legado — se aplican donde es po
 - Cambiar tecnologías o instalar librerías fuera del stack aprobado
 - Modificar pipelines de CI/CD
 - Subir archivos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/`, `Insumos/` al repositorio
+- Ejecutar `docker build`, `docker push` ni acceder a servidores remotos

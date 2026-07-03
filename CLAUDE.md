@@ -12,15 +12,20 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
 | Capa | Tecnología aprobada |
 |---|---|
 | **Frontend** | Angular 17+ · React 18+ |
-| **Backend** | .NET 8+ (C#) · NestJS 10+ (TypeScript) |
+| **Backend** | .NET 8+ (C#) · NestJS 10+ (TypeScript) · Python 3.11+ (FastAPI) — solo para tooling interno / scripts de reporting, no para apps de línea de negocio |
 | **Base de datos** | SQL Server 2019+ · PostgreSQL 15+ |
 | **ORM / acceso a datos** | Entity Framework Core · TypeORM · Prisma |
 | **Autenticación** | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
 | **Contenedores** | Docker · Docker Compose |
 | **CI/CD** | Azure DevOps Pipelines |
-| **Testing unitario** | xUnit (.NET) · Jest (TS/JS) |
+| **Testing unitario** | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
 | **Testing E2E** | Cypress |
 | **Documentación API** | Swagger / OpenAPI |
+
+> **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
+> `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
+> (`ado_reporte.py`). Reutiliza esa base en vez de .NET/NestJS. No usar Python
+> como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
 ---
 
@@ -82,6 +87,7 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Implementar accesibilidad (a11y / WCAG AA) en componentes o pantallas | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Escribir tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
+| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md → IA_Skill/SKILL-animation-microinteractions.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 
 ### Backend .NET
 
@@ -101,6 +107,14 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Mejorar calidad o revisión de TypeScript en NestJS | IA_Skill/SKILL-nestjs-clean-typescript.md |
 | Escribir tests unitarios o de integración en NestJS | IA_Skill/SKILL-nestjs-test-frameworks.md |
 
+### Backend Python (FastAPI — solo tooling interno, ver nota de stack)
+
+| Situación | Skill a leer |
+|---|---|
+| Crear o modificar cualquier archivo del backend Python de ReporteadorV2 (router, service, cliente HTTP) | IA_Skill/SKILL-python-fastapi-best-practices.md |
+| Escribir tests unitarios o de integración en el backend Python | IA_Skill/SKILL-python-test-frameworks.md |
+| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
+
 ### Full Stack
 
 | Situación | Skill a leer |
@@ -116,6 +130,7 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Crear guard, interceptor o manejar tokens en Angular | IA_Skill/SKILL-security-angular.md |
 | Seguridad en cualquier endpoint o middleware .NET | IA_Skill/SKILL-security-dotnet.md |
 | Seguridad en cualquier endpoint, guard o pipe NestJS | IA_Skill/SKILL-security-nestjs.md |
+| Seguridad en el backend Python de ReporteadorV2 (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
 | Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
 
@@ -168,10 +183,17 @@ Si el código existente ya usa otra forma, registrarla en convenciones.md y usar
 - Refresh token en cookie HttpOnly
 - Proteger con guard/middleware TODOS los endpoints excepto login
 
+### Python (FastAPI — tooling interno)
+- El Dockerfile y docker-compose.yml son entregable obligatorio en todo proyecto FastAPI
+- Documentar los pasos de deploy en un README.md dentro de la carpeta del proyecto
+- El deploy real en la VM lo ejecuta el dev manualmente — el agente no hace push ni accede a servidores remotos
+- Frontend servido por FastAPI: HTML/JS vanilla únicamente — sin npm, sin build step, sin frameworks JS
+
 ---
 
 ## Estructura del workspace
 
+```
 workspace-proyecto/
 ├── Codigo/              ← ÚNICO que se versiona en GitHub / Azure DevOps
 │   └── [nombre-proyecto]/   ← estructura interna libre; rutas reales en IA_Memoria/arquitectura.md
@@ -181,6 +203,7 @@ workspace-proyecto/
 ├── Features/            ← Definición detallada de cada módulo
 ├── Issues/              ← Bugs y problemas registrados
 └── CLAUDE.md            ← Este archivo
+```
 
 No asumir estructura interna de Codigo/ — leer IA_Memoria/arquitectura.md.
 Las carpetas IA_Skill, IA_Memoria, Insumos, Features e Issues
@@ -229,6 +252,7 @@ No modificar el código existente, no falsificar la spec — consultar al dev.
 - Cambiar tecnologías o instalar librerías fuera del stack aprobado
 - Modificar pipelines de CI/CD
 - Subir archivos de las carpetas IA al repositorio git
+- Ejecutar docker build, docker push ni acceder a servidores remotos
 
 ---
 

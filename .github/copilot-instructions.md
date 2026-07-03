@@ -10,17 +10,18 @@ Si hay conflicto entre instrucciones, aplicar este orden:
 ## Stack aprobado (bloqueado)
 Usar solo:
 - Frontend: Angular 17+ o React 18+
-- Backend: .NET 8+ (C#) o NestJS 10+ (TypeScript)
+- Backend: .NET 8+ (C#) o NestJS 10+ (TypeScript) — Python 3.11+ (FastAPI) solo para tooling interno / scripts de reporting, no para apps de línea de negocio
 - Base de datos: SQL Server 2019+ o PostgreSQL 15+
 - ORM: Entity Framework Core, TypeORM, Prisma
 - Auth: JWT + Refresh Token, OAuth2, ASP.NET Identity
 - Contenedores: Docker, Docker Compose
 - CI/CD: Azure DevOps Pipelines
-- Testing unitario: xUnit (.NET), Jest (TS/JS)
+- Testing unitario: xUnit (.NET), Jest (TS/JS), pytest (Python)
 - Testing E2E: Cypress
 - API docs: Swagger/OpenAPI
 
 No sugerir ni instalar tecnologías fuera de este stack sin confirmación explícita.
+Python (FastAPI) se aprobó el 2026-07-02 solo para `Codigo/Reportes/` (ReporteadorV2) — no usarlo como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
 ## Protocolo de inicio (obligatorio)
 Antes de codificar, leer en este orden:
@@ -52,10 +53,12 @@ Mapa rápido:
 - Specs y especificaciones: SKILL-spec-generator.md
 - Frontend (diseño visual): frontend-design/SKILL-component-patterns.md, frontend-design/SKILL-design-tokens.md, frontend-design/SKILL-typography-system.md, frontend-design/SKILL-layout-spacing-system.md, frontend-design/SKILL-visual-identity-override.md, frontend-design/SKILL-dark-mode-theming.md, frontend-design/SKILL-responsive-pwa-patterns.md, frontend-design/SKILL-animation-microinteractions.md, frontend-design/SKILL-accessibility-a11y.md
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
+- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md → SKILL-animation-microinteractions.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
 - Backend .NET: SKILL-dotnet-best-practices.md, SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md
 - Backend NestJS: SKILL-nestjs-best-practices.md, SKILL-nestjs-clean-typescript.md, SKILL-nestjs-patterns.md, SKILL-nestjs-test-frameworks.md
+- Backend Python (FastAPI, solo tooling interno de ReporteadorV2): SKILL-python-fastapi-best-practices.md, SKILL-python-test-frameworks.md
 - Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
-- Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
+- Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-python.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
 - Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md
 - Soporte: SKILL-web-search.md, SKILL-caveman.md, SKILL-pr-review-fixes.md
 
@@ -74,6 +77,7 @@ Cuándo NO consultar skills:
 - Proteger todos los endpoints con guard/middleware excepto login
 - Migraciones versionadas para todo cambio de BD
 - IDs UUID/GUID (no enteros secuenciales)
+- Python (FastAPI, tooling interno): Dockerfile y docker-compose.yml obligatorios, deploy documentado en README.md dentro del proyecto, deploy real lo ejecuta el dev manualmente (el agente no hace push ni accede a servidores remotos), frontend servido por FastAPI en HTML/JS vanilla únicamente
 
 ## Política de código legado
 - Código nuevo: seguir convenciones del template al 100%, sin importar el entorno
@@ -87,6 +91,7 @@ Cuándo NO consultar skills:
 - Cambiar tecnologías o instalar librerías fuera del stack aprobado
 - Modificar pipelines de CI/CD
 - Incluir en commits archivos de IA_Skill, IA_Memoria, Features, Issues, Insumos
+- Ejecutar docker build, docker push o acceder a servidores remotos
 
 ## Contexto adicional
 Para detalles extendidos y excepciones, usar:
