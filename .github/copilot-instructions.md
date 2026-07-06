@@ -51,9 +51,9 @@ Consultar IA_Skill solo cuando la tarea lo requiera por dominio técnico.
 
 Mapa rápido:
 - Specs y especificaciones: SKILL-spec-generator.md
-- Frontend (diseño visual): frontend-design/SKILL-component-patterns.md, frontend-design/SKILL-design-tokens.md, frontend-design/SKILL-typography-system.md, frontend-design/SKILL-layout-spacing-system.md, frontend-design/SKILL-visual-identity-override.md, frontend-design/SKILL-dark-mode-theming.md, frontend-design/SKILL-responsive-pwa-patterns.md, frontend-design/SKILL-animation-microinteractions.md, frontend-design/SKILL-accessibility-a11y.md
+- Frontend (diseño visual): frontend-design/SKILL-component-patterns.md, frontend-design/SKILL-design-tokens.md, frontend-design/SKILL-typography-system.md, frontend-design/SKILL-layout-spacing-system.md, frontend-design/SKILL-visual-identity-override.md, frontend-design/SKILL-dark-mode-theming.md, frontend-design/SKILL-responsive-pwa-patterns.md, frontend-design/SKILL-animation-microinteractions.md, frontend-design/SKILL-accessibility-a11y.md, frontend-design/SKILL-gradient-accents.md (botones premium / mesh gradient hero, solo landing)
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
-- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md → SKILL-animation-microinteractions.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
+- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → frontend-design/SKILL-animation-microinteractions.md → frontend-design/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
 - Backend .NET: SKILL-dotnet-best-practices.md, SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md
 - Backend NestJS: SKILL-nestjs-best-practices.md, SKILL-nestjs-clean-typescript.md, SKILL-nestjs-patterns.md, SKILL-nestjs-test-frameworks.md
 - Backend Python (FastAPI, solo tooling interno de ReporteadorV2): SKILL-python-fastapi-best-practices.md, SKILL-python-test-frameworks.md

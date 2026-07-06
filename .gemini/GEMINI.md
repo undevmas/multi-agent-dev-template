@@ -73,13 +73,14 @@ Después de leer el snapshot, ANTES de codificar:
 | Sistema tipográfico del proyecto | IA_Skill/frontend-design/SKILL-typography-system.md |
 | Layout, grid o sistema de espaciado | IA_Skill/frontend-design/SKILL-layout-spacing-system.md |
 | Identidad visual (paleta, radius, iconografía) | IA_Skill/frontend-design/SKILL-visual-identity-override.md |
+| Botones/CTAs con gradiente premium, o hero tipo mesh gradient | IA_Skill/frontend-design/SKILL-gradient-accents.md — mesh gradient SOLO landing/marketing |
 | Dark mode o theming (claro/oscuro, multi-tenant) | IA_Skill/frontend-design/SKILL-dark-mode-theming.md |
 | Diseño responsive o patrones PWA | IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md |
 | Animaciones o micro-interacciones | IA_Skill/frontend-design/SKILL-animation-microinteractions.md |
 | Accesibilidad (a11y / WCAG AA) | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
-| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md → IA_Skill/SKILL-animation-microinteractions.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
+| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 | Implementar feature con spec en estado `ready` | IA_Skill/SKILL-implementation.md |
 | Módulo completo full stack (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
