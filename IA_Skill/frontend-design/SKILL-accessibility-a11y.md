@@ -5,7 +5,7 @@ description: >
   dashboards: ARIA semántico, navegación por teclado, focus management, contraste
   de color, y patrones para formularios, modales y notificaciones. Úsala para
   que la IA genere componentes accesibles por defecto, no como afterthought.
-stack: Angular 17+ · React 18+ · ARIA · WCAG 2.1 AA
+stack: Angular 17+ (@angular/cdk/a11y) · React 18+ (Radix UI) · ARIA · WCAG 2.1 AA
 contexts: PWA · Dashboard · Admin panel · Formularios · Modales
 ---
 
@@ -107,49 +107,62 @@ function MultiStepFlow({ step }: { step: number }) {
 
 ### Focus trap en modales y dialogs
 
+**Angular: usar `@angular/cdk/a11y`, no reconstruirlo a mano.** El CDK ya
+resuelve el trap de foco, el manejo de Shift+Tab en los bordes, y el
+retorno de foco al cerrar — con los edge cases de teclado ya cubiertos.
+Ver `SKILL-approved-libraries.md` para el resto de directivas de este
+paquete (`LiveAnnouncer`, `FocusMonitor`).
+
 ```typescript
-// Angular — directive de focus trap
-@Directive({ selector: '[appFocusTrap]', standalone: true })
-export class FocusTrapDirective implements AfterViewInit, OnDestroy {
-  private el = inject(ElementRef<HTMLElement>);
-  private previouslyFocused: HTMLElement | null = null;
+// Angular — cdkTrapFocus (import { A11yModule } from '@angular/cdk/a11y')
+@Component({
+  selector: 'app-modal',
+  standalone: true,
+  imports: [A11yModule],
+  template: `
+    <div class="modal" cdkTrapFocus cdkTrapFocusAutoCapture role="dialog" aria-modal="true">
+      <ng-content></ng-content>
+    </div>
+  `,
+})
+export class ModalComponent {}
+```
 
-  private get focusableElements(): HTMLElement[] {
-    return Array.from(this.el.nativeElement.querySelectorAll(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
-      'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    ));
+`cdkTrapFocusAutoCapture` enfoca automáticamente el primer elemento al
+montar y devuelve el foco al elemento que abrió el modal al destruirse —
+es el mismo comportamiento que antes había que escribir a mano.
+
+```typescript
+// Angular — anunciar cambios dinámicos a lectores de pantalla
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+
+@Component({ /* ... */ })
+export class BugsTableComponent {
+  private announcer = inject(LiveAnnouncer);
+
+  onGuardar() {
+    this.announcer.announce('Resumen actualizado');
   }
-
-  ngAfterViewInit() {
-    this.previouslyFocused = document.activeElement as HTMLElement;
-    // Enfocar primer elemento del modal
-    this.focusableElements[0]?.focus();
-    this.el.nativeElement.addEventListener('keydown', this.handleKeydown);
-  }
-
-  ngOnDestroy() {
-    // Devolver foco al elemento que abrió el modal
-    this.previouslyFocused?.focus();
-    this.el.nativeElement.removeEventListener('keydown', this.handleKeydown);
-  }
-
-  private handleKeydown = (e: KeyboardEvent) => {
-    if (e.key !== 'Tab') return;
-    const elements = this.focusableElements;
-    const first = elements[0];
-    const last = elements[elements.length - 1];
-
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  };
 }
 ```
+
+```typescript
+// Angular — anillo de foco solo cuando el origen es teclado, no mouse
+import { FocusMonitor } from '@angular/cdk/a11y';
+
+@Directive({ selector: '[appFocusRing]', standalone: true })
+export class FocusRingDirective implements OnInit, OnDestroy {
+  private el = inject(ElementRef);
+  private monitor = inject(FocusMonitor);
+  ngOnInit() { this.monitor.monitor(this.el); }
+  ngOnDestroy() { this.monitor.stopMonitoring(this.el); }
+}
+```
+
+React: el equivalente es `FocusTrap` de Radix (`@radix-ui/react-focus-scope`)
+o el manejo nativo que ya traen los primitivos de Radix (`Dialog`,
+`AlertDialog`) — no requiere una directiva separada, el propio componente
+Radix ya lo resuelve al usarlo.
 
 ---
 

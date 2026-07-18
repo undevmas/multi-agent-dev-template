@@ -1,4 +1,4 @@
-param(
+﻿param(
     # "all" escanea Codigo/ completo; cualquier otro valor escanea Codigo/<Target>/
     [string]$Target = "all",
     [switch]$Full,
@@ -8,6 +8,15 @@ param(
 # mediante git.includeDiffs y git.includeLogs - no hay flags CLI equivalentes en repomix.
 
 $ErrorActionPreference = "Stop"
+
+# Fix de encoding — PowerShell (sobre todo 5.1, el que trae Windows por
+# default) no usa UTF-8 para la salida de consola salvo que se fuerce.
+# Sin esto, los acentos/ñ de los mensajes [INFO]/[WARN] y del prompt final
+# se ven mal (mojibake) aunque el contenido generado sea correcto — es
+# puramente visual en la terminal, no afecta el snapshot ni el prompt copiado.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $CodigoDir = Join-Path $RootDir "Codigo"
@@ -58,13 +67,25 @@ function Invoke-RepomixScan {
 
     # Siempre pasar directorio y output explícito para todos los targets
     $npxArgs = @($repomixArgsBase) + @($SourcePath, "--output", $OutputPath)
+    $tempConfigPath = $null
 
     if (Test-Path $ConfigPath) {
-        # Heredar style, compress, ignore patterns y security-check del config
-        $npxArgs += @("--config", $ConfigPath)
-        # Respetar --full / --no-compress del usuario sobre lo que define el config
+        # Heredar style, ignore patterns y security-check del config.
+        # NOTA: Repomix no tiene un flag CLI --no-compress (verificado contra
+        # cliRun.ts del repo oficial) — --compress es opt-in y no es negable.
+        # Si se pide --Full/--NoCompress y el config trae compress:true, se
+        # genera un config temporal con compress:false en vez de un flag
+        # que no existe.
         if (-not $compressEnabled) {
-            $npxArgs += "--no-compress"
+            $tempConfigPath = Join-Path ([System.IO.Path]::GetTempPath()) "repomix-config-$([guid]::NewGuid().ToString('N')).json"
+            $cfg = Get-Content $ConfigPath -Raw | ConvertFrom-Json
+            if (-not $cfg.output) { $cfg | Add-Member -MemberType NoteProperty -Name output -Value ([pscustomobject]@{}) }
+            $cfg.output.compress = $false
+            $cfg | ConvertTo-Json -Depth 10 | Set-Content -Path $tempConfigPath -Encoding UTF8
+            $npxArgs += @("--config", $tempConfigPath)
+        }
+        else {
+            $npxArgs += @("--config", $ConfigPath)
         }
     }
     else {
@@ -84,6 +105,9 @@ function Invoke-RepomixScan {
     }
     finally {
         Pop-Location
+        if ($tempConfigPath -and (Test-Path $tempConfigPath)) {
+            Remove-Item $tempConfigPath -Force -ErrorAction SilentlyContinue
+        }
     }
 
     if (-not (Test-Path $OutputPath)) {

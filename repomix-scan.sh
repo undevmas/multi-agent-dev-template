@@ -50,13 +50,27 @@ invoke_scan() {
 
   # Siempre pasar directorio y output explícito para todos los targets
   local args=("repomix@latest" "$source_path" "--output" "$output_path")
+  local local_config_path=""
 
   if [[ -f "$CONFIG_PATH" ]]; then
-    # Heredar style, compress, ignore patterns y security-check del config
-    args+=("--config" "$CONFIG_PATH")
-    # Respetar --full / --no-compress del usuario sobre lo que define el config
+    # Heredar style, ignore patterns y security-check del config.
+    # NOTA: Repomix no tiene un flag CLI --no-compress (verificado contra
+    # cliRun.ts del repo oficial) — --compress es opt-in y no es negable.
+    # Si el usuario pide --full/--no-compress y el config trae compress:true,
+    # se genera un config temporal con compress:false en vez de intentar
+    # pasar un flag que no existe.
     if [[ "$compress_enabled" == false ]]; then
-      args+=("--no-compress")
+      local_config_path="$(mktemp -t repomix-config-XXXXXX.json)"
+      node -e "
+        const fs = require('fs');
+        const cfg = JSON.parse(fs.readFileSync('$CONFIG_PATH', 'utf8'));
+        cfg.output = cfg.output || {};
+        cfg.output.compress = false;
+        fs.writeFileSync('$local_config_path', JSON.stringify(cfg, null, 2));
+      "
+      args+=("--config" "$local_config_path")
+    else
+      args+=("--config" "$CONFIG_PATH")
     fi
   else
     args+=("--style" "markdown")
@@ -74,6 +88,10 @@ invoke_scan() {
     cd "$CODIGO_DIR"
     npx "${args[@]}"
   )
+
+  if [[ -n "$local_config_path" && -f "$local_config_path" ]]; then
+    rm -f "$local_config_path"
+  fi
 
   if [[ ! -f "$output_path" ]]; then
     echo "[ERROR] No se genero el snapshot esperado: $output_path"

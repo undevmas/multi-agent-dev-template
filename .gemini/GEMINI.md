@@ -73,6 +73,8 @@ Después de leer el snapshot, ANTES de codificar:
 | Sistema tipográfico del proyecto | IA_Skill/frontend-design/SKILL-typography-system.md |
 | Layout, grid o sistema de espaciado | IA_Skill/frontend-design/SKILL-layout-spacing-system.md |
 | Identidad visual (paleta, radius, iconografía) | IA_Skill/frontend-design/SKILL-visual-identity-override.md |
+| Librería de terceros aprobada (antes de instalar dependencias) | IA_Skill/SKILL-approved-libraries.md |
+| Tabla server-side Angular (paginación/sort) | IA_Skill/frontend-design/SKILL-angular-data-table-pattern.md |
 | Botones/CTAs con gradiente premium, o hero tipo mesh gradient | IA_Skill/frontend-design/SKILL-gradient-accents.md — mesh gradient SOLO landing/marketing |
 | Dark mode o theming (claro/oscuro, multi-tenant) | IA_Skill/frontend-design/SKILL-dark-mode-theming.md |
 | Diseño responsive o patrones PWA | IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md |
