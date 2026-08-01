@@ -3,12 +3,13 @@ set -euo pipefail
 
 TARGET="${1:-all}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CODIGO_DIR="$ROOT_DIR/Codigo"
-SNAPSHOTS_DIR="$ROOT_DIR/IA_Memoria/snapshots"
-CONFIG_PATH="$CODIGO_DIR/repomix.config.json"
+
+# shellcheck source=./repomix-lib.sh
+source "$ROOT_DIR/repomix-lib.sh"
 
 FULL=false
 NO_COMPRESS=false
+STACK=""
 # Nota: el contexto git (diffs y logs) se controla en repomix.config.json
 # mediante git.includeDiffs y git.includeLogs — no hay flags CLI equivalentes en repomix.
 
@@ -16,12 +17,11 @@ for arg in "$@"; do
   case "$arg" in
     --full) FULL=true ;;
     --no-compress) NO_COMPRESS=true ;;
+    --stack=*) STACK="${arg#--stack=}" ;;
   esac
 done
 
-info() { echo "[INFO] $1"; }
-warn() { echo "[WARN] $1"; }
-ok() { echo "[OK]   $1"; }
+init_repomix_context "$ROOT_DIR"
 
 if [[ ! -d "$CODIGO_DIR" ]]; then
   warn "No se encontro la carpeta Codigo/."
@@ -33,107 +33,41 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 1
 fi
 
-mkdir -p "$SNAPSHOTS_DIR"
-
-compress_enabled=true
-if [[ "$NO_COMPRESS" == true || "$FULL" == true ]]; then
-  compress_enabled=false
-fi
-
-timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-
-invoke_scan() {
-  local source_path="$1"
-  local output_path="$2"
-  local label="$3"
-  local ignore_patterns="${4:-}"
-
-  # Siempre pasar directorio y output explícito para todos los targets
-  local args=("repomix@latest" "$source_path" "--output" "$output_path")
-  local local_config_path=""
-
-  if [[ -f "$CONFIG_PATH" ]]; then
-    # Heredar style, ignore patterns y security-check del config.
-    # NOTA: Repomix no tiene un flag CLI --no-compress (verificado contra
-    # cliRun.ts del repo oficial) — --compress es opt-in y no es negable.
-    # Si el usuario pide --full/--no-compress y el config trae compress:true,
-    # se genera un config temporal con compress:false en vez de intentar
-    # pasar un flag que no existe.
-    if [[ "$compress_enabled" == false ]]; then
-      local_config_path="$(mktemp -t repomix-config-XXXXXX.json)"
-      node -e "
-        const fs = require('fs');
-        const cfg = JSON.parse(fs.readFileSync('$CONFIG_PATH', 'utf8'));
-        cfg.output = cfg.output || {};
-        cfg.output.compress = false;
-        fs.writeFileSync('$local_config_path', JSON.stringify(cfg, null, 2));
-      "
-      args+=("--config" "$local_config_path")
-    else
-      args+=("--config" "$CONFIG_PATH")
-    fi
-  else
-    args+=("--style" "markdown")
-    if [[ "$compress_enabled" == true ]]; then
-      args+=("--compress")
-    fi
-  fi
-
-  if [[ -n "$ignore_patterns" ]]; then
-    args+=("--ignore" "$ignore_patterns")
-  fi
-
-  info "Escaneando $label ..."
-  (
-    cd "$CODIGO_DIR"
-    npx "${args[@]}"
-  )
-
-  if [[ -n "$local_config_path" && -f "$local_config_path" ]]; then
-    rm -f "$local_config_path"
-  fi
-
-  if [[ ! -f "$output_path" ]]; then
-    echo "[ERROR] No se genero el snapshot esperado: $output_path"
-    exit 1
-  fi
-
-  local size_bytes
-  size_bytes="$(wc -c < "$output_path" | xargs)"
-  local meta_path="${output_path%.md}.meta.json"
-
-  cat > "$meta_path" <<EOF
-{
-  "label": "$label",
-  "generatedAt": "$timestamp",
-  "source": "$source_path",
-  "output": "$output_path",
-  "compress": $compress_enabled,
-  "sizeBytes": $size_bytes
-}
-EOF
-
-  ok "Snapshot: $output_path"
-  ok "Meta: $meta_path"
-}
-
 has_code="$(find "$CODIGO_DIR" -mindepth 1 -not -name ".gitignore" | head -n 1 || true)"
 if [[ -z "$has_code" ]]; then
   warn "Codigo/ esta vacio. Agrega codigo y vuelve a ejecutar."
   exit 0
 fi
 
+is_full_scan=false
 if [[ "$TARGET" == "all" || "$TARGET" == "--all" || "$TARGET" == "" ]]; then
+  is_full_scan=true
   invoke_scan "." "$SNAPSHOTS_DIR/snapshot-latest.md" "codigo-completo"
+  snapshot_rel_path="IA_Memoria/snapshots/snapshot-latest.md"
 else
   TARGET="${TARGET#--}"
-  if [[ ! -d "$CODIGO_DIR/$TARGET" ]]; then
-    warn "No existe Codigo/$TARGET/."
+
+  # Alias de conveniencia para layouts planos (Codigo/<tech>/ directo).
+  # Si $TARGET no matchea ningun alias, se trata como ruta arbitraria
+  # relativa a Codigo/, usando --stack=<nombre> para el ignore correcto
+  # si se especifico.
+  relative_path="$TARGET"
+  effective_stack="$STACK"
+  case "$TARGET" in
+    backend-net)    relative_path="backend-net";      [[ -z "$effective_stack" ]] && effective_stack="dotnet" ;;
+    backend-nestjs) relative_path="backend-nestjs";   [[ -z "$effective_stack" ]] && effective_stack="nestjs" ;;
+    frontend)       relative_path="frontend-angular"; [[ -z "$effective_stack" ]] && effective_stack="angular" ;;
+  esac
+
+  if [[ ! -d "$CODIGO_DIR/$relative_path" ]]; then
+    warn "No existe Codigo/$relative_path/."
     exit 0
   fi
-  safe_name="${TARGET//[^a-zA-Z0-9_-]/-}"
-  ignore_all="**/bin/**,**/obj/**,**/*.user,**/.vs/**,**/node_modules/**,**/dist/**,**/build/**,**/.angular/**,**/coverage/**"
-  invoke_scan "$TARGET" "$SNAPSHOTS_DIR/snapshot-${safe_name}.md" "$TARGET" "$ignore_all"
+
+  ignore_all="$(get_stack_ignore "$effective_stack")"
+  safe_name="$(get_safe_name "$TARGET")"
+  invoke_scan "$relative_path" "$SNAPSHOTS_DIR/snapshot-${safe_name}.md" "$TARGET" "$ignore_all"
+  snapshot_rel_path="IA_Memoria/snapshots/snapshot-${safe_name}.md"
 fi
 
 echo ""
@@ -141,8 +75,10 @@ echo "================================================================"
 echo "  PROMPT DE INSPECCION — copiar y pegar en tu agente IA"
 echo "================================================================"
 echo ""
-cat <<'PROMPT'
-Lee IA_Memoria/snapshots/snapshot-latest.md usando lectura estrategica por secciones:
+
+if [[ "$is_full_scan" == true ]]; then
+cat <<PROMPT
+Lee $snapshot_rel_path usando lectura estrategica por secciones:
 
 PASO 1 — Leer las primeras 300 lineas del snapshot.
   Repomix siempre coloca el arbol de archivos y el resumen de tokens al inicio.
@@ -198,10 +134,38 @@ PASO 3 — Con la informacion recopilada, actualizar los archivos de memoria:
    - Agregar una entrada por cada antipatron siguiendo el formato del archivo
    - Si el proyecto esta vacio o el codigo sigue las convenciones: no agregar nada
 
+5. IA_Memoria/modulos.json (crear si no existe, o sobreescribir con lo detectado)
+   - Un objeto { "generatedAt": "...", "modules": [...] } con un entry por cada modulo/microservicio real
+     detectado en el arbol (name, path relativo a Codigo/, stack: dotnet | nestjs | angular | react | python-fastapi)
+   - Este archivo es el que usa repomix-scan-modules.ps1/.sh para escanear un modulo a la vez —
+     mantenlo sincronizado con lo que declares en arquitectura.md
+
 Al terminar, reporta: cuantos modulos encontraste implementados,
-que tecnologias detectaste y si hay alguna inconsistencia con
-lo que ya estaba declarado en los archivos de memoria.
+que tecnologias detectaste, si hay alguna inconsistencia con
+lo que ya estaba declarado en los archivos de memoria,
+y si registraste deuda tecnica (si/no y cuantas entradas).
 PROMPT
+else
+cat <<PROMPT
+Lee $snapshot_rel_path usando lectura estrategica por secciones (arbol + resumen de tokens
+al inicio, luego solo las secciones utiles: .csproj/package.json, controllers/endpoints,
+middleware/manejo de errores, migraciones).
+
+Este es un scan de un modulo especifico ($TARGET), no del proyecto completo. Al actualizar memoria:
+- IA_Memoria/arquitectura.md: actualiza SOLO la seccion de este modulo (ruta, tecnologia, estado),
+  sin tocar ni asumir el estado de otros modulos que no fueron escaneados.
+- IA_Memoria/progreso.md: marca [x] los features de este modulo que ya existan en el codigo.
+- IA_Memoria/convenciones.md: si este modulo revela un patron nuevo o inconsistente con lo ya
+  documentado, agregalo o senala la inconsistencia — no lo generalices a otros modulos sin evidencia.
+- IA_Memoria/deuda-tecnica.md: registra antipatrones reales encontrados en este modulo.
+- IA_Memoria/modulos.json: si no existe todavia, no lo generes a partir de este scan parcial
+  (necesita ver el proyecto completo) — sugiere correr \`./repomix-scan.sh all\` primero.
+
+Reporta: que encontraste en este modulo especificamente y si hay
+inconsistencias con lo que ya estaba declarado en los archivos de memoria.
+PROMPT
+fi
+
 echo ""
 echo "================================================================"
 echo ""

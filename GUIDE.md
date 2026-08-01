@@ -55,31 +55,62 @@ El snapshot le da al agente una foto comprimida de todo el código.
 Sin él, el agente adivina. Con él, parte de lo que realmente existe.
 
 ```powershell
-# Windows — snapshot completo
-.\repomix-scan.ps1
+# Windows — snapshot completo (bootstrap: genera tambien IA_Memoria/modulos.json)
+.\repomix-scan.ps1 -Target all
 
-# Solo un módulo (más rápido si la tarea es acotada)
-.\repomix-scan.ps1 -Target backend-net
-.\repomix-scan.ps1 -Target backend-nestjs
-.\repomix-scan.ps1 -Target frontend
+# Un modulo puntual: acepta cualquier ruta relativa a Codigo/, no solo los alias de abajo
+.\repomix-scan.ps1 -Target "MiApp/src/Gateway" -Stack dotnet
+.\repomix-scan.ps1 -Target backend-net      # alias de conveniencia (Codigo/backend-net/, stack dotnet)
+.\repomix-scan.ps1 -Target backend-nestjs   # alias (Codigo/backend-nestjs/, stack nestjs)
+.\repomix-scan.ps1 -Target frontend         # alias (Codigo/frontend-angular/, stack angular)
 .\repomix-scan.ps1 -Full   # sin compresión, máxima fidelidad
 ```
 
 ```bash
 # Linux / macOS
-./repomix-scan.sh
+./repomix-scan.sh all
+./repomix-scan.sh "MiApp/src/Gateway" --stack=dotnet
 ./repomix-scan.sh backend-net
 ./repomix-scan.sh backend-nestjs
 ./repomix-scan.sh frontend
 ./repomix-scan.sh --full
 ```
 
-El snapshot se guarda en `IA_Memoria/snapshots/snapshot-latest.md`.
+Stacks soportados en `-Stack`/`--stack`: `dotnet` · `nestjs` · `angular` · `react` · `python-fastapi`.
+Cada uno trae su propio preset de ignore (bin/obj, node_modules, .venv, etc.) — sin `-Stack`, se usa un preset genérico que cubre todos.
 
-**Cuándo regenerar:** primera sesión, tarea que toca más de un módulo, snapshot con más de 7 días.
-**Cuándo omitir:** fix puntual en un archivo conocido, cambio de texto, ajuste de config aislado.
+El snapshot se guarda en `IA_Memoria/snapshots/snapshot-latest.md` (o `snapshot-<módulo>.md` para un target puntual).
+
+**Cuándo regenerar completo (`-Target all`):** primera sesión, refactor amplio, o cuando cambió la estructura de módulos.
+**Cuándo escanear un módulo puntual:** la tarea toca 1-2 módulos conocidos — evita empaquetar todo el monorepo por un cambio acotado.
+**Cuándo omitir cualquier scan:** fix puntual en un archivo ya conocido, cambio de texto, ajuste de config aislado.
 
 > Requisito: Node.js 18+ instalado (Repomix corre vía `npx` sin instalación previa).
+
+### Escaneo dirigido por módulo (proyectos con varios servicios)
+
+Si el proyecto tiene varios módulos/microservicios (ej. un monorepo `src/Gateway`, `src/Identity`, `src/Catalogo`...),
+correr `-Target all` cada vez es desperdiciar contexto en módulos que la tarea actual no toca. Después del primer
+bootstrap (`-Target all`), el agente deja un manifest en `IA_Memoria/modulos.json` con el nombre, ruta y stack de
+cada módulo real detectado. A partir de ahí, usa el orquestador para escanear solo lo que necesitas:
+
+```powershell
+# Windows — todos los módulos del manifest, uno por uno (no un solo blob gigante)
+.\repomix-scan-modules.ps1
+
+# Solo los módulos relevantes para la tarea de hoy
+.\repomix-scan-modules.ps1 -Modules Gateway,Identity
+```
+
+```bash
+# Linux / macOS
+./repomix-scan-modules.sh
+./repomix-scan-modules.sh --modules=Gateway,Identity
+```
+
+El script genera un snapshot por módulo seleccionado y un solo prompt de inspección consolidado, con guía de
+lectura específica según el stack de cada módulo. Si `IA_Memoria/modulos.json` no existe todavía, el script lo indica
+y sugiere correr `-Target all` primero.
 
 ---
 
@@ -95,6 +126,8 @@ El agente leerá el snapshot para llenar automáticamente:
 | `IA_Memoria/arquitectura.md` | Tecnologías detectadas, módulos, puertos, variables de entorno |
 | `IA_Memoria/progreso.md` | Qué módulos existen y cuáles están pendientes |
 | `IA_Memoria/convenciones.md` | Patrones de naming encontrados en el código real |
+| `IA_Memoria/deuda-tecnica.md` | Antipatrones reales detectados (solo si el proyecto ya tiene código) |
+| `IA_Memoria/modulos.json` | Manifest de módulos (nombre, ruta, stack) — lo consume `repomix-scan-modules` |
 
 Esto evita que el agente te haga preguntas de arranque en cada sesión.
 Si el proyecto está vacío, el agente lo indica — no inventa estructura.
@@ -124,7 +157,16 @@ No inventes ni asumas nada que no este en el snapshot:
 3. IA_Memoria/convenciones.md
    - Confirma o corrige los patrones de naming detectados en el snapshot
    - Deja [COMPLETAR] donde no puedas inferirlo del snapshot
+
+4. IA_Memoria/deuda-tecnica.md (solo si el proyecto tiene codigo existente)
+   - Registra antipatrones reales: IDs secuenciales, DELETE directo, credenciales hardcodeadas, etc.
+
+5. IA_Memoria/modulos.json
+   - { "generatedAt": "...", "modules": [{ "name", "path", "stack" }, ...] } — un entry por modulo/microservicio real
 ```
+
+> Nota: el bloque de arriba es la versión resumida. El propio `repomix-scan.ps1`/`.sh` imprime el prompt completo
+> y actualizado al terminar cada scan — cuando difieran, el que imprime el script es la fuente de verdad.
 
 **Cursor**
 
@@ -134,12 +176,14 @@ Adjuntar el snapshot desde el chat (`@IA_Memoria/snapshots/snapshot-latest.md`) 
 @IA_Memoria/snapshots/snapshot-latest.md
 
 Lee el snapshot adjunto.
-Actualiza estos tres archivos con lo que encuentres en el snapshot.
+Actualiza estos archivos con lo que encuentres en el snapshot.
 No inventes ni asumas nada que no esté en el snapshot:
 
 1. IA_Memoria/arquitectura.md
 2. IA_Memoria/progreso.md
 3. IA_Memoria/convenciones.md
+4. IA_Memoria/deuda-tecnica.md
+5. IA_Memoria/modulos.json
 ```
 
 **GitHub Copilot**
@@ -150,12 +194,14 @@ Copilot no puede leer archivos por sí solo. Adjuntar manualmente:
 #file:IA_Memoria/snapshots/snapshot-latest.md
 
 Inspecciona el snapshot adjunto.
-Actualiza los tres archivos de memoria con lo que encuentres en el snapshot.
+Actualiza los archivos de memoria con lo que encuentres en el snapshot.
 No inventes ni asumas nada que no esté en el snapshot:
 
 1. IA_Memoria/arquitectura.md — tecnologías, módulos, puertos, variables de entorno
 2. IA_Memoria/progreso.md — marca solo lo que realmente exista en el snapshot
 3. IA_Memoria/convenciones.md — patrones de naming detectados en el snapshot
+4. IA_Memoria/deuda-tecnica.md — antipatrones reales (solo si hay código existente)
+5. IA_Memoria/modulos.json — manifest {name, path, stack} por módulo/microservicio real
 ```
 
 ---
@@ -343,10 +389,12 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 ```
 1. Código en Codigo/
            ↓
-2. .\repomix-scan.ps1  (o ./repomix-scan.sh)
+2. .\repomix-scan.ps1 -Target all  (o ./repomix-scan.sh all)  ← primera vez o refactor amplio
            ↓
 3. Copiar prompt de inspección → pegar en el agente
-   → agente llena IA_Memoria/ (arquitectura, progreso, convenciones)
+   → agente llena IA_Memoria/ (arquitectura, progreso, convenciones, deuda-tecnica, modulos.json)
+           ↓
+   [tareas siguientes acotadas a 1-2 módulos → .\repomix-scan-modules.ps1 -Modules X,Y en vez de repetir el paso 2]
            ↓
 4. Entregar insumo al agente spec
    → "Lee IA_Skill/SKILL-spec-generator.md y genera la spec de [módulo]"

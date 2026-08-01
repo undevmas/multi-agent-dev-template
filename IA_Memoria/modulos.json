@@ -1,0 +1,5 @@
+{
+  "_nota": "Este archivo se genera/actualiza automaticamente como parte del PASO 3 del prompt de inspeccion (repomix-scan.ps1/.sh -Target all). Lo usa repomix-scan-modules.ps1/.sh para escanear un modulo especifico a la vez sin re-empaquetar todo Codigo/.",
+  "generatedAt": null,
+  "modules": []
+}
