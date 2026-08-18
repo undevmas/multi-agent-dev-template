@@ -52,12 +52,12 @@ para prevenir.
 
 | # | Categoría | Skill / acción |
 |---|---|---|
-| 1 | Dependencias (SCA) | Ejecutar el scanner del stack detectado (ver Paso 1), luego `SKILL-dependency-vulnerability-triage.md` |
-| 2 | SAST / código propio | Si el stack está en la tabla aprobada: `SKILL-security-{angular,dotnet,nestjs,python}.md`. Si no: `SKILL-legacy-stack-security-baseline.md` |
-| 3 | Secretos | `SKILL-secrets-scanning.md` |
-| 4 | OWASP (revisión general) | `SKILL-security-owasp-checklist.md` |
-| 5 | Testing / cobertura | Correr el comando de cobertura del stack (`npm test -- --coverage`, `dotnet test /p:CollectCoverage=true`, `pytest --cov`), reportar el número real — nunca asumir cobertura sin dato |
-| 6 | Accesibilidad (solo frontend) | `SKILL-accessibility-a11y.md`. Si el proyecto no tiene frontend: estado "No aplica" (distinto de "no evaluado" — aquí sí se determinó que la categoría no corresponde) |
+| 1 | Dependencias (SCA) | Trivy (`Tools/`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`), luego `SKILL-dependency-vulnerability-triage.md` |
+| 2 | SAST / código propio | Semgrep + SonarQube (`Tools/`) para el hallazgo bruto. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
+| 3 | Secretos | Gitleaks (`Tools/`), triage con `SKILL-secrets-scanning.md` |
+| 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, ataque real si la app está corriendo) + `SKILL-security-owasp-checklist.md` para interpretar |
+| 5 | Testing / cobertura | Correr el comando de cobertura del stack (`npm test -- --coverage`, `dotnet test /p:CollectCoverage=true`, `pytest --cov`) — importable a SonarQube si se desea, pero el número real es lo que se reporta, nunca se asume |
+| 6 | Accesibilidad (solo frontend) | pa11y (`Tools/`, requiere la app corriendo) para el hallazgo real, `SKILL-accessibility-a11y.md` para interpretar/priorizar. Si el proyecto no tiene frontend: estado "No aplica" (distinto de "no evaluado") |
 | 7 | Rendimiento | **NO EVALUADO — sin skill de referencia** |
 | 8 | Observabilidad | **NO EVALUADO — sin skill de referencia** |
 | 9 | CI/CD (Azure DevOps) | **NO EVALUADO — sin skill de referencia** |
@@ -71,43 +71,117 @@ complementa.
 
 ---
 
-## Paso 1 — Detectar el stack y ejecutar los scanners
+## Paso 1 — Verificar las herramientas de `Tools/` antes de analizar
 
 Leer `IA_Memoria/arquitectura.md` primero para saber el stack real del
 proyecto (no asumir Angular/.NET solo porque es el default del template).
 
-Para cada scanner, intentar ejecutarlo vía bash. Si el comando no existe,
-**no bloquea el resto del análisis** — se marca esa categoría como
-"no evaluado — herramienta no disponible en este entorno" (nota: esto es
-distinto de las 4 categorías sin skill; aquí sí hay skill, pero faltó la
-herramienta) y se continúa con las demás.
+**Nunca correr un scanner sin antes verificar que su servicio está
+arriba.** Si algo no responde, no se improvisa un análisis manual como
+sustituto silencioso — se imprime la instrucción de arranque exacta y se
+continúa con lo que sí esté disponible, marcando el resto como "no
+evaluado — herramienta no disponible" en el entregable final.
+
+### 1a — ¿Existe `Tools/` en este proyecto?
 
 ```bash
-# Node/npm — dependencias
-npm audit --json > Insumos/npm-audit.json 2>&1 || echo "npm audit no disponible"
+if [[ ! -f "Tools/docker-compose.yml" ]]; then
+  echo "Tools/ no existe en este proyecto — copiarla del template antes de continuar."
+  exit 0
+fi
+if [[ ! -f "Tools/.env" ]]; then
+  cp Tools/.env.example Tools/.env
+  echo "Tools/.env creado desde el ejemplo. Revisar SONAR_TOKEN antes de usar Sonar."
+fi
+source Tools/.env 2>/dev/null || true
+SONARQUBE_HOST_PORT="${SONARQUBE_HOST_PORT:-19000}"
+TRIVY_HOST_PORT="${TRIVY_HOST_PORT:-14954}"
+ZAP_HOST_PORT="${ZAP_HOST_PORT:-18080}"
+```
 
-# .NET — dependencias
-dotnet list package --vulnerable --include-transitive > Insumos/dotnet-vulnerable.txt 2>&1 || echo "dotnet no disponible"
+### 1b — Chequeo de cada servicio persistente
 
-# Python — dependencias
-pip-audit -f json > Insumos/pip-audit.json 2>&1 || echo "pip-audit no disponible"
+```bash
+check_sonarqube() {
+  curl -sf "http://localhost:${SONARQUBE_HOST_PORT}/api/system/status" 2>/dev/null | grep -q '"status":"UP"'
+}
+check_trivy() {
+  [[ "$(curl -sf http://localhost:${TRIVY_HOST_PORT}/healthz 2>/dev/null)" == "ok" ]]
+}
+check_zap() {
+  curl -sf "http://localhost:${ZAP_HOST_PORT}/" >/dev/null 2>&1
+}
 
-# Secretos — todo el historial, no solo HEAD
-gitleaks detect --source . --report-format json --report-path Insumos/gitleaks-report.json --log-opts="--all" \
-  || echo "gitleaks no disponible — intentar 'pip install' o 'brew install gitleaks', si falla continuar sin bloquear"
+if ! check_sonarqube; then
+  echo "SonarQube no responde. Arrancar con:"
+  echo "  cd Tools && docker compose up -d sonarqube-db sonarqube"
+  echo "  (tarda 30-60s la primera vez, reintentar el chequeo después)"
+fi
 
-# SAST — Semgrep con reglas OWASP/seguridad general
-semgrep --config=auto --json --output=Insumos/semgrep-report.json . \
-  || echo "semgrep no disponible — intentar 'pip install semgrep' (requiere Python), si falla continuar sin bloquear"
+if ! check_trivy; then
+  echo "Trivy server no responde. Arrancar con: cd Tools && docker compose up -d trivy"
+fi
 
-# Cobertura — según stack detectado
+if ! check_zap; then
+  echo "ZAP no responde. Arrancar con: cd Tools && docker compose up -d zap"
+  echo "  (recordar: la app objetivo debe ser alcanzable en host.docker.internal:<puerto>)"
+fi
+```
+
+Si alguno no responde tras darle la instrucción, esa categoría se marca
+"no evaluado — herramienta no disponible" y el análisis **continúa** con
+las demás — nunca se detiene todo el flujo por un servicio caído.
+
+### 1c — ¿El proyecto ya fue analizado en SonarQube alguna vez?
+
+Esto es distinto de "¿el contenedor está arriba?" — un Sonar recién
+levantado responde `UP` pero no tiene ningún análisis todavía.
+
+```bash
+check_sonar_project_analizado() {
+  local project_key="$1"
+  [[ -z "$SONAR_TOKEN" ]] && { echo "Sin SONAR_TOKEN en Tools/.env — ver Tools/README.md"; return 1; }
+  local result
+  result=$(curl -sf -u "${SONAR_TOKEN}:" \
+    "http://localhost:${SONARQUBE_HOST_PORT}/api/project_analyses/search?project=${project_key}&ps=1" 2>/dev/null)
+  [[ -z "$result" ]] && return 1
+  echo "$result" | grep -q '"analyses":\[\]' && return 1  # existe el proyecto pero sin análisis
+  return 0
+}
+
+if check_sonarqube && ! check_sonar_project_analizado "mi-proyecto"; then
+  echo "Proyecto sin análisis previo en Sonar. Correr:"
+  echo "  cd Tools && docker compose --profile tools run --rm sonar-scanner -Dsonar.projectKey=mi-proyecto -Dsonar.sources=."
+fi
+```
+
+### 1d — Ejecutar los scanners, vía `Tools/` si Docker está disponible
+
+```bash
+cd Tools
+
+# SCA (complementa/reemplaza npm audit según lo que ya cubra Trivy)
+docker compose --profile tools run --rm gitleaks detect --source /src --log-opts="--all" \
+  --report-path /src/Insumos/gitleaks-report.json \
+  || echo "gitleaks (Tools/) falló — verificar Docker, o correr localmente si está instalado"
+
+docker compose --profile tools run --rm semgrep --config=auto --json --output=/src/Insumos/semgrep-report.json /src \
+  || echo "semgrep (Tools/) falló — verificar Docker, o correr localmente si está instalado"
+
+# Accesibilidad real (requiere la app corriendo en el host)
+docker compose --profile tools run --rm pa11y http://host.docker.internal:4200 \
+  > ../Insumos/pa11y-report.txt 2>&1 || echo "pa11y no corrió — ¿la app está levantada en el puerto indicado?"
+
+cd ..
+
+# Cobertura — local, no requiere Tools/ (no hay ganancia en dockerizarlo)
 npm test -- --coverage 2>&1 | tee Insumos/coverage-output.txt || true
 ```
 
-Si una herramienta requiere instalación y el entorno lo permite, intentar
-instalarla una vez (`pip install semgrep`, `npm install -g gitleaks` no
-existe pero sí hay binarios — usar el gestor de paquetes disponible). Si
-falla la instalación, no reintentar en loop — marcar y seguir.
+Si Docker no está disponible en el entorno en absoluto, caer a las
+versiones locales de cada herramienta (`npm audit`, `pip-audit`,
+`dotnet list package --vulnerable`) tal como en la versión anterior de
+este skill — degradado, pero no bloqueante.
 
 ---
 
@@ -138,6 +212,22 @@ mkdir -p "Entregables/${TS}"
 Markdown puro, autocontenido — un dev usando otra IA sin este template
 debe poder leerlo y actuar sin contexto adicional. Estructura obligatoria:
 
+**Regla dura, sin excepción: cero referencias al template dentro del
+cuerpo de cada hallazgo.** Nunca escribir `IA_Memoria/`, `IA_Skill/`,
+`SKILL-*.md`, `deuda-tecnica.md`, ni la palabra "template" dentro de
+"Qué es", "Por qué importa", "Acción sugerida" o "Cómo refutar si no
+aplica" — el dev que reciba esto probablemente no tiene ese folder ni
+sabe qué es. Si la acción sugerida internamente implica registrar algo en
+`IA_Memoria/deuda-tecnica.md`, eso se hace aparte, en el workflow interno
+del agente — no se le pide al dev externo que lo haga.
+
+Segunda regla dura: cada campo debe ser específico al hallazgo real, no
+una descripción genérica de la categoría. "Cada dependencia declarada
+entra en el árbol de auditoría de SCA" es una frase que aplica a
+cualquier paquete de cualquier proyecto — no dice nada sobre el
+hallazgo concreto. Si un campo se puede copiar-pegar a un hallazgo
+distinto sin cambiar una palabra, está mal escrito.
+
 ```markdown
 # Auditoría Pre-Productiva — [Proyecto] — [fecha legible]
 
@@ -148,10 +238,10 @@ debe poder leerlo y actuar sin contexto adicional. Estructura obligatoria:
 ## 1. Dependencias (SCA)
 ### [🔴|🟡|🟢] [Paquete] — [severidad CVSS] — [ID del advisory/CVE]
 **Dónde:** `package.json` (o equivalente)
-**Qué es:** [descripción del hallazgo, en términos que no requieren conocer el template]
-**Por qué importa:** [impacto real, no genérico]
-**Acción sugerida:** [bump a versión X / requiere ticket por breaking change / sin fix disponible, monitorear]
-**Cómo refutar si no aplica:** [ej. "si el paquete es solo devDependency y no llega a producción, este hallazgo baja de prioridad — confirmar en package.json"]
+**Qué es:** [descripción concreta y específica del hallazgo — nombre del paquete, versión instalada, versión con fix, qué vulnerabilidad es exactamente. Nunca una frase genérica que aplicaría a cualquier dependencia]
+**Por qué importa:** [impacto real y específico de ESTA vulnerabilidad en ESTE contexto — no una explicación de qué es SCA en general]
+**Acción sugerida:** [acción concreta y ejecutable: "bump a versión X.Y.Z", "eliminar del package.json si no se usa (confirmar con `grep -r` en el código)", "sin fix disponible, monitorear el advisory"]
+**Cómo refutar si no aplica:** [una condición verificable por el propio dev, sin depender de ningún documento externo — ej. "si al buscar el import de este paquete en el código no aparece ningún uso real, es seguro eliminarlo del package.json en vez de solo actualizarlo"]
 
 [... un bloque por hallazgo ...]
 
@@ -172,14 +262,14 @@ debe poder leerlo y actuar sin contexto adicional. Estructura obligatoria:
 [mismo formato, o "No aplica — proyecto sin frontend"]
 
 ## Categorías no evaluadas en esta auditoría
-- Rendimiento — sin skill de referencia en el template
-- Observabilidad — sin skill de referencia en el template
-- CI/CD (Azure DevOps) — sin skill de referencia en el template
-- Compliance PII/salud — sin skill de referencia en el template
+- Rendimiento — no evaluado, fuera del alcance de las herramientas usadas en esta auditoría
+- Observabilidad — no evaluado, fuera del alcance de las herramientas usadas en esta auditoría
+- CI/CD — no evaluado, fuera del alcance de las herramientas usadas en esta auditoría
+- Compliance PII/salud — no evaluado, fuera del alcance de las herramientas usadas en esta auditoría
 
-*Generado por el agente analista pre-productivo el [fecha]. Próxima
-auditoría: comparar el conteo de hallazgos con este documento para
-determinar avance — el template no hace este diff automáticamente.*
+*Auditoría generada el [fecha]. La comparación con auditorías futuras
+(¿bajó el conteo de hallazgos?, ¿aparecieron nuevos?) es manual — este
+documento es una fotografía de un momento, no un tracker.*
 ```
 
 ### Entregable 2 — `Entregables/{TS}/hallazgos-preprod.html`
@@ -235,7 +325,7 @@ h1 { font-size:24px; } h2 { font-size:16px; border-bottom:2px solid var(--color-
 
 <h2>Categorías no evaluadas</h2>
 <div class="no-evaluado">
-  Rendimiento, Observabilidad, CI/CD, Compliance PII — sin skill de referencia en el template. No se intentó evaluar.
+  Rendimiento, Observabilidad, CI/CD, Compliance PII — no evaluadas en esta auditoría, fuera del alcance de las herramientas usadas.
 </div>
 
 <script>
@@ -272,3 +362,16 @@ Entregables en: Entregables/[TS]/
 - No mezclar "no evaluado" (sin skill/herramienta) con "sin hallazgos"
   (se evaluó y no hay nada que reportar) — son estados distintos y el
   entregable debe distinguirlos con claridad
+- No correr un scanner de `Tools/` sin el chequeo del Paso 1 primero —
+  un contenedor caído da error confuso, no "sin hallazgos"
+- No dejar el puerto de ZAP expuesto más allá de `localhost` — corre sin
+  autenticación (`api.disablekey=true`) a propósito para simplificar el
+  uso local, nunca lo publiques en un servidor accesible desde internet
+- No commitear `Tools/.env` (tiene `SONAR_TOKEN`) — ver `SKILL-secrets-scanning.md`
+- No dejar ninguna referencia a `IA_Memoria/`, `IA_Skill/`, `SKILL-*.md` ni
+  a la palabra "template" dentro del cuerpo de un hallazgo en los 2
+  entregables — quien los recibe (dev o su propia IA) no tiene ese
+  contexto y no debería necesitarlo para actuar
+- No escribir campos genéricos que apliquen a cualquier hallazgo de la
+  misma categoría — cada "Qué es"/"Por qué importa"/"Acción sugerida" debe
+  ser específico al paquete/archivo/línea real encontrado

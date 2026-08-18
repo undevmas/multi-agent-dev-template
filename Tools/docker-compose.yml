@@ -1,0 +1,156 @@
+# Tools/docker-compose.yml
+#
+# Herramientas de análisis pre-productivo para SKILL-preprod-security-audit.md
+#
+# Puertos expuestos al host con offset +10000 sobre el default de cada
+# herramienta, para minimizar choque con instalaciones locales existentes
+# (ej. si ya tienes SonarQube corriendo en 9000 para otro proyecto).
+# Todos son ajustables en .env sin tocar este archivo — ver .env.example.
+#
+# Servicios persistentes (se quedan arriba): sonarqube, sonarqube-db, trivy, zap
+# Servicios on-demand (un solo uso, requieren --profile tools): semgrep,
+# gitleaks, pa11y, sonar-scanner — no arrancan con `docker compose up`.
+
+services:
+  # ============================================================
+  # SonarQube — SAST + calidad de código + cobertura importada
+  # Requiere generar un token una sola vez desde la UI (ver README.md,
+  # sección "Primer arranque de SonarQube") — no se puede automatizar
+  # por completo porque Sonar exige cambiar el password admin en el
+  # primer login antes de emitir tokens.
+  # ============================================================
+  sonarqube-db:
+    image: postgres:17
+    container_name: preprod-sonarqube-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - sonarqube_db_data:/var/lib/postgresql/data
+    # Sin "ports:" — solo accesible dentro de la red de este compose.
+    # Cero riesgo de choque de puerto porque nunca se expone al host.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d sonar -U sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - preprod-tools
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: preprod-sonarqube
+    restart: unless-stopped
+    depends_on:
+      sonarqube-db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_temp:/opt/sonarqube/temp
+    ports:
+      # host:contenedor — default real de Sonar es 9000, se expone en
+      # ${SONARQUBE_HOST_PORT} para evitar choque con instalaciones locales
+      - "${SONARQUBE_HOST_PORT:-19000}:9000"
+    networks:
+      - preprod-tools
+
+  # ============================================================
+  # Trivy — SCA + secrets + IaC, server mode (evita re-descargar
+  # la DB de vulnerabilidades en cada scan)
+  # Healthcheck confirmado contra la doc oficial: GET /healthz -> "ok"
+  # ============================================================
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: preprod-trivy
+    restart: unless-stopped
+    command: ["server", "--listen", "0.0.0.0:4954"]
+    volumes:
+      - trivy_cache:/root/.cache/trivy
+    ports:
+      # default real 4954
+      - "${TRIVY_HOST_PORT:-14954}:4954"
+    networks:
+      - preprod-tools
+
+  # ============================================================
+  # OWASP ZAP — DAST, modo daemon con API sin key (uso local únicamente,
+  # nunca exponer este puerto fuera de tu máquina/red de confianza).
+  # Comando y healthcheck confirmados contra el Dockerfile-stable y
+  # zap_common.py oficiales de zaproxy/zaproxy.
+  # ============================================================
+  zap:
+    image: zaproxy/zap-stable
+    container_name: preprod-zap
+    restart: unless-stopped
+    command: ["zap.sh", "-daemon", "-host", "0.0.0.0", "-port", "8080", "-config", "api.disablekey=true"]
+    ports:
+      # default real 8080
+      - "${ZAP_HOST_PORT:-18080}:8080"
+    networks:
+      - preprod-tools
+    # Si la app a escanear corre en tu host (ej. localhost:4200), ZAP
+    # necesita alcanzarla — usa host.docker.internal:4200 como target,
+    # no localhost:4200 (eso apuntaría al propio contenedor de ZAP).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ============================================================
+  # Herramientas on-demand — un solo uso, no quedan corriendo.
+  # Invocar con: docker compose --profile tools run --rm <servicio> ...
+  # ============================================================
+  semgrep:
+    image: semgrep/semgrep
+    profiles: ["tools"]
+    working_dir: /src
+    volumes:
+      - ../Codigo:/src
+    entrypoint: ["semgrep"]
+
+  gitleaks:
+    image: zricethezav/gitleaks
+    profiles: ["tools"]
+    working_dir: /src
+    volumes:
+      - ../:/src
+    entrypoint: ["gitleaks"]
+
+  pa11y:
+    image: pa11y/pa11y
+    profiles: ["tools"]
+    # pa11y necesita alcanzar la app corriendo en el host — usar
+    # http://host.docker.internal:<puerto> como URL objetivo, no localhost
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    entrypoint: ["pa11y"]
+
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli
+    profiles: ["tools"]
+    working_dir: /usr/src
+    volumes:
+      - ../Codigo:/usr/src
+    environment:
+      SONAR_HOST_URL: "http://sonarqube:9000"
+      SONAR_TOKEN: "${SONAR_TOKEN:?Falta SONAR_TOKEN en Tools/.env — ver README.md, sección 'Primer arranque de SonarQube'}"
+    networks:
+      - preprod-tools
+
+networks:
+  preprod-tools:
+    driver: bridge
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  sonarqube_temp:
+  sonarqube_db_data:
+  trivy_cache:
