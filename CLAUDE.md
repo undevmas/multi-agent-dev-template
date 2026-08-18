@@ -72,6 +72,12 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 
 ## Cuándo leer cada Skill
 
+### Punto de entrada — Auditoría Pre-Productiva
+
+| Situación | Skill a leer |
+|---|---|
+| "Actúa como agente analista pre-productivo", "corre el checklist pre-prod", "auditoría de seguridad antes de liberar" | IA_Skill/SKILL-preprod-security-audit.md — orquesta el resto, no leer las skills de seguridad sueltas directamente para este caso |
+
 ### Frontend
 
 | Situación | Skill a leer |
@@ -136,6 +142,10 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Seguridad en el backend Python de ReporteadorV2 (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
 | Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
+| Vulnerabilidad de dependencia/librería (npm audit, dotnet list package --vulnerable, pip-audit) — decidir qué parchar ahora vs. documentar | IA_Skill/SKILL-dependency-vulnerability-triage.md |
+| Hallazgo de seguridad (SAST, código legado) en un stack que NO está en las filas de arriba (Angular/.NET/NestJS/Python-ReporteadorV2) — ej. Express, PHP, código de cliente heredado | IA_Skill/SKILL-legacy-stack-security-baseline.md — guía puntual, no modernización |
+| Escaneo/sospecha de secreto expuesto (Gitleaks, .env trackeado, credencial en un commit) | IA_Skill/SKILL-secrets-scanning.md |
+| Decidir si un fix (de cualquier tipo — PR, SAST, SCA, secreto, código legado) se aplica directo, se acota, o requiere ticket | IA_Skill/SKILL-risk-zone-policy.md — fuente única, todas las filas de arriba la referencian, no la redefinen |
 
 ### Texto y documentación
 
@@ -216,35 +226,10 @@ NO se suben al repositorio de código.
 
 ## Política de trabajo con código legado
 
-Aplica cuando el proyecto tiene código existente que no sigue al 100% las convenciones
-del template. Las convenciones del template no se bajan para acomodar el legado —
-se aplican donde es posible sin romper lo que funciona.
+Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zonas
+(verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias (esta,
+AGENTS.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 
-### Zona verde — código nuevo (estándar completo siempre)
-Archivos que no existían antes. Seguir las convenciones del template al 100%
-aunque estén en un módulo legado. No heredar antipatrones del código de al lado.
-- UUID/GUID siempre, aunque la tabla vecina use int secuencial
-- Soft delete, response estandarizada, guards en todos los endpoints nuevos
-- Naming en inglés, estructura de carpetas según convenciones
-
-### Zona ámbar — código existente que hay que modificar
-Tocar solo lo mínimo necesario para la tarea. No aprovechar para "mejorar" lo que no pidieron.
-- Agregar el nuevo método siguiendo convenciones, sin cambiar los métodos existentes
-- Si el archivo tiene DELETE directo en BD, el nuevo código usa soft delete — el viejo queda igual
-- Si un cambio rompería la interfaz existente — PARAR y consultar al dev antes de continuar
-- No refactorizar oportunistamente sin ticket explícito
-
-### Zona roja — código que no se toca sin ticket explícito
-Código legado que funciona pero no sigue convenciones. Detectar, documentar, dejar como está.
-- No modificar migraciones ya aplicadas en producción
-- No cambiar IDs de int a UUID en tablas existentes con datos
-- No renombrar endpoints que ya consumen clientes externos
-- Registrar en `IA_Memoria/deuda-tecnica.md` con impacto y condición de salida
-
-### Regla de desempate
-Cuando spec y código real se contradicen en un módulo legado:
-el código real gana. La contradicción va a `IA_Memoria/deuda-tecnica.md`.
-No modificar el código existente, no falsificar la spec — consultar al dev.
 
 ---
 

@@ -14,6 +14,9 @@ en GitHub. Triggers:
 Este skill requiere acceso a `gh` CLI y al filesystem completo del workspace.
 Si `gh` no está disponible o no hay sesión activa, reportar al dev antes de continuar.
 
+**Política de zona (verde/ámbar/roja) usada en todo este skill: ver
+`SKILL-risk-zone-policy.md` — es la fuente canónica, no se redefine aquí.**
+
 ---
 
 ## Paso 1 — Leer contexto del proyecto

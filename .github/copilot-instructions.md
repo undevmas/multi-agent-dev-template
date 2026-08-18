@@ -52,6 +52,7 @@ Consultar IA_Skill solo cuando la tarea lo requiera por dominio técnico.
 Mapa rápido:
 - Specs y especificaciones: SKILL-spec-generator.md
 - Frontend (diseño visual): frontend-design/SKILL-component-patterns.md, frontend-design/SKILL-design-tokens.md, frontend-design/SKILL-typography-system.md, frontend-design/SKILL-layout-spacing-system.md, frontend-design/SKILL-visual-identity-override.md, frontend-design/SKILL-dark-mode-theming.md, frontend-design/SKILL-responsive-pwa-patterns.md, frontend-design/SKILL-animation-microinteractions.md, frontend-design/SKILL-accessibility-a11y.md, frontend-design/SKILL-gradient-accents.md (botones premium / mesh gradient hero, solo landing), frontend-design/SKILL-angular-data-table-pattern.md (tabla server-side Angular)
+- Punto de entrada — auditoría pre-productiva ("actúa como agente analista pre-productivo", "corre el checklist pre-prod"): SKILL-preprod-security-audit.md — orquesta el resto, no leer las skills de seguridad sueltas directamente para este caso
 - Antes de instalar cualquier dependencia de terceros (componentes/iconos/gráficas/animación): SKILL-approved-libraries.md
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
 - Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → frontend-design/SKILL-animation-microinteractions.md → frontend-design/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
@@ -60,6 +61,7 @@ Mapa rápido:
 - Backend Python (FastAPI, solo tooling interno de ReporteadorV2): SKILL-python-fastapi-best-practices.md, SKILL-python-test-frameworks.md
 - Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
 - Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-python.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
+- Triage de hallazgos (SCA/legado/secretos/zona de riesgo — usar en vez de las de arriba cuando el hallazgo no es de código propio en el stack aprobado): SKILL-dependency-vulnerability-triage.md, SKILL-legacy-stack-security-baseline.md, SKILL-secrets-scanning.md, SKILL-risk-zone-policy.md (fuente única de zonas, las demás la referencian)
 - Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md
 - Soporte: SKILL-web-search.md, SKILL-caveman.md, SKILL-pr-review-fixes.md
 
@@ -81,10 +83,10 @@ Cuándo NO consultar skills:
 - Python (FastAPI, tooling interno): Dockerfile y docker-compose.yml obligatorios, deploy documentado en README.md dentro del proyecto, deploy real lo ejecuta el dev manualmente (el agente no hace push ni accede a servidores remotos), frontend servido por FastAPI en HTML/JS vanilla únicamente
 
 ## Política de código legado
-- Código nuevo: seguir convenciones del template al 100%, sin importar el entorno
-- Código existente a modificar: solo lo mínimo necesario, no refactorizar sin ticket explícito
-- Código intocable: detectar antipatrones, registrar en `IA_Memoria/deuda-tecnica.md`, no tocar
-- Desempate: código real gana sobre spec en legado → registrar deuda, consultar al dev
+
+Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zonas
+(verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias
+(esta, CLAUDE.md, AGENTS.md, GEMINI.md) diverjan entre sí.
 
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno

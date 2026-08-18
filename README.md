@@ -2,79 +2,33 @@
 
 Capa de contexto y gobierno para sesiones de desarrollo con IA. Estandariza cómo trabaja el agente en el proyecto — sin perder convenciones entre sesiones ni depender de un solo proveedor.
 
-> **¿Primera vez con este template?** Este README es la referencia rápida. Para el paso a paso completo,
-> con el prompt exacto para copiar/pegar en cada agente (Claude Code, Gemini CLI, Cursor, Copilot, OpenCode, Codex CLI),
-> ver **[GUIDE.md](GUIDE.md)**.
-
 ---
 
 ## Estructura del workspace
 
 ```
 workspace-proyecto/
-├── CLAUDE.md / AGENTS.md / .gemini/GEMINI.md    ← Instrucciones del agente (fuente de verdad)
-├── GUIDE.md                                     ← Guía paso a paso con prompts por agente
+├── CLAUDE.md / AGENTS.md / GEMINI.md    ← Instrucciones del agente (fuente de verdad)
 │
-├── repomix-scan.ps1 / .sh                       ← Escanea Codigo/ (completo o un módulo) y arma el snapshot
-├── repomix-scan-modules.ps1 / .sh               ← Escanea varios módulos a la vez usando IA_Memoria/modulos.json
-├── repomix-lib.ps1 / .sh                        ← Funciones compartidas entre los dos scripts de arriba
+├── Insumos/                             ← Material de entrada para el agente
+│   ├── mockups/                         ← Pantallas y wireframes
+│   ├── especificaciones/                ← Docs de reglas de negocio, HU, PDFs
+│   └── datos/                           ← Seeds y escenarios de prueba
 │
-├── Insumos/                                     ← Material de entrada para el agente
-│   ├── mockups/                                 ← Pantallas y wireframes
-│   ├── especificaciones/                        ← Docs de reglas de negocio, HU, PDFs
-│   └── datos/                                   ← Seeds y escenarios de prueba
+├── Features/                            ← Specs de cada módulo (3 archivos por feature)
+│   ├── [mod].md                         ← Requisitos de negocio + estado del ciclo
+│   ├── [mod].spec.md                    ← Contrato técnico: entidades, API, reglas
+│   └── [mod].checks.md                  ← Verificación post-implementación
 │
-├── Features/                                    ← Specs de cada módulo (3 archivos por feature)
-│   ├── [mod].md                                 ← Requisitos de negocio + estado del ciclo
-│   ├── [mod].spec.md                            ← Contrato técnico: entidades, API, reglas
-│   └── [mod].checks.md                          ← Verificación post-implementación
+├── IA_Skill/                            ← Guías técnicas que consulta el agente
+├── IA_Memoria/                          ← Estado persistente del proyecto
+│   ├── progreso.md
+│   ├── arquitectura.md
+│   └── convenciones.md
+├── Issues/                              ← Bugs registrados
 │
-├── IA_Skill/                                     ← Guías técnicas que consulta el agente
-├── IA_Memoria/                                   ← Estado persistente del proyecto
-│   ├── progreso.md                              ← Qué está hecho y qué sigue
-│   ├── arquitectura.md                          ← Módulos, rutas, tecnologías, puertos
-│   ├── convenciones.md                          ← Naming, patrones, formato de response
-│   ├── deuda-tecnica.md                         ← Antipatrones detectados en código existente
-│   ├── modulos.json                             ← Manifest {name, path, stack} por módulo real
-│   └── snapshots/                               ← Salida de los scripts repomix-scan* (no editar a mano)
-├── Issues/                                       ← Bugs registrados
-│
-└── Codigo/                                      ← ÚNICO que se versiona en git
-    └── repomix.config.json                      ← Config compartida de los scripts repomix-scan*
+└── Codigo/                              ← ÚNICO que se versiona en git
 ```
-
----
-
-## Paso 0 — Dale contexto real al agente antes de pedirle nada
-
-Sin esto, el agente adivina la arquitectura del proyecto. Con esto, arranca sabiendo qué existe.
-
-**La primera vez** (o si la estructura de módulos cambió), corre el scan completo:
-
-```powershell
-# Windows
-.\repomix-scan.ps1 -Target all
-```
-```bash
-# Linux / macOS
-./repomix-scan.sh all
-```
-
-El script imprime un **prompt listo para copiar**. Pégalo en tu agente: leerá el snapshot generado y llenará
-`IA_Memoria/arquitectura.md`, `progreso.md`, `convenciones.md`, `deuda-tecnica.md` y `modulos.json`.
-
-**Para tareas puntuales** (una vez ya existe `IA_Memoria/modulos.json`), no vuelvas a escanear todo el proyecto —
-escanea solo los módulos que la tarea de hoy va a tocar:
-
-```powershell
-.\repomix-scan-modules.ps1 -Modules Gateway,Identity
-```
-```bash
-./repomix-scan-modules.sh --modules=Gateway,Identity
-```
-
-Ver **[GUIDE.md](GUIDE.md)** (sección "Paso 2 — Genera el snapshot con Repomix") para todas las variantes
-(`-Stack`, `-Full`, alias por stack, prompts por agente) y cuándo conviene escanear todo vs. un módulo puntual.
 
 ---
 
@@ -192,8 +146,7 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 |---|---|
 | `Codigo/` | ✅ Siempre |
 | `CLAUDE.md`, `AGENTS.md`, bridges | ✅ Recomendado |
-| `GUIDE.md`, `repomix-scan*.ps1/.sh`, `repomix-lib.ps1/.sh` | ✅ Recomendado — son tooling del template, no código del proyecto |
-| `IA_Memoria/` (`progreso.md`, `arquitectura.md`, `convenciones.md`, `deuda-tecnica.md`, `modulos.json`) | Opcional — útil para equipos |
+| `IA_Memoria/` | Opcional — útil para equipos |
 | `Features/`, `Issues/` | Opcional — útil como documentación compartida |
 | `IA_Skill/` | No recomendado |
 | `IA_Memoria/snapshots/` | Nunca |

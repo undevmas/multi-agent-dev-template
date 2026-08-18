@@ -68,6 +68,7 @@ Después de leer el snapshot, ANTES de codificar:
 
 | Situación | Skill |
 |---|---|
+| "Actúa como agente analista pre-productivo", "corre el checklist pre-prod" | IA_Skill/SKILL-preprod-security-audit.md — orquesta el resto |
 | Componente reutilizable con variantes | IA_Skill/frontend-design/SKILL-component-patterns.md |
 | Tokens de diseño (color, espaciado, radio, sombras) | IA_Skill/frontend-design/SKILL-design-tokens.md |
 | Sistema tipográfico del proyecto | IA_Skill/frontend-design/SKILL-typography-system.md |
@@ -102,6 +103,10 @@ Después de leer el snapshot, ANTES de codificar:
 | Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
 | Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
 | Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
+| Vulnerabilidad de dependencia/librería (npm audit, dotnet list package --vulnerable, pip-audit) — decidir qué parchar ahora vs. documentar | IA_Skill/SKILL-dependency-vulnerability-triage.md |
+| Hallazgo de seguridad (SAST, código legado) en un stack que NO está en las filas de arriba (Angular/.NET/NestJS/Python-ReporteadorV2) — ej. Express, PHP, código de cliente heredado | IA_Skill/SKILL-legacy-stack-security-baseline.md — guía puntual, no modernización |
+| Escaneo/sospecha de secreto expuesto (Gitleaks, .env trackeado, credencial en un commit) | IA_Skill/SKILL-secrets-scanning.md |
+| Decidir si un fix (de cualquier tipo — PR, SAST, SCA, secreto, código legado) se aplica directo, se acota, o requiere ticket | IA_Skill/SKILL-risk-zone-policy.md — fuente única, todas las filas de arriba la referencian, no la redefinen |
 | Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 | Texto visible al usuario final (mensajes UI) | IA_Skill/SKILL-humanizer.md |
 | Documentar feature terminada | IA_Skill/SKILL-docs-feature.md |
@@ -164,12 +169,9 @@ No asumir estructura interna de Codigo/ — leer IA_Memoria/arquitectura.md.
 
 ## Política de trabajo con código legado
 
-Las convenciones del template no se adaptan al legado — se aplican donde es posible.
-
-- **Zona verde — código nuevo:** estándar completo siempre, sin importar el entorno
-- **Zona ámbar — código existente a modificar:** solo lo mínimo necesario, sin refactorizar sin ticket
-- **Zona roja — código intocable sin ticket:** detectar, registrar en `IA_Memoria/deuda-tecnica.md`, no modificar
-- **Regla de desempate:** código real > spec. Si contradicen en legado → registrar deuda, consultar al dev.
+Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zonas
+(verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias
+(esta, CLAUDE.md, AGENTS.md, copilot-instructions.md) diverjan entre sí.
 
 ---
 
