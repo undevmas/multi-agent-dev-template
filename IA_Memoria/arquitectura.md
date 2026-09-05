@@ -121,6 +121,15 @@ Usuario
 
 ---
 
+## Snapshot verificado — PersonalCripto (2026-09-04)
+
+- Raíz del código: `Codigo/personal-cripto/`.
+- Backend: monorepo .NET 10 (`net10.0`) con Gateway, Identity, Worker y servicios Business, Catalogo, Reportes y Trading.
+- Frontend: Angular 22 en `src/Frontend/gestion-pwa`, standalone/zoneless/signals y PWA.
+- Datos e infraestructura: EF Core 10 con PostgreSQL y SQL Server, Redis y .NET Aspire para orquestación local.
+- Integraciones: Azure Service Bus/Key Vault, RabbitMQ, AWS SQS/SNS, OpenTelemetry y Serilog.
+- Patrones detectados: capas Domain/Application/Infrastructure, MediatR, EF Core y Dapper.
+
 ## Notas importantes para el agente IA
 
 - Antes de crear cualquier módulo, verificar en `IA_Memoria/progreso.md` si ya existe

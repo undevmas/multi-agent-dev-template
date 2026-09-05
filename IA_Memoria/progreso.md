@@ -8,6 +8,8 @@
 
 ## Estado actual
 
+**Snapshot verificado (2026-09-04):** `Codigo/personal-cripto/` contiene un monorepo .NET 10 + Angular 22 con Gateway, Identity, Worker, Business, Catalogo, Reportes y Trading. El inventario funcional detallado queda pendiente de scans dirigidos por módulo.
+
 **Última actualización:** [fecha]
 **Iteración / Sprint:** [número o nombre]
 **Prioridad actual:** [qué se está trabajando hoy]

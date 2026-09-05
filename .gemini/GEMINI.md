@@ -118,6 +118,8 @@ Después de leer el snapshot, ANTES de codificar:
 
 ## Reglas de codificación
 
+> Corrección de mapeo para HTML/JS vanilla: usar `IA_Skill/SKILL-frontend-design.md` → `IA_Skill/SKILL-animation-microinteractions.md` → `IA_Skill/SKILL-gradient-accents.md` → `IA_Skill/frontend-design/SKILL-accessibility-a11y.md`. Esta secuencia reemplaza cualquier referencia de la tabla anterior a las skills de animación o gradientes dentro de `frontend-design/`.
+
 ### General
 - Código en inglés (variables, funciones, clases, tablas)
 - Comentarios y documentación en español

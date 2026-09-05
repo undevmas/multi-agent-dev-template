@@ -79,6 +79,17 @@ Incluir: campos de la respuesta, estructura del objeto de error, campos adiciona
 
 ---
 
+## Patrones detectados en PersonalCripto (snapshot 2026-09-04)
+
+| Aspecto | Patrón detectado |
+|---|---|
+| Arquitectura | Capas Domain / Application / Infrastructure, con servicios y módulos separados |
+| Casos de uso | MediatR para solicitudes y handlers |
+| Datos | EF Core 10; Dapper en acceso de datos puntual |
+| Errores | Manejadores globales de excepciones y DTOs `ApiResponse` / `ApiError` |
+| Frontend | Angular 22 standalone, zoneless y signals |
+| Observabilidad | OpenTelemetry y Serilog |
+
 ## Versionado de API
 
 - Prefijo: `/api/v1/`

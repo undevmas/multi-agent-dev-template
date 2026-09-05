@@ -14,6 +14,27 @@ candidata razonable — de lo contrario, preguntar antes de sumarla.
 
 ---
 
+## Aprobaciones verificadas — PersonalCripto
+
+Estas aprobaciones proceden del snapshot y de los manifiestos declarados en `Codigo/personal-cripto/` el 2026-09-04. Sirven para **mantener o actualizar de forma compatible** ese proyecto; no son autorización para introducirlas en un proyecto nuevo sin confirmación.
+
+| Área | Tecnologías y paquetes verificados |
+|---|---|
+| Plataforma | .NET 10, ASP.NET Core 10, Entity Framework Core 10, Dapper 2.1.79, MediatR 14.2.0, .NET Aspire (SDK 13.2.4; Hosting 9.5.2) |
+| Datos y caché | PostgreSQL con Npgsql/EF Core, SQL Server con EF Core, Redis con StackExchange.Redis y `Microsoft.Extensions.Caching.StackExchangeRedis` |
+| Seguridad e identidad | ASP.NET Identity, JWT Bearer, OpenIddict 7.6.0, Fido2.AspNet 4.0.1, Otp.NET 1.4.1, Azure Identity y Azure Key Vault |
+| Mensajería | Azure Service Bus 7.20.2, RabbitMQ.Client 7.2.1, AWS SDK SQS/SNS 4.0.100.7, MessagePack 3.1.8 |
+| Resiliencia y jobs | Polly.Core 8.6.6, Quartz 3.19.1 |
+| Observabilidad | OpenTelemetry 1.17.0, Azure Monitor OpenTelemetry 1.6.0 y Serilog 4.4.0 con sus sinks/enrichers declarados |
+| Frontend | Angular 22.1, RxJS 7.8, TypeScript 6, `angularx-qrcode` 22.0.1, `jwt-decode` 4.0.0 |
+| Herramientas frontend | Angular CLI/Build 22.1, Vitest 4.0.8, JSDOM 28.0.0 y Prettier 3.8.1 |
+
+### Restricciones específicas
+
+- `@angular/animations` está presente por compatibilidad en el proyecto; para código Angular nuevo preferir las APIs modernas `animate.enter` y `animate.leave` cuando el alcance lo permita.
+- Vitest está aprobado para el frontend de PersonalCripto; Jest permanece como alternativa aprobada en los demás proyectos del template.
+- Las versiones de los manifiestos (`.csproj`, `package.json` y lockfile) son la fuente de verdad. No elevar versiones ni añadir paquetes de esta tabla sin una tarea explícita.
+
 ## Tabla resumen por track
 
 | Categoría | Angular | React | HTML vanilla |

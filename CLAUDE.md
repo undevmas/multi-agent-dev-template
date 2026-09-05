@@ -98,6 +98,8 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
 | Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 
+> Corrección de mapeo para HTML/JS vanilla: usar `IA_Skill/SKILL-frontend-design.md` → `IA_Skill/SKILL-animation-microinteractions.md` → `IA_Skill/SKILL-gradient-accents.md` → `IA_Skill/frontend-design/SKILL-accessibility-a11y.md`. Esta secuencia reemplaza cualquier referencia de la tabla anterior a las skills de animación o gradientes dentro de `frontend-design/`.
+
 ### Backend .NET
 
 | Situación | Skill a leer |
@@ -243,6 +245,10 @@ AGENTS.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 - Ejecutar docker build, docker push ni acceder a servidores remotos
 
 ---
+
+## Compatibilidad verificada de PersonalCripto
+
+Para mantener `Codigo/personal-cripto/` están aprobados .NET 10, Angular 22, .NET Aspire y Vitest, además de las dependencias registradas en `IA_Skill/SKILL-approved-libraries.md`. Para tests del frontend de ese proyecto usar `IA_Skill/SKILL-angular-test-vitest.md`, no la skill genérica de Jest. Esta excepción es exclusiva de ese proyecto: no autoriza instalaciones nuevas en otros proyectos sin confirmación.
 
 ## Estado del proyecto
 

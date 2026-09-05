@@ -15,11 +15,20 @@
     }
   },
   "ignore": {
-    "useGitignore": true,
+    "useGitignore": false,
     "useDotIgnore": true,
     "useDefaultPatterns": true,
     "customPatterns": [
       "**/.git/**",
+      "**/.env",
+      "**/.env.*",
+      "**/appsettings.Development.json",
+      "**/secrets/**",
+      "**/keys/**",
+      "**/*.pfx",
+      "**/*.p12",
+      "**/*.key",
+      "**/*.pem",
       "**/node_modules/**",
       "**/dist/**",
       "**/build/**",

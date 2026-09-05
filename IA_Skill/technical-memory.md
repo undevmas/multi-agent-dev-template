@@ -84,9 +84,7 @@ Antes de generar el Word, sintetiza internamente (no escribas esto en el documen
 
 ### Paso 3 — Generar el .docx
 
-Lee primero `/mnt/skills/public/docx/SKILL.md` para las APIs de generación.
-
-Genera un script Node.js con `docx` npm package y ejecútalo. Guarda el resultado en `Entregables/`.
+Lee primero `IA_Skill/document-artifacts/SKILL.md`. Usa la capacidad nativa de documentos disponible en el agente; no asumas una ruta del sistema ni instales paquetes para generar el archivo. Guarda el resultado en `Entregables/`.
 
 ---
 
@@ -249,5 +247,4 @@ const SIZES = {
 
 ## Referencias internas
 
-- Para generación Word: `/mnt/skills/public/docx/SKILL.md`
-- Para lectura de archivos Word existentes (manual de usuario): skill `file-reading`
+- Para generar o leer documentos: `IA_Skill/document-artifacts/SKILL.md`

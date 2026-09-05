@@ -85,7 +85,7 @@ El snapshot se guarda en `IA_Memoria/snapshots/snapshot-latest.md` (o `snapshot-
 **Cuándo escanear un módulo puntual:** la tarea toca 1-2 módulos conocidos — evita empaquetar todo el monorepo por un cambio acotado.
 **Cuándo omitir cualquier scan:** fix puntual en un archivo ya conocido, cambio de texto, ajuste de config aislado.
 
-> Requisito: Node.js 18+ instalado (Repomix corre vía `npx` sin instalación previa).
+> Requisito: Node.js 18+ instalado. El primer escaneo puede hacer que `npx` descargue en su caché la versión fijada de Repomix; requiere acceso a npm y no modifica las dependencias de `Codigo/`.
 
 ### Escaneo dirigido por módulo (proyectos con varios servicios)
 

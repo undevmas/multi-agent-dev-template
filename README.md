@@ -150,3 +150,5 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 | `Features/`, `Issues/` | Opcional — útil como documentación compartida |
 | `IA_Skill/` | No recomendado |
 | `IA_Memoria/snapshots/` | Nunca |
+
+> Política vigente del template: los artefactos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/` e `Insumos/` no se incluyen en el repositorio de código. Las filas anteriores que los presentan como opcionales o “no recomendado” están reemplazadas por esta política.

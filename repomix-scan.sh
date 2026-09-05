@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TARGET="${1:-all}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=./repomix-lib.sh
 source "$ROOT_DIR/repomix-lib.sh"
 
+TARGET="all"
 FULL=false
 NO_COMPRESS=false
 STACK=""
+
+show_usage() {
+  cat <<'EOF'
+Uso: ./repomix-scan.sh [target] [--full] [--no-compress] [--stack=<stack>]
+
+Sin target, escanea todo Codigo/. Un target escanea Codigo/<target>/.
+Opciones:
+  --full              No comprime el snapshot.
+  --no-compress       Alias de --full.
+  --stack=<stack>     dotnet, nestjs, angular, react o python-fastapi.
+  -h, --help          Muestra esta ayuda sin ejecutar un escaneo.
+EOF
+}
 # Nota: el contexto git (diffs y logs) se controla en repomix.config.json
 # mediante git.includeDiffs y git.includeLogs — no hay flags CLI equivalentes en repomix.
 
@@ -18,6 +31,17 @@ for arg in "$@"; do
     --full) FULL=true ;;
     --no-compress) NO_COMPRESS=true ;;
     --stack=*) STACK="${arg#--stack=}" ;;
+    -h|--help) show_usage; exit 0 ;;
+    -*) echo "[ERROR] Opcion no reconocida: $arg" >&2; show_usage >&2; exit 2 ;;
+    *)
+      if [[ "$TARGET" == "all" ]]; then
+        TARGET="$arg"
+      else
+        echo "[ERROR] Solo se permite un target." >&2
+        show_usage >&2
+        exit 2
+      fi
+      ;;
   esac
 done
 

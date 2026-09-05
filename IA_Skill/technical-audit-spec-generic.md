@@ -122,8 +122,7 @@ base de datos. Remediación propuesta: migración a bcrypt o equivalente.
 
 ### Paso 3 — Generar el .docx
 
-Lee `/mnt/skills/public/docx/SKILL.md` para las APIs de generación. Genera un script Node.js
-con el paquete `docx` y ejecútalo. Guarda el resultado en `Entregables/`.
+Lee `IA_Skill/document-artifacts/SKILL.md`. Usa la capacidad nativa de documentos disponible en el agente; no asumas una ruta del sistema ni instales paquetes para generar el archivo. Guarda el resultado en `Entregables/`.
 
 ---
 
@@ -260,6 +259,5 @@ resumen de controles y de cumplimiento funcional.
 
 ## Referencias internas
 
-- Para generación Word: `/mnt/skills/public/docx/SKILL.md`
-- Para lectura de archivos Word existentes (especificación funcional, acuerdos): skill `file-reading`
+- Para generar o leer documentos: `IA_Skill/document-artifacts/SKILL.md`
 - Skill relacionada (documento narrativo, no de auditoría): `technical-memory`
