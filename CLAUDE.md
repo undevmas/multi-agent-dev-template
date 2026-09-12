@@ -19,13 +19,20 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
 | **Contenedores** | Docker · Docker Compose |
 | **CI/CD** | Azure DevOps Pipelines |
 | **Testing unitario** | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
-| **Testing E2E** | Cypress |
+| **Testing E2E** | Playwright Test + playwright-cli |
 | **Documentación API** | Swagger / OpenAPI |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
 > `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
 > (`ado_reporte.py`). Reutiliza esa base en vez de .NET/NestJS. No usar Python
 > como backend de nuevas apps de negocio sin la misma aprobación explícita.
+
+> **Excepción de planificación para PersonalCripto:** `jmh_trading` es una
+> dependencia Python analítica existente, externa al workspace. Se permite
+> inspeccionar sus contratos y crear roadmap, épicas y specs que describan su
+> participación. Mientras su fuente no esté disponible debe clasificarse como
+> `DEPENDENCIA EXTERNA NO VERIFICABLE`; esta excepción no autoriza crear una
+> nueva aplicación de negocio Python ni modificar/deployar el servicio externo.
 
 ---
 
@@ -96,6 +103,7 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 | Implementar accesibilidad (a11y / WCAG AA) en componentes o pantallas | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Escribir tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
+| Validar un flujo UI, reproducir un bug visual/funcional o crear/ejecutar pruebas E2E | IA_Skill/SKILL-playwright-e2e.md; para automatización interactiva, `.claude/skills/playwright-cli/SKILL.md` |
 | Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 
 > Corrección de mapeo para HTML/JS vanilla: usar `IA_Skill/SKILL-frontend-design.md` → `IA_Skill/SKILL-animation-microinteractions.md` → `IA_Skill/SKILL-gradient-accents.md` → `IA_Skill/frontend-design/SKILL-accessibility-a11y.md`. Esta secuencia reemplaza cualquier referencia de la tabla anterior a las skills de animación o gradientes dentro de `frontend-design/`.
@@ -155,6 +163,9 @@ Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
 |---|---|
 | Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
 | Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
+| Crear o editar memoria técnica formal en Word (.docx) para clientes/gobierno | IA_Skill/technical-memory.md |
+| Generar especificaciones técnicas formales en Word (.docx) para auditorías | IA_Skill/technical-audit-spec-generic.md |
+| Crear, editar o inspeccionar entregables en Word o PDF | IA_Skill/document-artifacts/SKILL.md |
 
 ### Especificaciones
 
@@ -250,6 +261,8 @@ AGENTS.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 
 Para mantener `Codigo/personal-cripto/` están aprobados .NET 10, Angular 22, .NET Aspire y Vitest, además de las dependencias registradas en `IA_Skill/SKILL-approved-libraries.md`. Para tests del frontend de ese proyecto usar `IA_Skill/SKILL-angular-test-vitest.md`, no la skill genérica de Jest. Esta excepción es exclusiva de ese proyecto: no autoriza instalaciones nuevas en otros proyectos sin confirmación.
 
+Playwright Test y `playwright-cli` están aprobados en este template para validación E2E y automatización de navegador. Su mapa operativo vive en `IA_Skill/SKILL-playwright-e2e.md`; no sustituye los tests unitarios de cada stack.
+
 ## Estado del proyecto
 
 El estado actual del proyecto vive únicamente en `IA_Memoria/`:
@@ -258,3 +271,26 @@ El estado actual del proyecto vive únicamente en `IA_Memoria/`:
 - `IA_Memoria/convenciones.md` — naming, commits y reglas del equipo
 
 Al arrancar con un proyecto nuevo o existente: llenar esos tres archivos antes de iniciar cualquier sesión de desarrollo.
+## Regla de módulo completo
+
+Cuando una tarea construya un módulo funcional, el módulo incluye por defecto:
+
+- Backend/API, persistencia y reglas de negocio que correspondan.
+- Frontend/pantalla/flujo de usuario cuando el módulo tenga interacción visual.
+- Validación directa del flujo completo mediante Playwright, ejecutando la aplicación y comprobando el comportamiento desde la UI.
+
+La única excepción es un servicio o módulo explícitamente sin frontend (por ejemplo, un worker, una API interna, un proceso de integración o un servicio de infraestructura). En ese caso, documentar en la entrega que no aplica UI/Playwright y validar mediante pruebas de contrato, integración o smoke tests apropiados.
+
+No considerar terminado un módulo con frontend si solo compila o tiene tests unitarios: debe existir al menos una validación Playwright del happy path y de los errores principales del flujo.
+Para ejecutar esta validación, el agente debe verificar de forma autónoma que los servicios locales del proyecto (backend y frontend, por ejemplo Angular/React en localhost:4200 u otro puerto configurado) estén activos (o arrancarlos en segundo plano sin bloquear la terminal) y ejecutar la prueba en modo visual/encabezado (--headed en desarrollo local contra Chromium, o interactivamente con playwright-cli open). No asumir ejecución headless silenciosa ni esperar a que el operador tenga que indicarlo en el prompt.
+
+## Regla para librerías y plugins recomendados
+
+Si una librería o plugin recomendado no aparece en el stack aprobado, no descartarlo automáticamente por ese único motivo. Antes de decidir no usarlo, detener la implementación y consultar al usuario presentando brevemente:
+
+1. Qué problema resuelve y qué ventajas aporta frente a la opción aprobada o a no incorporar dependencia.
+2. Evidencia de seguridad, mantenimiento, comunidad, licencia y compatibilidad con el proyecto.
+3. Por qué puede ser la mejor opción para esta tarea y cuáles son las alternativas consideradas.
+4. Impacto de adoptarlo: instalación, mantenimiento, lockfile, CI/CD, superficie de ataque y migración futura.
+
+Solo después de la confirmación explícita del usuario se puede instalar o implementar una tecnología fuera del stack. Si el usuario decide no adoptarla, registrar la decisión y su razón en la memoria o spec correspondiente.

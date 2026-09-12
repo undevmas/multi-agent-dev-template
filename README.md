@@ -122,7 +122,7 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 | Autenticación | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
 | Contenedores | Docker · Docker Compose |
 | CI/CD | Azure DevOps Pipelines |
-| Testing | xUnit · Jest · Cypress |
+| Testing | xUnit · Jest · Playwright Test + playwright-cli |
 | Documentación API | Swagger / OpenAPI |
 
 ---

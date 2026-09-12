@@ -1,0 +1,21 @@
+{
+  "name": "multi-agent-personal-cripto",
+  "version": "1.0.0",
+  "description": "Capa de contexto y gobierno para sesiones de desarrollo con IA. Estandariza cómo trabaja el agente en el proyecto — sin perder convenciones entre sesiones ni depender de un solo proveedor.",
+  "main": "index.js",
+  "scripts": {
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:all": "playwright test",
+    "test:e2e:ui": "playwright test --project=chromium --ui",
+    "test:e2e:debug": "playwright test --project=chromium --debug",
+    "test:e2e:report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.4.1"
+  }
+}

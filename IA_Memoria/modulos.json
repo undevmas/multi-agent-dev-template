@@ -1,5 +1,14 @@
 {
-  "_nota": "Este archivo se genera/actualiza automaticamente como parte del PASO 3 del prompt de inspeccion (repomix-scan.ps1/.sh -Target all). Lo usa repomix-scan-modules.ps1/.sh para escanear un modulo especifico a la vez sin re-empaquetar todo Codigo/.",
-  "generatedAt": null,
-  "modules": []
+  "generatedAt": "2026-09-04T00:00:00-06:00",
+  "modules": [
+    { "name": "gestion-pwa", "path": "personal-cripto/src/Frontend/gestion-pwa", "stack": "angular" },
+    { "name": "Gateway", "path": "personal-cripto/src/Gateway", "stack": "dotnet" },
+    { "name": "Identity", "path": "personal-cripto/src/Identity", "stack": "dotnet" },
+    { "name": "Business", "path": "personal-cripto/src/Services/Business", "stack": "dotnet" },
+    { "name": "Catalogo", "path": "personal-cripto/src/Services/Catalogo", "stack": "dotnet" },
+    { "name": "Reportes", "path": "personal-cripto/src/Services/Reportes", "stack": "dotnet" },
+    { "name": "Trading", "path": "personal-cripto/src/Services/Trading", "stack": "dotnet" },
+    { "name": "Worker", "path": "personal-cripto/src/Services/Worker", "stack": "dotnet" },
+    { "name": "Aspire-Orchestration", "path": "personal-cripto/src/Orchestration", "stack": "dotnet" }
+  ]
 }

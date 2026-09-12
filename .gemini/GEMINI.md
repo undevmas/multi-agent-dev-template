@@ -16,7 +16,7 @@
 | Contenedores | Docker · Docker Compose |
 | CI/CD | Azure DevOps Pipelines |
 | Testing unitario | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
-| Testing E2E | Cypress |
+| Testing E2E | Playwright Test + playwright-cli |
 | Documentación API | Swagger / OpenAPI |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
@@ -25,6 +25,13 @@
 > como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
 ---
+
+> **Excepción de planificación para PersonalCripto:** `jmh_trading` es una
+> dependencia Python analítica existente, externa al workspace. Se permite
+> inspeccionar sus contratos y crear roadmap, épicas y specs que describan su
+> participación. Mientras su fuente no esté disponible debe clasificarse como
+> `DEPENDENCIA EXTERNA NO VERIFICABLE`; esto no autoriza crear una nueva app
+> Python de negocio ni modificar o desplegar el servicio externo.
 
 ## Protocolo de inicio
 
@@ -83,6 +90,7 @@ Después de leer el snapshot, ANTES de codificar:
 | Accesibilidad (a11y / WCAG AA) | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
 | Tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
+| Validar UI, reproducir un bug visual/funcional o crear/ejecutar E2E | IA_Skill/SKILL-playwright-e2e.md; automatización interactiva: `.claude/skills/playwright-cli/SKILL.md` |
 | Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 | Implementar feature con spec en estado `ready` | IA_Skill/SKILL-implementation.md |
 | Módulo completo full stack (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
@@ -110,6 +118,9 @@ Después de leer el snapshot, ANTES de codificar:
 | Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 | Texto visible al usuario final (mensajes UI) | IA_Skill/SKILL-humanizer.md |
 | Documentar feature terminada | IA_Skill/SKILL-docs-feature.md |
+| Crear o editar memoria técnica formal en Word (.docx) para clientes/gobierno | IA_Skill/technical-memory.md |
+| Generar especificaciones técnicas formales en Word (.docx) para auditorías | IA_Skill/technical-audit-spec-generic.md |
+| Crear, editar o inspeccionar entregables en Word o PDF | IA_Skill/document-artifacts/SKILL.md |
 | Búsqueda web y fuentes externas actualizadas | IA_Skill/SKILL-web-search.md |
 | Respuestas ultra-concisas en sesiones largas | IA_Skill/SKILL-caveman.md |
 | Resolver comentarios de revisión de PR en GitHub | IA_Skill/SKILL-pr-review-fixes.md |
@@ -176,6 +187,18 @@ Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zo
 (esta, CLAUDE.md, AGENTS.md, copilot-instructions.md) diverjan entre sí.
 
 ---
+
+## Reglas de módulo completo
+
+Cuando una capacidad tenga frontend, la entrega incluye pantalla/flujo de
+usuario y validación Playwright del happy path y del error principal. Compilar
+o pasar tests unitarios no basta. Para un worker, API interna o servicio sin
+frontend, documentar la excepción y ejecutar pruebas de contrato, integración
+o smoke test.
+
+En el roadmap maestro, leer `IA_Skill/SKILL-spec-generator.md`: se permite
+generar épicas y specs hijas en la misma sesión; las decisiones pendientes
+mantienen la spec en `draft` o `needs-clarification`.
 
 ## NUNCA sin confirmación explícita
 

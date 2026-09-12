@@ -123,6 +123,26 @@ Activar si se cumplen 2 o más:
 → Generar propuesta de descomposición y presentarla al dev **antes** de cualquier spec.
 Ver sección "Protocolo para features grandes" al final.
 
+### Excepción: modo Roadmap Maestro
+
+Aplicar únicamente cuando el usuario pide explícitamente un análisis integral
+del repositorio y un roadmap completo con épicas, specs, dependencias, waves y
+criterios de salida — sin implementar código en esa ejecución.
+
+En este modo, una iniciativa grande **no obliga a detenerse** tras proponer la
+descomposición. El agente puede crear el epic y sus specs hijas en la misma
+sesión, siempre que:
+
+- documente decisiones, supuestos y dependencias no verificables;
+- marque `draft` o `needs-clarification` las specs afectadas por una decisión
+  arquitectónica o de negocio pendiente; nunca las marque `ready` por omisión;
+- clasifique una dependencia externa sin fuente como `DEPENDENCIA EXTERNA NO
+  VERIFICABLE` y especifique el contrato/evidencia que falta;
+- no escriba código, cambie configuración de runtime ni ejecute migraciones.
+
+La confirmación posterior del dev sirve para priorizar o convertir specs a
+`ready`; no es necesaria para entregar el mapa completo solicitado.
+
 ### Señales de incertidumbre técnica (requiere spike primero)
 - La feature depende de una decisión técnica que el equipo no puede tomar sin investigar
 - Hay más de una arquitectura posible con trade-offs significativos
@@ -174,7 +194,10 @@ antes de continuar.
 
 ## Paso 5 — Generar los artefactos de la spec
 
-Según el estado del ciclo de vida, generar los archivos correspondientes.
+Según el estado del ciclo de vida, generar los archivos correspondientes. Toda
+feature o épica debe incluir además un prompt de ejecución especializado; no es
+opcional aunque la Spec permanezca `draft`, porque también sirve para auditar
+readiness y explicar por qué todavía no puede implementarse.
 
 ### Ciclo de vida de una spec
 
@@ -184,11 +207,30 @@ Según el estado del ciclo de vida, generar los archivos correspondientes.
 | `needs-clarification` | Tiene `[NEEDS CLARIFICATION]` pendientes | Agente spec |
 | `ready` | Sin gaps críticos, lista para implementación | Agente spec (tras respuestas del dev) |
 | `in-progress` | El agente de implementación está trabajando en ella | Agente de implementación |
-| `in-review` | Implementación terminada, checks corridos, esperando OK del dev | Agente de implementación |
+| `in-review` | Implementación terminada; checks corridos y, si hay frontend, evidencia Playwright PASS registrada; esperando OK del dev | Agente de implementación |
 | `done` | Dev confirmó que la feature está completa | Dev |
 | `epic` | Feature grande descompuesta en hijas — este archivo es solo el contenedor | Agente spec |
 | `spike` | Investigación técnica acotada, bloquea la spec real | Agente spec |
 | `legacy-debt` | Feature existente con deuda documentada, no bloqueante | Agente spec |
+
+### Detección obligatoria de interfaz
+
+Antes de generar los artefactos, clasificar la feature como **Con frontend** o
+**Sin frontend**. Es *Con frontend* si una User Story requiere que un actor vea,
+capture, confirme o navegue una pantalla, componente, flujo web/PWA o estado
+visual. Un endpoint consumido solo por otro servicio no la convierte en feature
+con frontend.
+
+La clasificación se declara en `[mod].spec.md` y gobierna los checks:
+
+- **Con frontend:** generar escenarios Playwright y exigir evidencia de ejecución
+  antes de `in-review`.
+- **Sin frontend:** indicar la razón concreta y exigir prueba de contrato,
+  integración o smoke test acorde al servicio.
+
+No inferir "sin frontend" solo porque el insumo no trae mockup: revisar User
+Stories, rutas existentes y alcance. Si sigue ambiguo, registrar
+`[NEEDS CLARIFICATION]` en vez de omitir la validación UI.
 
 ---
 
@@ -295,6 +337,8 @@ El agente lo genera; el dev lo revisa antes de que el agente de implementación 
 **Feature:** [link a Features/[mod].md]
 **Estado:** [mismo estado que el .md]
 **Stack involucrado:** [solo los que aplican: Angular | .NET | NestJS | SQL Server | PostgreSQL]
+**Interfaz de usuario:** Sí | No
+**Justificación si no aplica:** [solo si es No: worker, API interna, integración u otro motivo concreto]
 
 ---
 
@@ -393,6 +437,23 @@ Son las que los escenarios de aceptación del .md verifican.
 
 ---
 
+## Alcance de interfaz y validación E2E
+
+> Incluir esta sección siempre. Si **Interfaz de usuario: No**, dejar explícita
+> la justificación y el tipo de prueba no visual que corresponde.
+
+**Rutas/pantallas afectadas:** [ruta(s) o "No aplica"]
+
+| Escenario UI | User Story | Pasos de usuario | Resultado observable | Prueba Playwright esperada |
+|---|---|---|---|---|
+| [happy path] | US-[N] | [acciones concretas] | [estado visible / navegación / datos] | `tests/e2e/[mod]/[escenario].spec.ts` |
+| [error principal] | US-[N] | [acción que falla] | [mensaje/estado recuperable] | `tests/e2e/[mod]/[escenario-error].spec.ts` |
+
+Para una feature sin frontend, reemplazar la tabla por:
+`No aplica Playwright: [razón]. Validación requerida: [contrato | integración | smoke test].`
+
+---
+
 ## [NEEDS CLARIFICATION] pendientes
 
 [Listar solo si quedaron gaps después del Paso 4. Si no hay, eliminar esta sección.]
@@ -412,6 +473,11 @@ inspeccionando el código — no ejecutando el sistema.
 
 ```markdown
 # Checks de Verificación: [Nombre]
+
+**Modo de validación:** los checks de estructura se revisan en código. Si la
+spec declara `Interfaz de usuario: Sí`, los checks de validación UI son
+obligatorios, se ejecutan con Playwright contra la aplicación disponible y no
+se sustituyen por inspección de código.
 
 **Feature:** [link a Features/[mod].md]
 **Aplica sobre:** código nuevo generado en esta implementación
@@ -478,6 +544,39 @@ Por cada US del .md:
 
 ---
 
+## Checks de validación UI (solo si `Interfaz de usuario: Sí`)
+
+- [ ] Se creó o actualizó una prueba Playwright por cada escenario de "Alcance
+  de interfaz y validación E2E" en `tests/e2e/[mod]/`.
+- [ ] Se ejecutó `npm run test:e2e -- [ruta o filtro del escenario]` contra la
+  UI disponible y todos los escenarios definidos pasaron.
+- [ ] El happy path comprueba un resultado visible, navegación o persistencia
+  observable desde la UI; no solo que una petición HTTP respondió 200.
+- [ ] El error principal comprueba el mensaje o estado recuperable visible.
+- [ ] No se usaron credenciales, tokens ni secretos hardcodeados en la prueba
+  ni en artefactos Playwright.
+
+### Evidencia de validación UI
+
+Completar antes de `in-review`:
+
+```text
+Herramienta: Playwright Test | playwright-cli
+Comando ejecutado:
+Base URL / entorno:
+Navegador:
+Escenarios y archivos ejecutados:
+Resultado: PASS | FAIL
+Artefactos ante fallo (trace/screenshot/video): [ruta o no aplica]
+```
+
+Si Playwright no está disponible, el agente debe reportar el bloqueo y no
+marcar `in-review` para una feature con frontend. Solo una excepción explícita
+del dev, escrita en este archivo junto con validación alternativa y evidencia,
+permite continuar.
+
+---
+
 ## Reporte al finalizar
 
 El agente de implementación debe completar este reporte antes de marcar `in-review`:
@@ -487,13 +586,110 @@ Checks completados: [N]/[total]
 Checks fallidos: [lista — descripción breve de cada uno]
 Checks de legado no aplicables: [lista]
 Deuda registrada en deuda-tecnica.md: [sí/no — si sí, qué entradas se agregaron]
+Validación UI requerida: [sí/no — razón]
+Evidencia Playwright: [PASS + comando/archivo | no aplica | excepción autorizada]
 Listo para revisión del dev: [sí/no]
 ```
 ```
 
 ---
 
+### Archivo 4: `Features/[mod].prompt.md` — Prompt maestro de ejecución
+
+Este archivo permite entregar la feature o épica a un agente posterior sin
+perder alcance, dependencias, validaciones ni condiciones de detención. Debe
+derivarse del contenido real de `[mod].md`, `[mod].spec.md`,
+`[mod].checks.md`, del código inspeccionado y, cuando aplique, del Epic/Roadmap.
+
+**No generar un prompt genérico copiado entre features.** Cada prompt debe
+nombrar explícitamente:
+
+- feature/épica e IDs exactos de las Specs que gobierna;
+- estado real de cada Spec y cuáles no pueden promocionarse;
+- dependencias HARD externas e internas;
+- orden obligatorio y carriles realmente paralelizables;
+- módulos/capas concretos que el agente debe inspeccionar;
+- invariantes de negocio y arquitectura propias de esa capacidad;
+- huecos que invalidarían el cierre (BD, contrato, frontend, E2E, etc.);
+- pruebas y evidencia específicas, incluidos escenarios Playwright cuando hay UI;
+- condiciones fail-closed, de pausa y de handoff;
+- criterio exacto para que la Spec o épica alcance como máximo `in-review`.
+
+El prompt debe ser autocontenido y listo para copiar y pegar. No debe contener
+un bloque de activación con opciones, IDs por elegir ni placeholders. El estado
+oficial de los artefactos gobierna qué puede hacer el agente:
+
+````markdown
+# Prompt de implementación — [ID y nombre]
+
+**Feature/Epic:** [link]
+**Spec(s):** [link]
+**Modo recomendado:** [SPEC con ID | EPIC si es seguro]
+
+## Instrucciones al agente
+
+[Objetivo concreto y límite de esta ejecución]
+
+### Orden y paralelismo
+
+[Secuencia exacta de Specs y convergencias]
+
+### Invariantes y huecos prohibidos
+
+[Reglas específicas que no pueden omitirse]
+
+### Validación especializada
+
+[Tests, Playwright, observabilidad y evidencia exactos]
+
+### Condición de cierre
+
+[Qué debe cumplirse para dejar el alcance en `in-review`; nunca `done`]
+````
+
+El generador debe resolver todos los placeholders de contenido usando la Spec
+y el estado real de sus dependencias. Para una feature independiente crea un
+solo `[mod].prompt.md`. Para un Epic crea un solo `[mod].prompt.md` maestro;
+sus Specs hijas no reciben prompts propios.
+
+El prompt maestro de una épica debe servir sin edición para iniciar, reanudar y
+cerrar la épica. Debe ordenar al agente que, en cada invocación, lea los estados
+reales y actúe así: preparar la siguiente Spec si le faltan artefactos; pedir
+decisiones si está bloqueada; implementar o reanudar sólo la siguiente Spec
+`ready`/`in-progress`; o producir el resumen de VoBo cuando todo esté
+`in-review`. Nunca implementa una Spec `draft`, `needs-clarification` o
+`blocked`, ni marca `done`.
+
+Para una feature normal, el prompt opera por defecto sobre una sola Spec. Para
+un Epic o Roadmap Maestro, debe permitir dos modos:
+
+- `SPEC`: opción predeterminada; atiende una unidad funcional y se detiene en
+  `in-review`.
+- `EPIC`: sólo con aceptación expresa de los IDs incluidos; ejecuta las Specs
+  hijas en orden de dependencias y verifica cada una antes de consumirla.
+
+En modo `EPIC`, una dependencia interna puede consumirse en la misma ejecución
+después de pasar todos sus checks, sin marcarla `done`. Las dependencias externas
+sí deben estar `done`. Una Spec bloqueada no autoriza saltar silenciosamente el
+hueco: puede continuarse únicamente con Specs independientes y el cierre del
+Epic debe quedar pendiente.
+
+Cuando una Spec tenga `needs-clarification`, `spike-blocked` o `blocked`, el
+prompt debe identificar la decisión/evidencia faltante y prohibir inventarla.
+Para operaciones sensibles —capital real, secretos, producción, cambios de
+entorno o acciones externas— exigir una autorización separada y exacta; la
+aceptación del Epic nunca amplía esos permisos.
+
+Si cambia materialmente una Spec, sus dependencias, frontend, Playwright o
+condición de salida, actualizar también `[mod].prompt.md` en la misma tarea.
+
+---
+
 ## Protocolo para features grandes (Epic)
+
+> No aplicar la espera de confirmación de esta sección cuando se active el
+> **modo Roadmap Maestro** definido en el Paso 3. En ese caso, generar el mapa
+> completo y conservar los supuestos/decisiones pendientes dentro de las specs.
 
 Si en el Paso 3 se detecta que la feature es grande, generar este archivo
 **antes de cualquier spec** y esperar confirmación del dev.
@@ -547,6 +743,11 @@ Separar en features por área de responsabilidad.
 
 Una vez confirmada la opción, se generará la spec de cada feature hija.
 ```
+
+Generar también `Features/[mod].prompt.md`. Debe referenciar el Epic y sus
+Specs hijas, describir el orden interno y permitir modo `SPEC` o `EPIC` bajo
+aceptación expresa. No presentar como ejecutable una rama que todavía dependa
+de decisiones, spikes o evidencia pendientes.
 
 ---
 
@@ -638,11 +839,14 @@ Archivos creados/actualizados:
   Features/[mod].md            — Requisitos y User Stories
   Features/[mod].spec.md       — Contrato técnico
   Features/[mod].checks.md     — Verificación post-implementación
+  Features/[mod].prompt.md     — Prompt especializado de ejecución/handoff
 
 Estado: [estado del ciclo de vida]
 User Stories: [N] (P1: [n], P2: [n], P3: [n])
 Reglas de negocio: [N] definidas
 Endpoints: [N] contratos especificados
+Interfaz de usuario: [sí/no]
+Escenarios Playwright requeridos: [N] — [si aplica, listar archivos esperados]
 [NEEDS CLARIFICATION] pendientes: [N] — [si hay, listarlos]
 Supuestos documentados: [N]
 
@@ -651,9 +855,10 @@ Supuestos documentados: [N]
 
 Siguiente paso sugerido:
 → [Si estado es needs-clarification]: Responder [N] pregunta(s) pendiente(s) para pasar a ready
-→ [Si estado es ready]: Pasar al agente de implementación con: "implementa Features/[mod]"
-→ [Si es epic]: Confirmar opción de descomposición en Features/[mod]-epic.md
+→ [Si estado es ready]: Invocar `Features/[mod].prompt.md` completando su bloque de activación
+→ [Si es epic]: Confirmar la descomposición y luego invocar su `.prompt.md` en modo SPEC o EPIC
 → [Si es spike]: Resolver spike en Features/[mod]-spike.md antes de continuar
+→ [Si es modo Roadmap Maestro]: El roadmap, las specs hijas y un `.prompt.md` especializado por épica ya fueron generados; resolver las decisiones marcadas y completar el bloque de activación antes de promover/implementar cada Spec
 ```
 
 ---
@@ -672,12 +877,20 @@ Siguiente paso sugerido:
 4. **Nunca descomponer un Epic sin confirmación del dev.** Proponer, esperar respuesta,
    entonces generar las specs hijas.
 
+   Excepción: en modo **Roadmap Maestro**, el pedido explícito de roadmap
+   completo autoriza la descomposición y creación de specs `draft` o
+   `needs-clarification` en la misma sesión; no autoriza implementación.
+
 5. **El código existente manda sobre la spec** cuando hay conflicto.
    Si el código hace X y la spec pide Y en código legado, registrar en deuda-tecnica.md,
    no modificar el código ni falsificar la spec.
 
 6. **Máximo 3 preguntas por sesión.** Si hay más ambigüedades, resolverlas con
    defaults razonables, documentarlos en Supuestos, y continuar.
+
+7. **Nunca omitir ni reciclar genéricamente `[mod].prompt.md`.** Debe reflejar
+   las Specs, dependencias, riesgos, pruebas y autorizaciones reales de esa
+   feature o épica. Un prompt desactualizado es un contrato de handoff inválido.
 
 ---
 
@@ -691,6 +904,7 @@ generar specs técnicamente coherentes con el proyecto:
 | La spec involucra seguridad, tokens o permisos | `SKILL-security-[stack].md` relevante |
 | La spec define migraciones de BD | `SKILL-database-migrations.md` |
 | La spec describe un módulo MVC completo | `SKILL-mvc-feature.md` |
+| La spec incluye interfaz o flujo visual | `SKILL-playwright-e2e.md` |
 | La spec necesita respetar patrones NestJS | `SKILL-nestjs-best-practices.md` |
 | La spec necesita respetar patrones .NET | `SKILL-dotnet-best-practices.md` |
 

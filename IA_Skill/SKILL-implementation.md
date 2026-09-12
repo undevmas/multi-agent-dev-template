@@ -83,6 +83,10 @@ Leer la lista de verificación completa ANTES de codificar.
 Saber desde el inicio qué se va a verificar al final. Esto guía las decisiones
 de implementación — no es un checklist de cierre, es una guía de trabajo.
 
+Si `[mod].spec.md` indica **Interfaz de usuario: Sí**, leer además
+`IA_Skill/SKILL-playwright-e2e.md`, identificar los escenarios y archivos
+Playwright exigidos, y agregarlos al plan. No tratar esos checks como opcionales.
+
 ---
 
 ## Paso 2 — Leer contexto del proyecto
@@ -125,7 +129,7 @@ Plan:
   1. BD: [tabla(s) a crear, migración]
   2. Backend: [entidades, services, controllers según spec]
   3. Frontend: [componentes y páginas según contratos de API]
-  4. Verificación: [mod].checks.md al terminar
+  4. Verificación: [mod].checks.md y, si hay frontend, Playwright con evidencia al terminar
 ```
 Si el dev no corrige el plan en 2 turnos, proceder.
 
@@ -217,6 +221,20 @@ Si la implementación toca un archivo existente que no sigue convenciones:
 
 Antes de declarar la implementación terminada, recorrer cada check del archivo.
 
+### Validación UI requerida
+
+Si la spec declara **Interfaz de usuario: Sí**:
+
+1. Arrancar la aplicación o el entorno local documentado.
+2. Ejecutar las pruebas Playwright que exige la spec, empezando por Chromium.
+3. Registrar en "Evidencia de validación UI" el comando, base URL, navegador,
+   escenarios y resultado real.
+4. Corregir fallas de código nuevo y repetir la prueba. No sustituir la
+   ejecución por una revisión de código, una llamada API aislada o un build.
+
+Si Playwright no está disponible, reportar el bloqueo; no marcar `in-review`
+sin la excepción explícita del dev escrita en `[mod].checks.md`.
+
 ### Checks de legado (`[LEGADO]`)
 Si el módulo tiene código previo que no cumple el check:
 - No bloquear la implementación nueva
@@ -234,6 +252,8 @@ Completar el bloque de reporte al final de `[mod].checks.md`:
 Checks completados: [N]/[total]
 Checks fallidos: [lista]
 Checks de legado no aplicables: [lista]
+Validación UI requerida: [sí/no — razón]
+Evidencia Playwright: [PASS + comando/archivo | no aplica | excepción autorizada]
 Deuda registrada en deuda-tecnica.md: [sí/no — si sí, qué entradas]
 Listo para revisión del dev: [sí/no]
 ```
@@ -332,6 +352,9 @@ Siguiente paso:
 
 5. **Los checks de `[mod].checks.md` son obligatorios para código nuevo.**
    No hay "lo verifico después" — la verificación ocurre en el Paso 6, antes de declarar in-review.
+
+   Si la spec tiene frontend, esto incluye la evidencia Playwright requerida;
+   compilar o pasar tests unitarios no la reemplaza.
 
 6. **No marcar `done`.** Ese estado lo asigna el dev después de revisar.
    El techo del agente de implementación es `in-review`.

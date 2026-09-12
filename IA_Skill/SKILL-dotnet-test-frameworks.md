@@ -7,7 +7,8 @@ Leer antes de crear cualquier archivo de test.
 Framework principal: xUnit
 Mocking: Moq o NSubstitute
 Assertions: FluentAssertions
-E2E/Integration: Cypress (frontend) + WebApplicationFactory (backend)
+E2E: Playwright Test + playwright-cli (frontend)  
+Integration: WebApplicationFactory (backend)
 
 ---
 

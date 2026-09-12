@@ -28,6 +28,7 @@ Estas aprobaciones proceden del snapshot y de los manifiestos declarados en `Cod
 | Observabilidad | OpenTelemetry 1.17.0, Azure Monitor OpenTelemetry 1.6.0 y Serilog 4.4.0 con sus sinks/enrichers declarados |
 | Frontend | Angular 22.1, RxJS 7.8, TypeScript 6, `angularx-qrcode` 22.0.1, `jwt-decode` 4.0.0 |
 | Herramientas frontend | Angular CLI/Build 22.1, Vitest 4.0.8, JSDOM 28.0.0 y Prettier 3.8.1 |
+| E2E y automatización de navegador | Playwright Test 1.63 (`@playwright/test`, raíz del workspace) y `playwright-cli` global; ver `SKILL-playwright-e2e.md` |
 
 ### Restricciones específicas
 

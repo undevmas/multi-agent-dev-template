@@ -38,7 +38,7 @@ Leer ANTES de escribir cualquier línea de código de una feature nueva.
    └── Componentes → Página → Manejo de estados (loading, empty, error, success)
 
 8. Cierre
-   └── Test E2E del flujo completo → Actualizar IA_Memoria/progreso.md
+   └── Leer `SKILL-playwright-e2e.md` → Test E2E del flujo completo → Actualizar IA_Memoria/progreso.md
 ```
 
 ---
@@ -166,6 +166,7 @@ updated_by  UUID              NULL  REFERENCES users(id)
 - [ ] Validaciones de entrada implementadas (FluentValidation / class-validator)
 - [ ] Manejo de errores en todos los endpoints (try-catch + respuesta estándar)
 - [ ] Tests unitarios: mínimo happy path + un caso de error por Service
+- [ ] Prueba Playwright persistente del happy path y del error principal cuando la feature tenga frontend (ver `SKILL-playwright-e2e.md`)
 - [ ] Paginación implementada en endpoints de listado
 - [ ] Los 4 estados de UI: loading, empty, error, success
 - [ ] Responsive verificado en móvil (375px mínimo)

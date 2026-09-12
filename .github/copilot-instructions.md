@@ -17,11 +17,17 @@ Usar solo:
 - Contenedores: Docker, Docker Compose
 - CI/CD: Azure DevOps Pipelines
 - Testing unitario: xUnit (.NET), Jest (TS/JS), pytest (Python)
-- Testing E2E: Cypress
+- Testing E2E: Playwright Test + playwright-cli
 - API docs: Swagger/OpenAPI
 
 No sugerir ni instalar tecnologías fuera de este stack sin confirmación explícita.
 Python (FastAPI) se aprobó el 2026-07-02 solo para `Codigo/Reportes/` (ReporteadorV2) — no usarlo como backend de nuevas apps de negocio sin la misma aprobación explícita.
+
+Excepción de planificación para PersonalCripto: `jmh_trading` es una
+dependencia Python analítica externa existente. Se pueden inspeccionar sus
+contratos y especificar su participación como `DEPENDENCIA EXTERNA NO
+VERIFICABLE` mientras su fuente no esté en el workspace. Esto no autoriza crear
+una nueva app Python de negocio ni modificar o desplegar el servicio externo.
 
 ## Protocolo de inicio (obligatorio)
 Antes de codificar, leer en este orden:
@@ -30,6 +36,8 @@ Antes de codificar, leer en este orden:
 3. IA_Memoria/convenciones.md
 4. Features/[feature].md (si aplica) + Features/[feature].spec.md si existe en estado `ready` o `in-progress`
 5. IA_Skill/[skill].md relevante
+
+Para validar UI, depurar un flujo desde el navegador o escribir/ejecutar E2E, leer `IA_Skill/SKILL-playwright-e2e.md`. Para la automatización interactiva, consultar `.claude/skills/playwright-cli/SKILL.md`.
 
 Regla de snapshot (Repomix) — solo cuando la tarea lo justifica:
 Adjuntar IA_Memoria/snapshots/snapshot-latest.md con #file: SOLO si:
@@ -55,14 +63,15 @@ Mapa rápido:
 - Punto de entrada — auditoría pre-productiva ("actúa como agente analista pre-productivo", "corre el checklist pre-prod"): SKILL-preprod-security-audit.md — orquesta el resto, no leer las skills de seguridad sueltas directamente para este caso
 - Antes de instalar cualquier dependencia de terceros (componentes/iconos/gráficas/animación): SKILL-approved-libraries.md
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
-- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → frontend-design/SKILL-animation-microinteractions.md → frontend-design/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
+- Validación UI/E2E: IA_Skill/SKILL-playwright-e2e.md; automatización interactiva: .claude/skills/playwright-cli/SKILL.md
+- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → IA_Skill/SKILL-animation-microinteractions.md → IA_Skill/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
 - Backend .NET: SKILL-dotnet-best-practices.md, SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md
 - Backend NestJS: SKILL-nestjs-best-practices.md, SKILL-nestjs-clean-typescript.md, SKILL-nestjs-patterns.md, SKILL-nestjs-test-frameworks.md
 - Backend Python (FastAPI, solo tooling interno de ReporteadorV2): SKILL-python-fastapi-best-practices.md, SKILL-python-test-frameworks.md
 - Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
 - Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-python.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
 - Triage de hallazgos (SCA/legado/secretos/zona de riesgo — usar en vez de las de arriba cuando el hallazgo no es de código propio en el stack aprobado): SKILL-dependency-vulnerability-triage.md, SKILL-legacy-stack-security-baseline.md, SKILL-secrets-scanning.md, SKILL-risk-zone-policy.md (fuente única de zonas, las demás la referencian)
-- Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md
+- Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md, technical-memory.md (.docx clientes), technical-audit-spec-generic.md (.docx auditorías), document-artifacts/SKILL.md (Word/PDF)
 - Soporte: SKILL-web-search.md, SKILL-caveman.md, SKILL-pr-review-fixes.md
 
 Cuándo NO consultar skills:
@@ -87,6 +96,18 @@ Cuándo NO consultar skills:
 Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zonas
 (verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias
 (esta, CLAUDE.md, AGENTS.md, GEMINI.md) diverjan entre sí.
+
+## Reglas de módulo completo
+
+Cuando una capacidad tenga frontend, la entrega incluye pantalla/flujo de
+usuario y validación Playwright del happy path y del error principal. Compilar
+o pasar tests unitarios no basta. Para un worker, API interna o servicio sin
+frontend, documentar la excepción y ejecutar pruebas de contrato, integración
+o smoke test.
+
+En el roadmap maestro, leer `IA_Skill/SKILL-spec-generator.md`: se permite
+generar épicas y specs hijas en la misma sesión; las decisiones pendientes
+mantienen la spec en `draft` o `needs-clarification`.
 
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno
