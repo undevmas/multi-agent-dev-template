@@ -3,9 +3,13 @@
 ## Prioridad de instrucciones (desempate)
 Si hay conflicto entre instrucciones, aplicar este orden:
 1. CLAUDE.md
-2. IA_Memoria/convenciones.md
-3. Este archivo
-4. IA_Skill/[skill].md específica de la tarea
+2. Contrato específico de la tarea (`Features/*.md`, `.spec.md`, `.checks.md`)
+   para comportamiento funcional, y `IA_Skill/[skill].md` para procedimiento.
+3. `IA_Memoria/convenciones.md`, `arquitectura.md` y `progreso.md` como contexto.
+4. Este archivo compacto.
+
+**AUTONOMY_POLICY_VERSION: 1** — para ambigüedades y solicitudes de
+confirmación aplicar `CLAUDE.md` → `Política de autonomía y ambigüedades`.
 
 ## Stack aprobado (bloqueado)
 Usar solo:
@@ -23,11 +27,15 @@ Usar solo:
 No sugerir ni instalar tecnologías fuera de este stack sin confirmación explícita.
 Python (FastAPI) se aprobó el 2026-07-02 solo para `Codigo/Reportes/` (ReporteadorV2) — no usarlo como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
-Excepción de planificación para PersonalCripto: `jmh_trading` es una
-dependencia Python analítica externa existente. Se pueden inspeccionar sus
-contratos y especificar su participación como `DEPENDENCIA EXTERNA NO
-VERIFICABLE` mientras su fuente no esté en el workspace. Esto no autoriza crear
-una nueva app Python de negocio ni modificar o desplegar el servicio externo.
+Excepción de stack para PersonalCripto — `jmh_trading`: módulo Python
+analítico versionado en `Codigo/personal-cripto/jmh_trading/` (fuera del
+`.sln`, pero verificado en el repositorio — ver `IA_Memoria/arquitectura.md`).
+Se permite crear, modificar y validar este módulo siguiendo
+`IA_Skill/SKILL-jmh-trading.md`. Esto no autoriza crear una nueva app Python de
+negocio fuera de este módulo. Una Spec aprobada y evidencia son necesarias pero
+no suficientes para ejecución real, paper trading o adapters live: se requiere
+autorización humana separada, actual y específica justo antes de operar. El
+deploy en la VM lo ejecuta el dev manualmente.
 
 ## Protocolo de inicio (obligatorio)
 Antes de codificar, leer en este orden:
@@ -55,6 +63,7 @@ Al leer el snapshot, ANTES de codificar:
 No iniciar código sin haber leído al menos 1, 2 y 3.
 
 ## Cuándo consultar skills
+> **Router central:** La selección de la **Skill Primaria** (una sola por tarea) y **Skills Auxiliares** (bajo demanda) se rige por IA_Skill/SKILL-instruction-router.md.
 Consultar IA_Skill solo cuando la tarea lo requiera por dominio técnico.
 
 Mapa rápido:
@@ -62,7 +71,7 @@ Mapa rápido:
 - Frontend (diseño visual): frontend-design/SKILL-component-patterns.md, frontend-design/SKILL-design-tokens.md, frontend-design/SKILL-typography-system.md, frontend-design/SKILL-layout-spacing-system.md, frontend-design/SKILL-visual-identity-override.md, frontend-design/SKILL-dark-mode-theming.md, frontend-design/SKILL-responsive-pwa-patterns.md, frontend-design/SKILL-animation-microinteractions.md, frontend-design/SKILL-accessibility-a11y.md, frontend-design/SKILL-gradient-accents.md (botones premium / mesh gradient hero, solo landing), frontend-design/SKILL-angular-data-table-pattern.md (tabla server-side Angular)
 - Punto de entrada — auditoría pre-productiva ("actúa como agente analista pre-productivo", "corre el checklist pre-prod"): SKILL-preprod-security-audit.md — orquesta el resto, no leer las skills de seguridad sueltas directamente para este caso
 - Antes de instalar cualquier dependencia de terceros (componentes/iconos/gráficas/animación): SKILL-approved-libraries.md
-- Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
+- Testing frontend: SKILL-angular-test-frameworks.md (Jest), SKILL-angular-test-vitest.md (Vitest en PersonalCripto), SKILL-react-test-frameworks.md
 - Validación UI/E2E: IA_Skill/SKILL-playwright-e2e.md; automatización interactiva: .claude/skills/playwright-cli/SKILL.md
 - Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → IA_Skill/SKILL-animation-microinteractions.md → IA_Skill/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
 - Backend .NET: SKILL-dotnet-best-practices.md, SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md

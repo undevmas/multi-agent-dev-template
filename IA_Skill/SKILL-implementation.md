@@ -1,5 +1,8 @@
 # SKILL — Implementation (Agente de Implementación Guiado por Spec)
 
+Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
+y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+
 ## Cuándo usar esta skill
 Cuando la tarea es implementar una feature que ya tiene spec generada.
 Leer esta skill COMPLETA antes de tocar cualquier archivo de código.
@@ -10,8 +13,10 @@ Triggers:
 - "la spec de [feature] está lista, puedes arrancar"
 - Existe `Features/[mod].spec.md` con **Estado:** `ready`
 
-**Si no existe `[mod].spec.md` o su estado no es `ready` — PARAR.**
-No implementar con especificación incompleta. Ver sección "Bloqueos" al final.
+Si no existe `[mod].spec.md`, o está `draft`/`needs-clarification`, aplicar la
+definición estricta de `NEEDS CLARIFICATION` de `CLAUDE.md`.
+Una Spec `ready` puede implementarse y una implementación `in-progress` puede
+reanudarse cuando la solicitud actual ordena continuar, reanudar o finalizar.
 
 ---
 
@@ -32,7 +37,9 @@ a código del stack del proyecto, se autoverifica y reporta con evidencia.
 - Modificar el contenido funcional de `[mod].md` sin confirmación del dev
 - Modificar los contratos, reglas de negocio o User Stories en `[mod].spec.md`
 - Declarar una feature como `done` — eso lo decide el dev
-- Inventar endpoints, entidades o comportamientos no especificados en la spec
+- Inventar reglas de negocio, umbrales, efectos o contratos funcionales no
+  especificados. Sí puede resolver detalles técnicos reversibles y crear
+  extensiones internas compatibles necesarias para materializar la Spec.
 - Empezar a codificar sin haber leído los tres artefactos de la spec
 
 ---
@@ -62,12 +69,17 @@ Leer los tres artefactos en este orden antes de cualquier otra acción:
 ### 1a. `Features/[mod].md`
 Verificar:
 - **Estado:** `ready` → continuar
-- **Estado:** `needs-clarification` → PARAR, hay [NEEDS CLARIFICATION] sin resolver
-- **Estado:** `draft` → PARAR, la spec está incompleta
-- **Estado:** `in-progress` → alguien ya está trabajando esto, confirmar con el dev antes de continuar
-- **Dependencias:** todas las features listadas deben estar en estado `done`
+- **Estado:** `needs-clarification` → no implementar el comportamiento
+  dependiente; continuar únicamente alcance independiente ya autorizado.
+- **Estado:** `draft` → no implementar esta Spec; puede continuarse con otras
+  Specs independientes.
+- **Estado:** `in-progress` → reanudar si la solicitud actual lo autoriza.
+  Solo escalar si se verifica una colisión real con otro trabajo concurrente.
+- **Dependencias HARD:** deben estar satisfechas.
+- **Dependencias SOFT:** no bloquean; implementar el degradado documentado.
 
-Si hay dependencias no resueltas — PARAR y reportar cuál bloquea.
+Solo una dependencia HARD no aislable puede bloquear. Continuar todo trabajo
+independiente y reportar el alcance afectado.
 
 ### 1b. `Features/[mod].spec.md`
 Leer completo. Marcar mentalmente:
@@ -170,6 +182,8 @@ leer las skills correspondientes antes de codificar esa capa:
 | React | `IA_Skill/SKILL-frontend-design.md` |
 | .NET | `IA_Skill/SKILL-dotnet-best-practices.md` |
 | NestJS | `IA_Skill/SKILL-nestjs-best-practices.md` |
+| Python (FastAPI — tooling interno) | `IA_Skill/SKILL-python-fastapi-best-practices.md` |
+| Python — PersonalCripto `jmh_trading` | `IA_Skill/SKILL-jmh-trading.md` |
 | Migración de BD | `IA_Skill/SKILL-database-migrations.md` |
 | Módulo full stack completo | `IA_Skill/SKILL-mvc-feature.md` |
 | Seguridad (guard, token, permiso) | `IA_Skill/SKILL-security-[stack].md` relevante |
@@ -180,13 +194,17 @@ Leer la skill de la capa que se va a implementar ahora — no todas a la vez.
 
 ## Paso 5 — Implementar siguiendo la spec
 
-El código que se produce es una traducción directa de `[mod].spec.md`. No es
-una interpretación ni una mejora — es el contrato hecho código.
+El código debe ser fiel al comportamiento de `[mod].spec.md`. El agente decide
+autónomamente los detalles técnicos reversibles usando evidencia, convenciones
+y patrones existentes. No agrega reglas de negocio ni amplía el alcance.
 
 ### Entidades y base de datos
 - Crear exactamente las columnas declaradas en la tabla de entidades
 - Aplicar los tipos, defaults y reglas de negocio de cada columna
-- No agregar columnas extra sin declararlo y sin agregarlas al spec
+- No agregar campos de dominio, defaults o reglas de negocio no declarados.
+- Metadatos técnicos necesarios para disponibilidad, fuente, freshness,
+  versionado o estados seguros pueden agregarse como T2 si son aditivos,
+  no destructivos, reversibles y quedan documentados y probados.
 
 ### Contratos de API
 - Implementar cada endpoint declarado: verbo, ruta, request body, response, códigos de error
@@ -196,24 +214,45 @@ una interpretación ni una mejora — es el contrato hecho código.
 ### Reglas de negocio (RN-XX)
 Cada regla tiene un número. Implementarlas en el orden en que aparecen.
 Si una regla es ambigua o parece incorrecta:
-- Implementarla tal como está declarada
-- Agregar un comentario en el código con `// RN-XX: [nota sobre la ambigüedad]`
-- Registrar en el reporte final (Paso 8)
+- Investigar las fuentes internas y clasificarla como T1/T2/B1/B2/S1/X1.
+- Resolver T1/T2 autónomamente.
+- Para B1, implementar soporte configurable y estado seguro sin activarla.
+- Aislar B2 cuando sea posible y continuar el resto.
+- Escalar únicamente según la definición estricta de `NEEDS CLARIFICATION`.
+- Registrar evidencia, decisión y comportamiento provisional en el reporte.
 
 ### Gaps en spec (`[NEEDS CLARIFICATION]`)
 Si `[mod].spec.md` tiene ítems `[NEEDS CLARIFICATION]` sin resolver:
-- Implementar usando el **default documentado** en ese ítem
-- No inventar un comportamiento diferente al default declarado
-- Registrar en el reporte cuáles defaults se usaron
+- No implementar ni activar el comportamiento dependiente de la decisión.
+- Aplicar el comportamiento seguro documentado (`disabled`, `UNKNOWN`,
+  `PENDING_CONFIGURATION` o equivalente), sin convertirlo en aprobación.
+- Continuar todo alcance independiente y registrar la decisión pendiente.
+- Un default solo puede usarse si está aprobado explícitamente en una Spec
+  `ready` y no debilita seguridad, capital real ni integridad de datos.
+
+### Propiedad del gap
+
+- Determinar qué Spec es propietaria del contrato o comportamiento faltante.
+- Si pertenece a otra Spec, registrar deuda técnica con `Spec propietaria`,
+  `Detectada desde`, `Retomar en`, evidencia, comportamiento provisional y
+  condición de salida. No adjudicarla genéricamente a la Spec consumidora.
+- Al retomar una Spec, buscar en `IA_Memoria/deuda-tecnica.md` deudas cuyo campo
+  `Retomar en` apunte a esa Spec e incorporarlas al plan y a los checks.
+- Si pertenece a la Spec actual, resolver T1/T2 con la mejor opción reversible,
+  implementarla y registrar la decisión en `[mod].checks.md`. Actualizar
+  `arquitectura.md` o `convenciones.md` solo si la decisión es transversal.
+- Una deuda cross-Spec permite continuar lo independiente, pero no declarar
+  operativo el comportamiento dependiente mientras su condición de salida no
+  esté cumplida.
 
 ### Código legado en zona ámbar
 Si la implementación toca un archivo existente que no sigue convenciones:
 - Agregar el nuevo código siguiendo convenciones del template
 - No modificar el código existente más allá de lo necesario
-- Si hay conflicto entre la spec y el código real existente:
-  → el código real manda (leer `CLAUDE.md` → Política de trabajo con código legado)
-  → registrar el conflicto en `IA_Memoria/deuda-tecnica.md`
-  → no modificar spec ni código existente sin ticket
+- Si hay conflicto entre la Spec y código legado fuera del cambio autorizado,
+  el código real manda y se registra el conflicto. Esto no impide modificaciones
+  explícitamente requeridas por una Spec `ready`, siempre que sean acotadas,
+  compatibles y verificadas.
 
 ---
 
@@ -225,12 +264,12 @@ Antes de declarar la implementación terminada, recorrer cada check del archivo.
 
 Si la spec declara **Interfaz de usuario: Sí**:
 
-1. Arrancar la aplicación o el entorno local documentado.
-2. Ejecutar las pruebas Playwright que exige la spec, empezando por Chromium.
-3. Registrar en "Evidencia de validación UI" el comando, base URL, navegador,
-   escenarios y resultado real.
-4. Corregir fallas de código nuevo y repetir la prueba. No sustituir la
-   ejecución por una revisión de código, una llamada API aislada o un build.
+El agente debe ejecutar de forma autónoma la validación visual en navegador, sin requerir que el operador lo pida explícitamente en el prompt:
+
+1. **Verificar servicios en background:** Comprobar si `http://localhost:4200` está activo. Si no responde, arrancarlo en segundo plano (daemon/background) según `IA_Skill/SKILL-playwright-e2e.md`, nunca con un comando síncrono bloqueante que congele la terminal del agente.
+2. **Ejecutar Playwright en modo visual:** En desarrollo local, ejecutar las pruebas Playwright que exige la spec en modo encabezado/visible (`--headed --project=chromium`), permitiendo observar la navegación física en pantalla.
+3. **Registrar evidencia:** Anotar en "Evidencia de validación UI" de `[mod].checks.md` el comando, base URL, navegador, escenarios y resultado real.
+4. Corregir fallas de código nuevo y repetir la prueba. No sustituir la ejecución por una revisión de código, una llamada API aislada o un build.
 
 Si Playwright no está disponible, reportar el bloqueo; no marcar `in-review`
 sin la excepción explícita del dev escrita en `[mod].checks.md`.
@@ -302,10 +341,13 @@ Verificación:
   Checks fallidos: [ninguno / lista]
   Deuda registrada: [no / sí → ver deuda-tecnica.md]
 
-[Si se usaron defaults de NEEDS CLARIFICATION:]
-⚠ Defaults usados por gaps en spec:
-  - NC-01: se implementó con [valor default]
-  - NC-02: se implementó con [valor default]
+[Si hubo ambigüedades o comportamiento provisional:]
+⚠ Supuestos y decisiones pendientes:
+  - [ID]: [T1/T2/B1/B2/S1/X1]
+    Evidencia: [fuentes revisadas]
+    Decisión aplicada: [decisión]
+    Comportamiento provisional: [disabled/UNKNOWN/etc.]
+    Condición de activación: [evidencia o aprobación necesaria]
 
 [Si hubo conflicto spec vs código real:]
 ⚠ Conflictos registrados en deuda-tecnica.md:
@@ -327,10 +369,16 @@ Siguiente paso:
 
 | Situación | Acción |
 |---|---|
-| Spec en estado `draft` o `needs-clarification` | PARAR. "La spec de [mod] no está lista (estado: [X]). Resolver [NEEDS CLARIFICATION] antes de implementar." |
-| Dependencias no resueltas | PARAR. "La feature [mod] depende de [dep] que está en estado [X], no done." |
-| Spec ambigua en punto crítico no documentado | Implementar con el criterio más conservador, documentar en el reporte. No consultar al dev durante la implementación — hacerlo al reportar. |
-| Código existente contradice la spec | El código real manda. Registrar en deuda-tecnica.md. No detener la implementación. |
+| Spec en estado `draft` o `needs-clarification` | No implementar el comportamiento dependiente. Reportar la decisión exacta y continuar únicamente unidades independientes ya autorizadas. |
+| Dependencia HARD no resuelta y no aislable | PARAR solo el alcance dependiente; continuar el resto. |
+| Dependencia SOFT no disponible | Implementar contrato degradado y pruebas; no bloquear. |
+| T1/T2 | Investigar, decidir, implementar y documentar sin preguntar. |
+| B1 | Implementar soporte configurable; regla deshabilitada y estado explícito. |
+| B2/S1/X1 no aislable | Escalar usando el formato de `CLAUDE.md`; continuar lo independiente. |
+| Gap propiedad de otra Spec | Registrar deuda con Spec propietaria y `Retomar en`; continuar lo independiente. |
+| Gap T1/T2 propiedad de la Spec actual | Resolver, implementar, probar y documentar; no diferir ni preguntar. |
+| Código legado fuera del cambio autorizado contradice la Spec | El código real manda en ese alcance; registrar sin detener lo independiente. |
+| Código existente carece del comportamiento nuevo autorizado por una Spec `ready` | Implementar el cambio acotado; la ausencia actual no veta la Spec. |
 | Stack no listado en Skills de implementación | PARAR antes de codificar. "El stack [X] no tiene skill en este proyecto. Confirmar antes de proceder." |
 
 ---
@@ -343,12 +391,14 @@ Siguiente paso:
 2. **`[mod].md` es la fuente de verdad del estado.** Actualizar siempre primero.
    `progreso.md` es un espejo — nunca puede estar adelante de `[mod].md`.
 
-3. **No inventar comportamiento.** Si la spec no lo dice, no existe.
-   La excepción: gaps con default documentado en `[NEEDS CLARIFICATION]` → usar ese default.
+3. **No inventar reglas de negocio.** La ausencia de una decisión funcional no
+   impide tomar decisiones técnicas reversibles ni implementar soporte seguro
+   deshabilitado.
 
-4. **No modificar el contrato durante la implementación.**
-   Si se descubre un error en `[mod].spec.md`, reportarlo al dev — no corregirlo en silencio.
-   El contrato lo escribe el agente spec o el dev, no el agente de implementación.
+4. **No introducir cambios funcionales silenciosos.** Las extensiones aditivas
+   y compatibles requeridas por una Spec `ready` se permiten con pruebas de
+   contrato en productor y consumidor. Los cambios breaking o de negocio se
+   escalan.
 
 5. **Los checks de `[mod].checks.md` son obligatorios para código nuevo.**
    No hay "lo verifico después" — la verificación ocurre en el Paso 6, antes de declarar in-review.

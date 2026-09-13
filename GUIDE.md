@@ -7,14 +7,15 @@
 
 ## Agentes soportados y cómo leen el contexto
 
-| Agente | Archivo de instrucciones | Lo lee automáticamente | Skills y snapshots |
-|---|---|---|---|
-| **Claude Code** | `CLAUDE.md` | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas |
-| **Gemini CLI** | `.gemini/GEMINI.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **OpenCode** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **Codex CLI** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **Cursor** | `.cursor/rules/project.mdc` | ✅ Sí, automático | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto |
-| **GitHub Copilot** | `.github/copilot-instructions.md` | ✅ Sí, automático | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente |
+| Agente                            | Archivo de instrucciones          | Lo lee automáticamente    | Skills y snapshots                                                                     |
+| --------------------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| **Antigravity** (Google DeepMind) | AGENTS.md / .gemini/GEMINI.md     | ✅ Sí, automático         | Lectura bajo demanda con herramientas nativas vía IA_Skill/SKILL-instruction-router.md |
+| **Claude Code**                   | `CLAUDE.md`                       | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas                                             |
+| **Gemini CLI**                    | `.gemini/GEMINI.md`               | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **OpenCode**                      | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **Codex CLI**                     | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **Cursor**                        | `.cursor/rules/project.mdc`       | ✅ Sí, automático         | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto                  |
+| **GitHub Copilot**                | `.github/copilot-instructions.md` | ✅ Sí, automático         | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente                             |
 
 > **Nota Cursor:** las instrucciones base (`.cursor/rules/project.mdc`) se cargan automáticamente. Skills, specs y snapshots se adjuntan arrastrando el archivo al chat o usando `@archivo` en el prompt.
 >
@@ -121,13 +122,13 @@ Cópialo y pégalo en tu agente para que llene la memoria del proyecto.
 
 El agente leerá el snapshot para llenar automáticamente:
 
-| Archivo | Qué escribe el agente |
-|---|---|
-| `IA_Memoria/arquitectura.md` | Tecnologías detectadas, módulos, puertos, variables de entorno |
-| `IA_Memoria/progreso.md` | Qué módulos existen y cuáles están pendientes |
-| `IA_Memoria/convenciones.md` | Patrones de naming encontrados en el código real |
-| `IA_Memoria/deuda-tecnica.md` | Antipatrones reales detectados (solo si el proyecto ya tiene código) |
-| `IA_Memoria/modulos.json` | Manifest de módulos (nombre, ruta, stack) — lo consume `repomix-scan-modules` |
+| Archivo                       | Qué escribe el agente                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `IA_Memoria/arquitectura.md`  | Tecnologías detectadas, módulos, puertos, variables de entorno                |
+| `IA_Memoria/progreso.md`      | Qué módulos existen y cuáles están pendientes                                 |
+| `IA_Memoria/convenciones.md`  | Patrones de naming encontrados en el código real                              |
+| `IA_Memoria/deuda-tecnica.md` | Antipatrones reales detectados (solo si el proyecto ya tiene código)          |
+| `IA_Memoria/modulos.json`     | Manifest de módulos (nombre, ruta, stack) — lo consume `repomix-scan-modules` |
 
 Esto evita que el agente te haga preguntas de arranque en cada sesión.
 Si el proyecto está vacío, el agente lo indica — no inventa estructura.
@@ -413,17 +414,17 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 33 skills organizadas por dominio. El agente lee solo la que corresponde a la tarea actual.
 
-| Área | Skills |
-|---|---|
-| **Especificaciones** | `SKILL-spec-generator.md` |
-| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` |
-| **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
-| **Testing frontend** | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md` |
-| **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
-| **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
-| **Seguridad** | `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
-| **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
-| **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` |
+| Área                          | Skills                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Especificaciones**          | `SKILL-spec-generator.md`                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md`                                                                                                                                                                                                                                                                                                                                                                           |
+| **Frontend — diseño visual**  | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
+| **Testing frontend**          | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md`                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Backend .NET**              | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md`                                                                                                                                                                                                                                                                                                                    |
+| **Backend NestJS**            | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md`                                                                                                                                                                                                                                                                                                                        |
+| **Seguridad**                 | `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md`                                                                                                                                                                                                                                                                                               |
+| **Texto y docs**              | `SKILL-humanizer.md` · `SKILL-docs-feature.md`                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Soporte del agente**        | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md`                                                                                                                                                                                                                                                                                                                                                                                       |
 
 Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` antes del prompt.
 

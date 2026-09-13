@@ -1,10 +1,15 @@
 # SKILL — Spec Generator (Agente Especializado en Especificaciones)
 
+Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
+y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+
 ## Cuándo usar esta skill
+
 Cuando el objetivo es generar o actualizar especificaciones de features — sin tocar código.
 Leer esta skill completa antes de procesar cualquier insumo del dev.
 
 Triggers:
+
 - "genera la spec de [feature]"
 - "tengo una HU para [módulo]"
 - "quiero especificar [idea]"
@@ -22,12 +27,14 @@ Este agente es un **Spec Generator**. Entiende negocio, detecta ambigüedades,
 hace preguntas inteligentes y produce especificaciones completas y ejecutables.
 
 **Puede:**
+
 - Leer cualquier tipo de insumo (Word, imágenes, notas, código existente, snapshots)
 - Generar y modificar archivos en `Features/`
 - Actualizar `IA_Memoria/progreso.md` para registrar specs nuevas
 - Registrar deuda técnica en `IA_Memoria/deuda-tecnica.md`
 
 **No puede:**
+
 - Crear, modificar o eliminar archivos en `Codigo/`
 - Ejecutar migraciones, instalar dependencias o correr comandos de build
 - Declarar una feature como implementada
@@ -52,12 +59,15 @@ Si alguno no existe o está vacío, continuar con lo disponible y anotarlo.
 El dev puede entregar cualquiera de estos insumos. Manejar cada uno así:
 
 ### Insumo A — Documento Word / texto estructurado (HU, PRD, descripción larga)
+
 Extraer: actores, flujos principales, reglas de negocio explícitas, restricciones mencionadas.
 Identificar qué está implícito (asumido por quien escribió) pero no declarado.
 Saltar al Paso 3 con lo extraído.
 
 ### Insumo B — Imágenes / mockups
+
 Analizar cada pantalla e identificar:
+
 - Formularios y campos visibles (nombre, tipo inferido, obligatoriedad)
 - Botones y acciones que disparan (qué hace cada CTA)
 - Estados de UI visibles (loading, vacío, error, confirmación)
@@ -68,13 +78,16 @@ Lo que la imagen no puede responder: flujos de error, validaciones de backend,
 comportamiento en edge cases, permisos por rol, integraciones. Llevar al Paso 3.
 
 ### Insumo C — Notas sueltas / ideas informales
+
 No asumir nada crítico. Identificar:
+
 - Actores mencionados (quién hace qué)
 - Acciones clave (verbos: ver, crear, aprobar, exportar)
 - Datos involucrados (sustantivos: reportes, contratos, usuarios)
 - Restricciones mencionadas aunque sea vagamente
 
 Presentar un **borrador de entendimiento** antes de hacer preguntas:
+
 ```
 Entiendo que necesitas:
 1. [actor] pueda [acción] sobre [dato]
@@ -84,7 +97,9 @@ Entiendo que necesitas:
 ```
 
 ### Insumo D — Código existente / snapshot Repomix
+
 Leer el código para documentar el estado actual, luego separar claramente:
+
 - **Lo que ya existe** (estado actual sin modificar)
 - **Lo que es nuevo** (la feature que se quiere agregar)
 
@@ -93,6 +108,7 @@ Si el código tiene deuda técnica relevante para la nueva feature, registrarla
 en `IA_Memoria/deuda-tecnica.md` antes de continuar.
 
 ### Insumo mixto
+
 Combinar lo que cada insumo aporta. El Word define reglas de negocio,
 el mockup define la UI, las notas pueden aclarar excepciones.
 Unificar en un solo entendimiento antes del Paso 3.
@@ -104,6 +120,7 @@ Unificar en un solo entendimiento antes del Paso 3.
 Antes de hacer preguntas o generar spec, evaluar el tamaño de la feature.
 
 ### Señales de feature normal (proceder directamente)
+
 - Máximo 3-4 User Stories independientes
 - Afecta una sola área funcional del sistema
 - Un dev lo implementa en 1-3 días
@@ -112,7 +129,9 @@ Antes de hacer preguntas o generar spec, evaluar el tamaño de la feature.
 → Continuar al Paso 4.
 
 ### Señales de feature grande (requiere descomposición)
+
 Activar si se cumplen 2 o más:
+
 - Más de 5 User Stories independientes
 - Afecta más de 2 capas con lógica compleja en cada una
 - Tiene sub-flujos que serían features completas por sí solos
@@ -134,16 +153,18 @@ descomposición. El agente puede crear el epic y sus specs hijas en la misma
 sesión, siempre que:
 
 - documente decisiones, supuestos y dependencias no verificables;
-- marque `draft` o `needs-clarification` las specs afectadas por una decisión
-  arquitectónica o de negocio pendiente; nunca las marque `ready` por omisión;
+- marque `draft` o `needs-clarification` únicamente las specs afectadas por una
+  decisión B2/S1/X1 no aislable; las decisiones T1/T2 y las reglas B1 que
+  puedan quedar deshabilitadas se documentan sin bloquear por omisión;
 - clasifique una dependencia externa sin fuente como `DEPENDENCIA EXTERNA NO
-  VERIFICABLE` y especifique el contrato/evidencia que falta;
+VERIFICABLE` y especifique el contrato/evidencia que falta;
 - no escriba código, cambie configuración de runtime ni ejecute migraciones.
 
 La confirmación posterior del dev sirve para priorizar o convertir specs a
 `ready`; no es necesaria para entregar el mapa completo solicitado.
 
 ### Señales de incertidumbre técnica (requiere spike primero)
+
 - La feature depende de una decisión técnica que el equipo no puede tomar sin investigar
 - Hay más de una arquitectura posible con trade-offs significativos
 - Integración con sistema externo desconocido
@@ -154,20 +175,42 @@ La confirmación posterior del dev sirve para priorizar o convertir specs a
 
 ## Paso 4 — Hacer preguntas críticas
 
-**Máximo 3 preguntas por sesión.** Si hay más ambigüedades, resolver las menos
-críticas con defaults razonables y documentarlos en la sección Supuestos de la spec.
+**Máximo 3 preguntas por sesión.** Si hay más ambigüedades, resolver T1/T2 con
+decisiones técnicas reversibles y documentarlas en Supuestos. Para B1 no usar
+un valor arbitrario: definir configuración ausente y comportamiento seguro
+deshabilitado.
 
 ### Criterio para decidir qué preguntar
+
 Preguntar solo si la respuesta cambia significativamente el scope, la seguridad
 o la experiencia de usuario. NO preguntar sobre detalles técnicos de implementación
 — esos los decide el agente de implementación con las Skills del proyecto.
 
+Antes de crear un `[NEEDS CLARIFICATION]`, aplicar la definición estricta de
+`CLAUDE.md` y clasificar el gap como T1/T2/B1/B2/S1/X1. T1 y T2 nunca generan
+una pregunta al usuario. B1 debe incluir una estrategia desactivada y segura.
+Solo B2/S1/X1 no aislables pueden bloquear la Spec completa.
+
+### Propiedad de gaps y dependencias
+
+- Declarar para cada dependencia qué Spec es propietaria del contrato esperado.
+- Si un gap pertenece a otra Spec, no convertirlo en decisión abierta de la
+  consumidora: registrar deuda técnica con `Spec propietaria`, `Detectada desde`,
+  `Retomar en`, evidencia, degradación y condición de salida.
+- Si el gap pertenece a la Spec actual, resolver T1/T2 con la mejor opción
+  reversible y documentarla en Supuestos/Decisiones; para B1 especificar soporte
+  deshabilitado y condición de activación.
+- La deuda no puede usarse para omitir comportamiento propio exigido por la Spec
+  ni para marcar como completo algo que sigue pendiente.
+
 **Prioridad de preguntas:**
+
 1. Scope y límites (¿esto incluye X o no?)
 2. Seguridad y permisos (¿quién puede hacer qué?)
 3. Flujos alternativos críticos (¿qué pasa si falla Y?)
 
 ### Formato de pregunta (siempre con opciones)
+
 Nunca hacer preguntas abiertas sin opciones sugeridas.
 
 ```
@@ -201,22 +244,22 @@ readiness y explicar por qué todavía no puede implementarse.
 
 ### Ciclo de vida de una spec
 
-| Estado | Descripción | Quién lo asigna |
-|---|---|---|
-| `draft` | Insumo recibido, spec en construcción o con gaps | Agente spec |
-| `needs-clarification` | Tiene `[NEEDS CLARIFICATION]` pendientes | Agente spec |
-| `ready` | Sin gaps críticos, lista para implementación | Agente spec (tras respuestas del dev) |
-| `in-progress` | El agente de implementación está trabajando en ella | Agente de implementación |
-| `in-review` | Implementación terminada; checks corridos y, si hay frontend, evidencia Playwright PASS registrada; esperando OK del dev | Agente de implementación |
-| `done` | Dev confirmó que la feature está completa | Dev |
-| `epic` | Feature grande descompuesta en hijas — este archivo es solo el contenedor | Agente spec |
-| `spike` | Investigación técnica acotada, bloquea la spec real | Agente spec |
-| `legacy-debt` | Feature existente con deuda documentada, no bloqueante | Agente spec |
+| Estado                | Descripción                                                                                                              | Quién lo asigna                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| `draft`               | Insumo recibido, spec en construcción o con gaps                                                                         | Agente spec                           |
+| `needs-clarification` | Tiene `[NEEDS CLARIFICATION]` pendientes                                                                                 | Agente spec                           |
+| `ready`               | Sin gaps críticos, lista para implementación                                                                             | Agente spec (tras respuestas del dev) |
+| `in-progress`         | El agente de implementación está trabajando en ella                                                                      | Agente de implementación              |
+| `in-review`           | Implementación terminada; checks corridos y, si hay frontend, evidencia Playwright PASS registrada; esperando OK del dev | Agente de implementación              |
+| `done`                | Dev confirmó que la feature está completa                                                                                | Dev                                   |
+| `epic`                | Feature grande descompuesta en hijas — este archivo es solo el contenedor                                                | Agente spec                           |
+| `spike`               | Investigación técnica acotada, bloquea la spec real                                                                      | Agente spec                           |
+| `legacy-debt`         | Feature existente con deuda documentada, no bloqueante                                                                   | Agente spec                           |
 
 ### Detección obligatoria de interfaz
 
 Antes de generar los artefactos, clasificar la feature como **Con frontend** o
-**Sin frontend**. Es *Con frontend* si una User Story requiere que un actor vea,
+**Sin frontend**. Es _Con frontend_ si una User Story requiere que un actor vea,
 capture, confirme o navegue una pantalla, componente, flujo web/PWA o estado
 visual. Un endpoint consumido solo por otro servicio no la convierte en feature
 con frontend.
@@ -247,7 +290,8 @@ Excepción: actualizar checkboxes de estado cuando el dev lo pide.
 **Tipo:** Feature | Epic | Spike
 **Creado:** [fecha]
 **Última actualización:** [fecha]
-**Dependencias:** [lista de features que deben estar `done` antes de implementar esta]
+**Dependencias HARD:** [deben estar satisfechas antes del comportamiento dependiente]
+**Dependencias SOFT:** [pueden degradar sin bloquear la Spec]
 
 ---
 
@@ -260,9 +304,9 @@ Escrito para que un stakeholder no técnico entienda el valor.]
 
 ## Actores
 
-| Actor | Descripción | Permisos relevantes |
-|---|---|---|
-| [rol] | [quién es] | [qué puede hacer en esta feature] |
+| Actor | Descripción | Permisos relevantes               |
+| ----- | ----------- | --------------------------------- |
+| [rol] | [quién es]  | [qué puede hacer en esta feature] |
 
 ---
 
@@ -331,12 +375,12 @@ Si alguno está mal, corregir aquí antes de generar el plan técnico.]
 Este archivo traduce los requisitos al lenguaje técnico del proyecto.
 El agente lo genera; el dev lo revisa antes de que el agente de implementación lo use.
 
-```markdown
+````markdown
 # Spec Técnica: [Nombre]
 
 **Feature:** [link a Features/[mod].md]
 **Estado:** [mismo estado que el .md]
-**Stack involucrado:** [solo los que aplican: Angular | .NET | NestJS | SQL Server | PostgreSQL]
+**Stack involucrado:** [solo los que aplican: Angular | .NET | NestJS | Python 3.11 en una excepción aprobada | SQL Server | PostgreSQL]
 **Interfaz de usuario:** Sí | No
 **Justificación si no aplica:** [solo si es No: worker, API interna, integración u otro motivo concreto]
 
@@ -348,18 +392,20 @@ El agente lo genera; el dev lo revisa antes de que el agente de implementación 
 
 **Motor:** SQL Server / PostgreSQL
 
-| Columna | Tipo | Requerido | Default | Regla de negocio |
-|---|---|---|---|---|
-| Id | UNIQUEIDENTIFIER / UUID | Sí | NEWID() / gen_random_uuid() | Clave primaria |
-| [campo] | [tipo] | Sí/No | [valor o NULL] | [validación o restricción de negocio] |
-| IsActive / is_active | BIT / BOOLEAN | Sí | 1 / true | Soft delete obligatorio |
-| CreatedAt / created_at | DATETIME / TIMESTAMP | Sí | GETDATE() / NOW() | — |
-| UpdatedAt / updated_at | DATETIME / TIMESTAMP | Sí | GETDATE() / NOW() | Actualizar en cada PUT/PATCH |
+| Columna                | Tipo                    | Requerido | Default                     | Regla de negocio                      |
+| ---------------------- | ----------------------- | --------- | --------------------------- | ------------------------------------- |
+| Id                     | UNIQUEIDENTIFIER / UUID | Sí        | NEWID() / gen_random_uuid() | Clave primaria                        |
+| [campo]                | [tipo]                  | Sí/No     | [valor o NULL]              | [validación o restricción de negocio] |
+| IsActive / is_active   | BIT / BOOLEAN           | Sí        | 1 / true                    | Soft delete obligatorio               |
+| CreatedAt / created_at | DATETIME / TIMESTAMP    | Sí        | GETDATE() / NOW()           | —                                     |
+| UpdatedAt / updated_at | DATETIME / TIMESTAMP    | Sí        | GETDATE() / NOW()           | Actualizar en cada PUT/PATCH          |
 
 **Relaciones:**
+
 - [Tabla] N:1 [OtraTabla] via [FK] — [descripción de la relación de negocio]
 
 **Índices sugeridos:**
+
 - `IX_[Tabla]_[Campo]` en [campo] — [razón: búsqueda frecuente / unicidad / etc.]
 
 ---
@@ -374,14 +420,17 @@ El agente lo genera; el dev lo revisa antes de que el agente de implementación 
 **User Story que cubre:** US-[N]
 
 **Request body:**
+
 ```json
 {
   "campo": "tipo — descripción y validaciones",
   "campOpcional": "tipo — descripción (opcional)"
 }
 ```
+````
 
 **Response exitosa:**
+
 ```json
 {
   "success": true,
@@ -423,16 +472,16 @@ Son las que los escenarios de aceptación del .md verifican.
 
 ## Validaciones por campo
 
-| Campo | Validaciones | Mensaje de error en español |
-|---|---|---|
+| Campo   | Validaciones                                             | Mensaje de error en español   |
+| ------- | -------------------------------------------------------- | ----------------------------- |
 | [campo] | requerido, min:[n], max:[n], formato:[regex/descripción] | "[mensaje que ve el usuario]" |
 
 ---
 
 ## Interacciones con otros módulos
 
-| Módulo | Tipo de interacción | Cuándo ocurre |
-|---|---|---|
+| Módulo         | Tipo de interacción      | Cuándo ocurre                  |
+| -------------- | ------------------------ | ------------------------------ |
 | [NombreModulo] | Lee / Escribe / Notifica | [en qué flujo de esta feature] |
 
 ---
@@ -444,10 +493,10 @@ Son las que los escenarios de aceptación del .md verifican.
 
 **Rutas/pantallas afectadas:** [ruta(s) o "No aplica"]
 
-| Escenario UI | User Story | Pasos de usuario | Resultado observable | Prueba Playwright esperada |
-|---|---|---|---|---|
-| [happy path] | US-[N] | [acciones concretas] | [estado visible / navegación / datos] | `tests/e2e/[mod]/[escenario].spec.ts` |
-| [error principal] | US-[N] | [acción que falla] | [mensaje/estado recuperable] | `tests/e2e/[mod]/[escenario-error].spec.ts` |
+| Escenario UI      | User Story | Pasos de usuario     | Resultado observable                  | Prueba Playwright esperada                  |
+| ----------------- | ---------- | -------------------- | ------------------------------------- | ------------------------------------------- |
+| [happy path]      | US-[N]     | [acciones concretas] | [estado visible / navegación / datos] | `tests/e2e/[mod]/[escenario].spec.ts`       |
+| [error principal] | US-[N]     | [acción que falla]   | [mensaje/estado recuperable]          | `tests/e2e/[mod]/[escenario-error].spec.ts` |
 
 Para una feature sin frontend, reemplazar la tabla por:
 `No aplica Playwright: [razón]. Validación requerida: [contrato | integración | smoke test].`
@@ -459,9 +508,14 @@ Para una feature sin frontend, reemplazar la tabla por:
 [Listar solo si quedaron gaps después del Paso 4. Si no hay, eliminar esta sección.]
 
 - [ ] **NC-01:** [pregunta — ej: "¿el exportar a Excel incluye los registros inactivos o solo activos?"]
+  - Clasificación: [B2 | S1 | X1]
+  - Evidencia revisada: [archivos, código, contratos y pruebas]
   - Impacto: [qué cambia según la respuesta]
-  - Default asumido mientras se aclara: [valor temporal]
-```
+  - Por qué no puede aislarse: [razón concreta]
+  - Comportamiento seguro mientras se aclara: [deshabilitado/UNKNOWN/etc.]
+  - Trabajo independiente que puede continuar: [lista]
+
+````
 
 ---
 
@@ -568,7 +622,7 @@ Navegador:
 Escenarios y archivos ejecutados:
 Resultado: PASS | FAIL
 Artefactos ante fallo (trace/screenshot/video): [ruta o no aplica]
-```
+````
 
 Si Playwright no está disponible, el agente debe reportar el bloqueo y no
 marcar `in-review` para una feature con frontend. Solo una excepción explícita
@@ -590,7 +644,8 @@ Validación UI requerida: [sí/no — razón]
 Evidencia Playwright: [PASS + comando/archivo | no aplica | excepción autorizada]
 Listo para revisión del dev: [sí/no]
 ```
-```
+
+`````
 
 ---
 
@@ -645,7 +700,7 @@ oficial de los artefactos gobierna qué puede hacer el agente:
 ### Condición de cierre
 
 [Qué debe cumplirse para dejar el alcance en `in-review`; nunca `done`]
-````
+`````
 
 El generador debe resolver todos los placeholders de contenido usando la Spec
 y el estado real de sus dependencias. Para una feature independiente crea un
@@ -654,8 +709,9 @@ sus Specs hijas no reciben prompts propios.
 
 El prompt maestro de una épica debe servir sin edición para iniciar, reanudar y
 cerrar la épica. Debe ordenar al agente que, en cada invocación, lea los estados
-reales y actúe así: preparar la siguiente Spec si le faltan artefactos; pedir
-decisiones si está bloqueada; implementar o reanudar sólo la siguiente Spec
+reales y actúe así: preparar la siguiente Spec si le faltan artefactos; escalar
+solo decisiones que cumplan la definición estricta de `NEEDS CLARIFICATION`;
+implementar o reanudar sólo la siguiente Spec
 `ready`/`in-progress`; o producir el resumen de VoBo cuando todo esté
 `in-review`. Nunca implementa una Spec `draft`, `needs-clarification` o
 `blocked`, ni marca `done`.
@@ -715,20 +771,22 @@ grande para una sola feature.]
 ## Propuesta de descomposición
 
 ### Opción A — Vertical Slicing (recomendada)
+
 Cortar por flujo completo de usuario. Cada slice entrega valor de punta a punta.
 
-| Slice | Descripción | MVP independiente | Depende de |
-|---|---|---|---|
-| [mod]-slice-1 | [qué entrega] | Sí | — |
-| [mod]-slice-2 | [qué agrega] | No (extiende slice-1) | slice-1 done |
-| [mod]-slice-3 | [qué agrega] | No | slice-1 done |
+| Slice         | Descripción   | MVP independiente     | Depende de   |
+| ------------- | ------------- | --------------------- | ------------ |
+| [mod]-slice-1 | [qué entrega] | Sí                    | —            |
+| [mod]-slice-2 | [qué agrega]  | No (extiende slice-1) | slice-1 done |
+| [mod]-slice-3 | [qué agrega]  | No                    | slice-1 done |
 
 ### Opción B — Por dominio funcional
+
 Separar en features por área de responsabilidad.
 
-| Feature | Descripción | Depende de |
-|---|---|---|
-| [mod]-[area1] | [qué cubre] | — |
+| Feature       | Descripción | Depende de              |
+| ------------- | ----------- | ----------------------- |
+| [mod]-[area1] | [qué cubre] | —                       |
 | [mod]-[area2] | [qué cubre] | [mod]-[area1] si aplica |
 
 ---
@@ -736,6 +794,7 @@ Separar en features por área de responsabilidad.
 ## Pregunta al dev
 
 ¿Cuál opción refleja mejor cómo quieren entregar valor al negocio?
+
 - **A** — Slices verticales (recomendado: permite demos incrementales)
 - **B** — Por dominio (útil si equipos diferentes trabajan en paralelo)
 - **C** — Otra división (describir)
@@ -781,6 +840,7 @@ Si hay incertidumbre técnica que bloquea la spec, generar:
 ## Criterios de éxito del spike
 
 El spike termina cuando se puede responder:
+
 - [ ] [Pregunta 1 — ej: "¿SignalR soporta el volumen de conexiones concurrentes esperado?"]
 - [ ] [Pregunta 2 si aplica]
 
@@ -789,6 +849,7 @@ El spike termina cuando se puede responder:
 ## Output esperado
 
 Al terminar el spike, actualizar este archivo con:
+
 - Decisión tomada
 - Razón
 - Impacto en la spec de [mod]
@@ -803,13 +864,16 @@ Luego proceder a generar `Features/[mod].spec.md`.
 Después de generar los artefactos, actualizar:
 
 ### `IA_Memoria/progreso.md`
+
 Agregar la nueva feature en la sección correcta según su estado:
+
 - `draft` / `needs-clarification` → sección Pendiente
 - `ready` → sección Pendiente con nota "spec lista para implementar"
 - `epic` → sección Pendiente con nota "Epic — ver features hijas"
 - `spike` → sección Bloqueado con nota "Esperando resultado de spike"
 
 ### `IA_Memoria/deuda-tecnica.md` (si aplica)
+
 Agregar entrada si durante la lectura del código existente se detectó deuda
 relevante para esta feature. Formato:
 
@@ -881,12 +945,16 @@ Siguiente paso sugerido:
    completo autoriza la descomposición y creación de specs `draft` o
    `needs-clarification` en la misma sesión; no autoriza implementación.
 
-5. **El código existente manda sobre la spec** cuando hay conflicto.
-   Si el código hace X y la spec pide Y en código legado, registrar en deuda-tecnica.md,
-   no modificar el código ni falsificar la spec.
+5. **El código existente manda fuera del cambio autorizado** cuando una Spec
+   contradice comportamiento legado que no forma parte de su alcance. Una Spec
+   `ready` sí puede cambiar deliberadamente código existente dentro de su
+   alcance; la ausencia actual del comportamiento nuevo no veta la Spec.
+   Registrar contradicciones reales sin falsificar la Spec.
 
-6. **Máximo 3 preguntas por sesión.** Si hay más ambigüedades, resolverlas con
-   defaults razonables, documentarlos en Supuestos, y continuar.
+6. **Máximo 3 preguntas por sesión.** Resolver T1/T2 con decisiones técnicas
+   reversibles. Para B1 mantener configuración ausente y comportamiento
+   deshabilitado. Nunca aplicar defaults a B2/S1/X1; escalarlos únicamente si
+   cumplen la definición estricta de `NEEDS CLARIFICATION`.
 
 7. **Nunca omitir ni reciclar genéricamente `[mod].prompt.md`.** Debe reflejar
    las Specs, dependencias, riesgos, pruebas y autorizaciones reales de esa
@@ -899,14 +967,14 @@ Siguiente paso sugerido:
 Este agente no implementa, pero puede consultar otras Skills para
 generar specs técnicamente coherentes con el proyecto:
 
-| Situación | Skill a consultar |
-|---|---|
+| Situación                                      | Skill a consultar                     |
+| ---------------------------------------------- | ------------------------------------- |
 | La spec involucra seguridad, tokens o permisos | `SKILL-security-[stack].md` relevante |
-| La spec define migraciones de BD | `SKILL-database-migrations.md` |
-| La spec describe un módulo MVC completo | `SKILL-mvc-feature.md` |
-| La spec incluye interfaz o flujo visual | `SKILL-playwright-e2e.md` |
-| La spec necesita respetar patrones NestJS | `SKILL-nestjs-best-practices.md` |
-| La spec necesita respetar patrones .NET | `SKILL-dotnet-best-practices.md` |
+| La spec define migraciones de BD               | `SKILL-database-migrations.md`        |
+| La spec describe un módulo MVC completo        | `SKILL-mvc-feature.md`                |
+| La spec incluye interfaz o flujo visual        | `SKILL-playwright-e2e.md`             |
+| La spec necesita respetar patrones NestJS      | `SKILL-nestjs-best-practices.md`      |
+| La spec necesita respetar patrones .NET        | `SKILL-dotnet-best-practices.md`      |
 
 Consultar solo para asegurar que los contratos son coherentes con el stack.
 No implementar — solo informar la spec.

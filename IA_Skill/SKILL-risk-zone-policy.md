@@ -1,5 +1,8 @@
 # SKILL — Política de Zonas de Riesgo (Verde / Ámbar / Roja)
 
+Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
+y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+
 ## Cuándo usar esta skill
 
 **Esta es la única fuente de verdad de la política de zonas — antes vivía
@@ -33,8 +36,11 @@ código de al lado.
 - UUID/GUID siempre, aunque la tabla vecina use int secuencial
 - Soft delete, response estandarizada, guards en todos los endpoints nuevos
 - Naming en inglés, estructura de carpetas según convenciones
-- Rotar una credencial expuesta (`SKILL-secrets-scanning.md`) — siempre
-  zona verde, nunca requiere ticket, se hace de inmediato
+- Retirar una credencial expuesta del código, logs o artefactos locales y evitar
+  seguir propagándola es contención inmediata dentro del alcance autorizado.
+  Revocarla o rotarla en un proveedor externo es `S1`: requiere autorización
+  humana separada, actual y específica, además de coordinación para evitar una
+  interrupción del servicio. Nunca registrar ni mostrar el valor del secreto.
 
 ### 🟡 Zona ámbar — código existente, cambio acotado al síntoma exacto
 
@@ -71,21 +77,31 @@ como está.
 
 1. ¿Es código nuevo / sin usuarios en producción dependiendo de él?
    → 🟢 verde, seguir el estándar completo, listo.
-2. ¿El fix cambia el contrato/interfaz pública (firma, forma de
-   respuesta, esquema de datos, versión mayor de una dependencia)?
+2. ¿El cambio es breaking, elimina o renombra campos, altera semántica
+   existente, afecta consumidores externos, o no está autorizado por la
+   tarea/Spec?
    → 🔴 roja, detenerse aquí.
-3. ¿El fix se puede acotar exactamente a las líneas del hallazgo/tarea,
-   sin tocar nada más del archivo/módulo?
+   ¿Es una extensión aditiva y backward-compatible de un contrato interno,
+   requerida por una Spec `ready`, con productor y consumidor bajo este
+   workspace?
+   → 🟡 ámbar; proceder con revisión de consumidores y pruebas de contrato en
+   ambos lados.
+3. ¿El cambio se puede acotar al alcance de la tarea y a consumidores conocidos,
+   aunque requiera cambios coordinados en más de un archivo o módulo?
    → Sí: 🟡 ámbar, proceder. No: 🔴 roja.
 
-En caso de duda entre dos zonas, gana la más conservadora.
+En caso de duda, investigar y clasificar el impacto antes de elegir zona. Si
+después de agotar evidencia el cambio sigue siendo no acotable, gana la zona
+más conservadora.
 
 ### Regla de desempate spec vs. código real
 
-Cuando la spec y el código real se contradicen en un módulo legado: el
+Cuando la Spec y el código real se contradicen fuera del cambio autorizado, el
 código real gana. La contradicción se documenta en
-`IA_Memoria/deuda-tecnica.md`. No se modifica el código existente ni se
-falsifica la spec — se consulta al dev.
+`IA_Memoria/deuda-tecnica.md`. Una Spec `ready` sí puede modificar
+deliberadamente código existente dentro de su alcance; no debe tratarse la
+ausencia del comportamiento nuevo como veto de la Spec. Los cambios breaking,
+no autorizados o de impacto no acotable se consultan al dev.
 
 ---
 

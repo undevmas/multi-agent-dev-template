@@ -1,39 +1,49 @@
 # AGENTS.md — Instrucciones del Proyecto
 
-> Este archivo es leído automáticamente por **OpenCode** y **Codex CLI (OpenAI)**.
+> Este archivo es leído automáticamente por **Antigravity (Google DeepMind)**, **OpenCode** y **Codex CLI (OpenAI)**.
 > Leer antes de cualquier acción en el workspace.
 > Fuente de verdad: `CLAUDE.md`. En caso de conflicto, prevalece CLAUDE.md.
 
 ---
 
-> Codex and OpenCode must read `CLAUDE.md` completely before acting; it resolves any conflict with this bridge.
+> Antigravity, Codex and OpenCode must read `CLAUDE.md` completely before acting; it resolves any conflict with this bridge.
+>
+> **AUTONOMY_POLICY_VERSION: 1**
+> La política canónica para ambigüedades, autonomía técnica, estados seguros,
+> presupuesto de contexto y `NEEDS CLARIFICATION` vive en `CLAUDE.md`, sección
+> `Política de autonomía y ambigüedades`. No duplicarla en este bridge.
 
 ## Stack tecnológico (reglas duras — no sugerir alternativas)
 
-| Capa | Tecnología aprobada |
-|---|---|
-| Frontend | Angular 17+ · React 18+ |
-| Backend | .NET 8+ (C#) · NestJS 10+ (TypeScript) · Python 3.11+ (FastAPI) — solo para tooling interno / scripts de reporting, no para apps de línea de negocio |
-| Base de datos | SQL Server 2019+ · PostgreSQL 15+ |
-| ORM / acceso a datos | Entity Framework Core · TypeORM · Prisma |
-| Autenticación | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
-| Contenedores | Docker · Docker Compose |
-| CI/CD | Azure DevOps Pipelines |
-| Testing unitario | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
-| Testing E2E | Playwright Test + playwright-cli |
-| Documentación API | Swagger / OpenAPI |
+| Capa                 | Tecnología aprobada                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend             | Angular 17+ · React 18+                                                                                                                              |
+| Backend              | .NET 8+ (C#) · NestJS 10+ (TypeScript) · Python 3.11+ (FastAPI) — solo para tooling interno / scripts de reporting, no para apps de línea de negocio |
+| Base de datos        | SQL Server 2019+ · PostgreSQL 15+                                                                                                                    |
+| ORM / acceso a datos | Entity Framework Core · TypeORM · Prisma                                                                                                             |
+| Autenticación        | JWT + Refresh Token · OAuth2 · ASP.NET Identity                                                                                                      |
+| Contenedores         | Docker · Docker Compose                                                                                                                              |
+| CI/CD                | Azure DevOps Pipelines                                                                                                                               |
+| Testing unitario     | xUnit (.NET) · Jest (TS/JS) · pytest (Python)                                                                                                        |
+| Testing E2E          | Playwright Test + playwright-cli                                                                                                                     |
+| Documentación API    | Swagger / OpenAPI                                                                                                                                    |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
 > `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
 > (`ado_reporte.py`). Reutiliza esa base en vez de .NET/NestJS. No usar Python
 > como backend de nuevas apps de negocio sin la misma aprobación explícita.
 
-> **Excepción de planificación para PersonalCripto:** `jmh_trading` es una
-> dependencia Python analítica existente, externa al workspace. Se permite
-> inspeccionar sus contratos y crear roadmap, épicas y specs que describan su
-> participación. Mientras su fuente no esté disponible debe clasificarse como
-> `DEPENDENCIA EXTERNA NO VERIFICABLE`; esta excepción no autoriza crear una
-> nueva aplicación de negocio Python ni modificar/deployar el servicio externo.
+> **Excepción de stack para PersonalCripto — `jmh_trading`:** módulo Python
+> analítico versionado en `Codigo/personal-cripto/jmh_trading/` (fuera del
+> `.sln`, pero verificado en el repositorio — ver `IA_Memoria/arquitectura.md`).
+> Se permite crear, modificar y validar este módulo siguiendo
+> `IA_Skill/SKILL-jmh-trading.md`. Esta excepción NO autoriza crear una nueva
+> aplicación de negocio Python fuera de este módulo. Una Spec aprobada y
+> evidencia explícita son necesarias pero nunca suficientes para habilitar
+> ejecución real, paper trading o adapters live: se requiere autorización
+> humana separada, actual y específica justo antes de habilitar u operar.
+> Tampoco autoriza ejecutar el deploy en la VM; eso lo hace el dev manualmente
+> (ver regla de Python/FastAPI más abajo en este documento).
 
 No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobación explícita.
 
@@ -45,21 +55,28 @@ Para mantener `Codigo/personal-cripto/` están aprobados .NET 10, Angular 22, .N
 
 Playwright Test y `playwright-cli` están aprobados en este template para validación E2E y automatización de navegador. Su mapa operativo vive en `IA_Skill/SKILL-playwright-e2e.md`; no sustituye los tests unitarios de cada stack.
 
-## Protocolo de inicio
+## Protocolo de inicio contextualizado y ruteo de skills
 
-Antes de cualquier tarea, leer en este orden:
-1. `IA_Memoria/progreso.md` — qué está hecho y qué sigue
-2. `IA_Memoria/arquitectura.md` — cada pieza del sistema
-3. `IA_Memoria/convenciones.md` — naming y estructura
-4. `Features/[feature].md` — si la tarea involucra un módulo específico
-   `Features/[feature].spec.md` — además, si existe y su Estado es `ready` o `in-progress`
-5. `IA_Skill/[skill].md` — la skill relevante antes de codificar
+Antes de cualquier acción, consultar `IA_Skill/SKILL-instruction-router.md` para determinar la **Skill Primaria**, las **Skills Auxiliares** y las lecturas estrictamente requeridas según el tipo de tarea.
 
-Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
+### Lecturas según tipo de tarea:
+
+1. **Implementar SPEC `ready` o reanudar `in-progress`:**
+   - Leer `Features/[feature].spec.md`, `[feature].checks.md` y `[feature].md`.
+   - Consultar `IA_Memoria/arquitectura.md` y `convenciones.md` únicamente antes de generar código nuevo o navegar entre servicios.
+2. **Corregir un bug puntual o refactor acotado:**
+   - Ir directamente al archivo afectado y su suite de tests. NO leer `progreso.md` ni snapshots globales.
+3. **Generar una SPEC o Spike técnico:**
+   - Leer insumos del dev y `[feature]-epic.md` (si aplica); no cargar skills de backend, frontend ni frameworks.
+4. **Tareas de investigación pura o consultas de usuario:**
+   - No cargar memoria global; buscar evidencia quirúrgica con herramientas dirigidas (`find_by_name`, `grep_search`, `view_file` acotado).
+
+Nunca empezar a codificar lógica de negocio sin verificar las convenciones y arquitectura del módulo correspondiente.
 
 ### Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica
 
 Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna de estas condiciones:
+
 - La tarea afecta más de un módulo o capa (frontend + backend, backend + BD, etc.).
 - Es la primera sesión en el proyecto o no hay contexto previo del código.
 - Se toma una decisión de arquitectura o refactor amplio.
@@ -68,11 +85,13 @@ Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna d
 NO leer el snapshot para: fix puntual en un archivo conocido, cambio de texto/estilo, modificación de config aislada.
 
 Si el snapshot no existe o tiene más de 7 días, sugerir al usuario ejecutar:
+
 - Windows: `.\repomix-scan.ps1`
 - Linux/macOS: `./repomix-scan.sh`
 
 Protocolo post-snapshot (obligatorio al leer el snapshot):
 Después de leer el snapshot, ANTES de codificar:
+
 1. Comparar contra `IA_Memoria/arquitectura.md` — actualizar módulos, dependencias o estructura que hayan cambiado.
 2. Comparar contra `IA_Memoria/progreso.md` — marcar como hecho lo que ya existe en el código aunque no estuviera registrado.
 3. Si el proyecto tiene código existente, actualizar `IA_Memoria/convenciones.md` con los patrones arquitectónicos detectados en el snapshot — solo agregar lo que no esté ya documentado, nunca reemplazar entradas ya completas:
@@ -87,113 +106,117 @@ Después de leer el snapshot, ANTES de codificar:
 
 ## Cuándo leer cada Skill
 
+> **Router central:** La selección de la **Skill Primaria** (una sola por tarea) y **Skills Auxiliares** (bajo demanda) se rige por [`IA_Skill/SKILL-instruction-router.md`](IA_Skill/SKILL-instruction-router.md). No cargar catálogos completos de skills de forma indiscriminada.
+
 ### Punto de entrada — Auditoría Pre-Productiva
 
-| Situación | Skill a leer |
-|---|---|
+| Situación                                                                                                             | Skill a leer                                                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | "Actúa como agente analista pre-productivo", "corre el checklist pre-prod", "auditoría de seguridad antes de liberar" | IA_Skill/SKILL-preprod-security-audit.md — orquesta el resto, no leer las skills de seguridad sueltas directamente para este caso |
 
 ### Frontend
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar componente reutilizable con variantes | IA_Skill/frontend-design/SKILL-component-patterns.md |
-| Definir o aplicar tokens de diseño (color, espaciado, radio, sombras) | IA_Skill/frontend-design/SKILL-design-tokens.md |
-| Configurar o ajustar sistema tipográfico del proyecto | IA_Skill/frontend-design/SKILL-typography-system.md |
-| Diseñar layout, grid o sistema de espaciado | IA_Skill/frontend-design/SKILL-layout-spacing-system.md |
-| Definir identidad visual (paleta de brand, radius, iconografía) | IA_Skill/frontend-design/SKILL-visual-identity-override.md |
-| Librería de terceros a usar (componentes, iconos, gráficas, animación) — antes de instalar cualquier dependencia | IA_Skill/SKILL-approved-libraries.md |
-| Tabla server-side/paginación/sort en Angular | IA_Skill/frontend-design/SKILL-angular-data-table-pattern.md |
-| Botones/CTAs con gradiente premium, o hero de landing tipo mesh gradient | IA_Skill/frontend-design/SKILL-gradient-accents.md — el mesh gradient es SOLO para landing/marketing, nunca dashboard/admin |
-| Implementar dark mode o theming (claro/oscuro, multi-tenant) | IA_Skill/frontend-design/SKILL-dark-mode-theming.md |
-| Implementar diseño responsive o patrones PWA | IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md |
-| Agregar animaciones o micro-interacciones a componentes | IA_Skill/frontend-design/SKILL-animation-microinteractions.md |
-| Implementar accesibilidad (a11y / WCAG AA) en componentes o pantallas | IA_Skill/frontend-design/SKILL-accessibility-a11y.md |
-| Escribir tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
-| Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
-| Validar un flujo UI, reproducir un bug visual/funcional o crear/ejecutar pruebas E2E | IA_Skill/SKILL-playwright-e2e.md; para automatización interactiva, `.claude/skills/playwright-cli/SKILL.md` |
-| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
+| Situación                                                                                                        | Skill a leer                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Crear o modificar componente reutilizable con variantes                                                          | IA_Skill/frontend-design/SKILL-component-patterns.md                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Definir o aplicar tokens de diseño (color, espaciado, radio, sombras)                                            | IA_Skill/frontend-design/SKILL-design-tokens.md                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Configurar o ajustar sistema tipográfico del proyecto                                                            | IA_Skill/frontend-design/SKILL-typography-system.md                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Diseñar layout, grid o sistema de espaciado                                                                      | IA_Skill/frontend-design/SKILL-layout-spacing-system.md                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Definir identidad visual (paleta de brand, radius, iconografía)                                                  | IA_Skill/frontend-design/SKILL-visual-identity-override.md                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Librería de terceros a usar (componentes, iconos, gráficas, animación) — antes de instalar cualquier dependencia | IA_Skill/SKILL-approved-libraries.md                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Tabla server-side/paginación/sort en Angular                                                                     | IA_Skill/frontend-design/SKILL-angular-data-table-pattern.md                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Botones/CTAs con gradiente premium, o hero de landing tipo mesh gradient                                         | IA_Skill/frontend-design/SKILL-gradient-accents.md — el mesh gradient es SOLO para landing/marketing, nunca dashboard/admin                                                                                                                                                                                                                                                                                                                                               |
+| Implementar dark mode o theming (claro/oscuro, multi-tenant)                                                     | IA_Skill/frontend-design/SKILL-dark-mode-theming.md                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Implementar diseño responsive o patrones PWA                                                                     | IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Agregar animaciones o micro-interacciones a componentes                                                          | IA_Skill/frontend-design/SKILL-animation-microinteractions.md                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Implementar accesibilidad (a11y / WCAG AA) en componentes o pantallas                                            | IA_Skill/frontend-design/SKILL-accessibility-a11y.md                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Escribir tests en Angular (TestBed, Jest)                                                                        | IA_Skill/SKILL-angular-test-frameworks.md                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Escribir tests en React (Jest + Testing Library)                                                                 | IA_Skill/SKILL-react-test-frameworks.md                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Validar un flujo UI, reproducir un bug visual/funcional o crear/ejecutar pruebas E2E                             | IA_Skill/SKILL-playwright-e2e.md; para automatización interactiva, `.claude/skills/playwright-cli/SKILL.md`                                                                                                                                                                                                                                                                                                                                                               |
+| Diseño moderno en HTML/JS vanilla (sin framework, sin npm)                                                       | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 
 > Corrección de mapeo para HTML/JS vanilla: usar `IA_Skill/SKILL-frontend-design.md` → `IA_Skill/SKILL-animation-microinteractions.md` → `IA_Skill/SKILL-gradient-accents.md` → `IA_Skill/frontend-design/SKILL-accessibility-a11y.md`. Esta secuencia reemplaza cualquier referencia de la tabla anterior a las skills de animación o gradientes dentro de `frontend-design/`.
 
 ### Backend .NET
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar cualquier archivo .NET (controller, service, repository) | IA_Skill/SKILL-dotnet-best-practices.md |
-| Code review o refactorizar código .NET existente | IA_Skill/SKILL-dotnet-design-pattern-review.md |
-| Escribir tests unitarios o de integración en .NET | IA_Skill/SKILL-dotnet-test-frameworks.md |
-| Migrar el proyecto a una nueva versión de .NET | IA_Skill/SKILL-dotnet-upgrade.md |
+| Situación                                                                  | Skill a leer                                   |
+| -------------------------------------------------------------------------- | ---------------------------------------------- |
+| Crear o modificar cualquier archivo .NET (controller, service, repository) | IA_Skill/SKILL-dotnet-best-practices.md        |
+| Code review o refactorizar código .NET existente                           | IA_Skill/SKILL-dotnet-design-pattern-review.md |
+| Escribir tests unitarios o de integración en .NET                          | IA_Skill/SKILL-dotnet-test-frameworks.md       |
+| Migrar el proyecto a una nueva versión de .NET                             | IA_Skill/SKILL-dotnet-upgrade.md               |
 
 ### Backend NestJS
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar módulo, controller, service o guard en NestJS | IA_Skill/SKILL-nestjs-best-practices.md |
-| Implementar CQRS, eventos de dominio, colas o caching en NestJS | IA_Skill/SKILL-nestjs-patterns.md |
-| Mejorar calidad o revisión de TypeScript en NestJS | IA_Skill/SKILL-nestjs-clean-typescript.md |
-| Escribir tests unitarios o de integración en NestJS | IA_Skill/SKILL-nestjs-test-frameworks.md |
+| Situación                                                       | Skill a leer                              |
+| --------------------------------------------------------------- | ----------------------------------------- |
+| Crear o modificar módulo, controller, service o guard en NestJS | IA_Skill/SKILL-nestjs-best-practices.md   |
+| Implementar CQRS, eventos de dominio, colas o caching en NestJS | IA_Skill/SKILL-nestjs-patterns.md         |
+| Mejorar calidad o revisión de TypeScript en NestJS              | IA_Skill/SKILL-nestjs-clean-typescript.md |
+| Escribir tests unitarios o de integración en NestJS             | IA_Skill/SKILL-nestjs-test-frameworks.md  |
 
 ### Backend Python (FastAPI — solo tooling interno, ver nota de stack)
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar cualquier archivo del backend Python de ReporteadorV2 (router, service, cliente HTTP) | IA_Skill/SKILL-python-fastapi-best-practices.md |
-| Escribir tests unitarios o de integración en el backend Python | IA_Skill/SKILL-python-test-frameworks.md |
-| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
+| Situación                                                                                                                                     | Skill a leer                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Crear o modificar cualquier archivo del backend Python de ReporteadorV2 (router, service, cliente HTTP)                                       | IA_Skill/SKILL-python-fastapi-best-practices.md |
+| Escribir tests unitarios o de integración en el backend Python                                                                                | IA_Skill/SKILL-python-test-frameworks.md        |
+| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio)                                                      | IA_Skill/SKILL-security-python.md               |
+| Crear, modificar o validar `Codigo/personal-cripto/jmh_trading/` (FastAPI interna, analítica, Redis Streams, TimescaleDB, contratos o pytest) | IA_Skill/SKILL-jmh-trading.md                   |
 
 ### Full Stack
 
-| Situación | Skill a leer |
-|---|---|
-| Implementar una feature con `Features/[mod].spec.md` en estado `ready` | IA_Skill/SKILL-implementation.md |
-| Implementar un módulo completo de principio a fin (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
-| Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
+| Situación                                                              | Skill a leer                          |
+| ---------------------------------------------------------------------- | ------------------------------------- |
+| Implementar una feature con `Features/[mod].spec.md` en estado `ready` | IA_Skill/SKILL-implementation.md      |
+| Implementar un módulo completo de principio a fin (sin spec previa)    | IA_Skill/SKILL-mvc-feature.md         |
+| Crear, aplicar o revertir migraciones de BD (.NET/NestJS)              | IA_Skill/SKILL-database-migrations.md |
 
 ### Seguridad
 
-| Situación | Skill a leer |
-|---|---|
-| Crear guard, interceptor o manejar tokens en Angular | IA_Skill/SKILL-security-angular.md |
-| Seguridad en cualquier endpoint o middleware .NET | IA_Skill/SKILL-security-dotnet.md |
-| Seguridad en cualquier endpoint, guard o pipe NestJS | IA_Skill/SKILL-security-nestjs.md |
-| Seguridad en el backend Python de ReporteadorV2 (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
-| Revisión OWASP (pre-producción o feature con datos sensibles) | IA_Skill/SKILL-security-owasp-checklist.md |
-| Revisión OWASP adicional (compliance por agentes) | IA_Skill/SKILL-agent-owasp-compliance.md |
-| Vulnerabilidad de dependencia/librería (npm audit, dotnet list package --vulnerable, pip-audit) — decidir qué parchar ahora vs. documentar | IA_Skill/SKILL-dependency-vulnerability-triage.md |
-| Hallazgo de seguridad (SAST, código legado) en un stack que NO está en las filas de arriba (Angular/.NET/NestJS/Python-ReporteadorV2) — ej. Express, PHP, código de cliente heredado | IA_Skill/SKILL-legacy-stack-security-baseline.md — guía puntual, no modernización |
-| Escaneo/sospecha de secreto expuesto (Gitleaks, .env trackeado, credencial en un commit) | IA_Skill/SKILL-secrets-scanning.md |
-| Decidir si un fix (de cualquier tipo — PR, SAST, SCA, secreto, código legado) se aplica directo, se acota, o requiere ticket | IA_Skill/SKILL-risk-zone-policy.md — fuente única, todas las filas de arriba la referencian, no la redefinen |
+| Situación                                                                                                                                                                            | Skill a leer                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Crear guard, interceptor o manejar tokens en Angular                                                                                                                                 | IA_Skill/SKILL-security-angular.md                                                                           |
+| Seguridad en cualquier endpoint o middleware .NET                                                                                                                                    | IA_Skill/SKILL-security-dotnet.md                                                                            |
+| Seguridad en cualquier endpoint, guard o pipe NestJS                                                                                                                                 | IA_Skill/SKILL-security-nestjs.md                                                                            |
+| Seguridad en el backend Python de ReporteadorV2 (manejo del PAT, subprocess/PDF, exposición del servicio)                                                                            | IA_Skill/SKILL-security-python.md                                                                            |
+| Revisión OWASP (pre-producción o feature con datos sensibles)                                                                                                                        | IA_Skill/SKILL-security-owasp-checklist.md                                                                   |
+| Revisión OWASP adicional (compliance por agentes)                                                                                                                                    | IA_Skill/SKILL-agent-owasp-compliance.md                                                                     |
+| Vulnerabilidad de dependencia/librería (npm audit, dotnet list package --vulnerable, pip-audit) — decidir qué parchar ahora vs. documentar                                           | IA_Skill/SKILL-dependency-vulnerability-triage.md                                                            |
+| Hallazgo de seguridad (SAST, código legado) en un stack que NO está en las filas de arriba (Angular/.NET/NestJS/Python-ReporteadorV2) — ej. Express, PHP, código de cliente heredado | IA_Skill/SKILL-legacy-stack-security-baseline.md — guía puntual, no modernización                            |
+| Escaneo/sospecha de secreto expuesto (Gitleaks, .env trackeado, credencial en un commit)                                                                                             | IA_Skill/SKILL-secrets-scanning.md                                                                           |
+| Decidir si un fix (de cualquier tipo — PR, SAST, SCA, secreto, código legado) se aplica directo, se acota, o requiere ticket                                                         | IA_Skill/SKILL-risk-zone-policy.md — fuente única, todas las filas de arriba la referencian, no la redefinen |
 
 ### Especificaciones
 
-| Situación | Skill a leer |
-|---|---|
+| Situación                                                 | Skill a leer                     |
+| --------------------------------------------------------- | -------------------------------- |
 | Generar o actualizar specs de features (sin tocar código) | IA_Skill/SKILL-spec-generator.md |
 
 ### Texto y documentación
 
-| Situación | Skill a leer |
-|---|---|
-| Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
-| Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
-| Crear o editar memoria técnica formal en Word (.docx) para clientes/gobierno | IA_Skill/technical-memory.md |
-| Generar especificaciones técnicas formales en Word (.docx) para auditorías | IA_Skill/technical-audit-spec-generic.md |
-| Crear, editar o inspeccionar entregables en Word o PDF | IA_Skill/document-artifacts/SKILL.md |
+| Situación                                                                    | Skill a leer                             |
+| ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Escribir texto visible al usuario final (mensajes UI, emails, empty states)  | IA_Skill/SKILL-humanizer.md              |
+| Documentar una feature terminada                                             | IA_Skill/SKILL-docs-feature.md           |
+| Crear o editar memoria técnica formal en Word (.docx) para clientes/gobierno | IA_Skill/technical-memory.md             |
+| Generar especificaciones técnicas formales en Word (.docx) para auditorías   | IA_Skill/technical-audit-spec-generic.md |
+| Crear, editar o inspeccionar entregables en Word o PDF                       | IA_Skill/document-artifacts/SKILL.md     |
 
 ### Herramientas del agente
 
-| Situación | Skill a leer |
-|---|---|
-| Necesitar información externa actualizada (versiones, CVEs, docs) | IA_Skill/SKILL-web-search.md |
-| Activar respuestas ultra-concisas para sesiones largas | IA_Skill/SKILL-caveman.md |
-| Resolver comentarios de revisión de un Pull Request en GitHub | IA_Skill/SKILL-pr-review-fixes.md |
+| Situación                                                         | Skill a leer                      |
+| ----------------------------------------------------------------- | --------------------------------- |
+| Necesitar información externa actualizada (versiones, CVEs, docs) | IA_Skill/SKILL-web-search.md      |
+| Activar respuestas ultra-concisas para sesiones largas            | IA_Skill/SKILL-caveman.md         |
+| Resolver comentarios de revisión de un Pull Request en GitHub     | IA_Skill/SKILL-pr-review-fixes.md |
 
 ---
 
 ## Reglas de codificación
 
 ### General
+
 - Código en inglés (variables, funciones, clases, tablas)
 - Comentarios y documentación en español
 - Nunca hardcodear credenciales, URLs base ni valores de entorno
@@ -202,10 +225,12 @@ Después de leer el snapshot, ANTES de codificar:
 - IDs siempre UUID/GUID (nunca int secuencial)
 
 ### Soft delete obligatorio
+
 Nunca ejecutar DELETE en tablas de negocio.
 Siempre: `IsActive = 0` (SQL Server) o `is_active = false` (PostgreSQL).
 
 ### Respuesta estandarizada de API
+
 Todos los endpoints deben retornar la misma estructura de respuesta — sin excepciones y sin inventar formatos nuevos por endpoint.
 La forma concreta (campos, anidamiento, errores, paginación) la define el proyecto en `IA_Memoria/convenciones.md`.
 Si el proyecto aún no tiene convención definida, usar como punto de partida:
@@ -213,11 +238,13 @@ Si el proyecto aún no tiene convención definida, usar como punto de partida:
 Si el código existente ya usa otra forma, registrarla en convenciones.md y usarla consistentemente — no mezclar formas dentro del mismo proyecto.
 
 ### Autenticación
+
 - JWT en header: `Authorization: Bearer [token]`
 - Refresh token en cookie HttpOnly
 - Guard/middleware en TODOS los endpoints excepto login
 
 ### Python (FastAPI — tooling interno)
+
 - El Dockerfile y docker-compose.yml son entregable obligatorio en todo proyecto FastAPI
 - Documentar los pasos de deploy en un README.md dentro de la carpeta del proyecto
 - El deploy real en la VM lo ejecuta el dev manualmente — el agente no hace push ni accede a servidores remotos
@@ -250,7 +277,6 @@ Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zo
 (verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias (esta,
 CLAUDE.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 
-
 ---
 
 ## NUNCA sin confirmación explícita
@@ -261,6 +287,7 @@ CLAUDE.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 - Modificar pipelines de CI/CD
 - Subir archivos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/`, `Insumos/` al repositorio
 - Ejecutar `docker build`, `docker push` ni acceder a servidores remotos
+
 ## Regla de módulo completo
 
 Cuando una tarea construya un módulo funcional, el módulo incluye por defecto:
@@ -272,7 +299,7 @@ Cuando una tarea construya un módulo funcional, el módulo incluye por defecto:
 La única excepción es un servicio o módulo explícitamente sin frontend (por ejemplo, un worker, una API interna, un proceso de integración o un servicio de infraestructura). En ese caso, documentar en la entrega que no aplica UI/Playwright y validar mediante pruebas de contrato, integración o smoke tests apropiados.
 
 No considerar terminado un módulo con frontend si solo compila o tiene tests unitarios: debe existir al menos una validación Playwright del happy path y de los errores principales del flujo.
-Para ejecutar esta validación, el agente debe verificar de forma autónoma que los servicios locales del proyecto (backend y frontend, por ejemplo Angular/React en localhost:4200 u otro puerto configurado) estén activos (o arrancarlos en segundo plano sin bloquear la terminal) y ejecutar la prueba en modo visual/encabezado (--headed en desarrollo local contra Chromium, o interactivamente con playwright-cli open). No asumir ejecución headless silenciosa ni esperar a que el operador tenga que indicarlo en el prompt.
+Para ejecutar esta validación, el agente debe verificar de forma autónoma que los servicios locales (AppHost/Angular en localhost:4200) estén activos (o arrancarlos en segundo plano sin bloquear la terminal) y ejecutar la prueba en modo visual/encabezado (--headed en desarrollo local contra Chromium, o interactivamente con playwright-cli open). No asumir ejecución headless silenciosa ni esperar a que el operador tenga que indicarlo en el prompt.
 
 ## Regla para librerías y plugins recomendados
 

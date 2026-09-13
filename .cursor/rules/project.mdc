@@ -6,6 +6,12 @@ alwaysApply: true
 # Instrucciones del Proyecto
 
 > Fuente de verdad: `CLAUDE.md`. En caso de conflicto, prevalece CLAUDE.md.
+>
+> **AUTONOMY_POLICY_VERSION: 1**
+> La política canónica para ambigüedades, autonomía técnica, estados seguros,
+> presupuesto de contexto y `NEEDS CLARIFICATION` vive en `CLAUDE.md`, sección
+> `Política de autonomía y ambigüedades`. No duplicarla en esta regla.
+>
 > Skills y snapshots deben adjuntarse manualmente si el contexto de la tarea los requiere.
 
 ---
@@ -13,9 +19,10 @@ alwaysApply: true
 ## Stack aprobado (bloqueado)
 
 Usar solo:
+
 - Frontend: Angular 17+ o React 18+
 - Backend: .NET 8+ (C#) o NestJS 10+ (TypeScript)
-- Python: 3.11+ (FastAPI) solo tooling interno de Reportes; `jmh_trading` se puede analizar y especificar como dependencia externa de PersonalCripto, pero no crear ni modificar ese servicio desde este workspace.
+- Python: 3.11+ (FastAPI) solo tooling interno de Reportes; dependencias o servicios externos no verificables requieren confirmación explícita (S1) antes de operar o integrar en vivo.
 - Base de datos: SQL Server 2019+ o PostgreSQL 15+
 - ORM: Entity Framework Core, TypeORM, Prisma
 - Auth: JWT + Refresh Token, OAuth2, ASP.NET Identity
@@ -29,18 +36,28 @@ No sugerir ni instalar tecnologías fuera de este stack sin confirmación explí
 
 ---
 
-## Protocolo de inicio (obligatorio)
+## Protocolo de inicio contextualizado y ruteo de skills (obligatorio)
 
-Antes de codificar, leer en este orden:
-1. `IA_Memoria/progreso.md`
-2. `IA_Memoria/arquitectura.md`
-3. `IA_Memoria/convenciones.md`
-4. `Features/[feature].md` (si aplica) + `Features/[feature].spec.md` si existe en estado `ready` o `in-progress`
-5. `IA_Skill/[skill].md` relevante
+Consultar `IA_Skill/SKILL-instruction-router.md` para determinar la **Skill Primaria**, las **Skills Auxiliares** y las lecturas estrictamente requeridas según el tipo de tarea.
+
+### Lecturas según tipo de tarea:
+
+1. **Implementar SPEC `ready` o reanudar `in-progress`:**
+   - Leer `Features/[feature].spec.md`, `[feature].checks.md` y `[feature].md`.
+   - Consultar `IA_Memoria/arquitectura.md` y `convenciones.md` únicamente antes de generar código nuevo o navegar entre servicios.
+2. **Corregir un bug puntual o refactor acotado:**
+   - Ir directamente al archivo afectado y su suite de tests. NO leer `progreso.md` ni snapshots globales.
+3. **Generar una SPEC o Spike técnico:**
+   - Leer insumos del dev y `[feature]-epic.md` (si aplica); no cargar skills de backend, frontend ni frameworks.
+4. **Tareas de investigación pura o consultas de usuario:**
+   - No cargar memoria global; buscar evidencia quirúrgica con herramientas dirigidas (`find_by_name`, `grep_search`, `view_file` acotado).
+
+Nunca empezar a codificar lógica de negocio sin verificar las convenciones y arquitectura del módulo correspondiente.
 
 ### Regla de snapshot (Repomix) — solo cuando la tarea lo justifica
 
 Adjuntar `IA_Memoria/snapshots/snapshot-latest.md` SOLO si:
+
 - La tarea afecta más de un módulo o capa.
 - Es la primera sesión en el proyecto.
 - Se toma una decisión de arquitectura o refactor amplio.
@@ -49,20 +66,22 @@ NO adjuntar para fixes puntuales, cambios de texto o config aislada.
 Si el snapshot no existe o tiene más de 7 días, pedir al usuario ejecutar `repomix-scan.ps1` (Windows) o `repomix-scan.sh` (Linux/macOS).
 
 Al leer el snapshot, ANTES de codificar:
+
 1. Actualizar `IA_Memoria/arquitectura.md` con cambios reales detectados.
 2. Marcar en `IA_Memoria/progreso.md` lo que ya existe aunque no esté registrado.
 3. Actualizar `IA_Memoria/convenciones.md` con patrones arquitectónicos detectados — solo agregar, nunca reemplazar entradas ya completas.
 4. Solo después de los tres pasos anteriores, proceder con la tarea.
 
-No iniciar código sin haber leído al menos 1, 2 y 3.
-
 ---
 
 ## Cuándo consultar skills
 
+> **Router central:** La selección de la **Skill Primaria** (una sola por tarea) y **Skills Auxiliares** (bajo demanda) se rige por `IA_Skill/SKILL-instruction-router.md`. No cargar catálogos completos de skills de forma indiscriminada.
+
 Adjuntar el archivo de skill con `@IA_Skill/SKILL-[nombre].md` o arrastrándolo al contexto cuando la tarea lo requiera.
 
 Mapa rápido:
+
 - Specs y especificaciones: `IA_Skill/SKILL-spec-generator.md`
 - Frontend (diseño visual): `IA_Skill/frontend-design/SKILL-component-patterns.md`, `IA_Skill/frontend-design/SKILL-design-tokens.md`, `IA_Skill/frontend-design/SKILL-typography-system.md`, `IA_Skill/frontend-design/SKILL-layout-spacing-system.md`, `IA_Skill/frontend-design/SKILL-visual-identity-override.md`, `IA_Skill/frontend-design/SKILL-dark-mode-theming.md`, `IA_Skill/frontend-design/SKILL-responsive-pwa-patterns.md`, `IA_Skill/frontend-design/SKILL-animation-microinteractions.md`, `IA_Skill/frontend-design/SKILL-accessibility-a11y.md`, `IA_Skill/frontend-design/SKILL-gradient-accents.md`, `IA_Skill/frontend-design/SKILL-angular-data-table-pattern.md`
 - Testing frontend: `IA_Skill/SKILL-angular-test-frameworks.md` (Jest), `IA_Skill/SKILL-angular-test-vitest.md` (si el proyecto de Angular usa Vitest en vez de Jest), `IA_Skill/SKILL-react-test-frameworks.md`
@@ -76,6 +95,7 @@ Mapa rápido:
 - Soporte: `IA_Skill/SKILL-web-search.md`, `IA_Skill/SKILL-caveman.md`, `IA_Skill/SKILL-pr-review-fixes.md`
 
 Cuándo NO consultar skills:
+
 - Tareas triviales o mecánicas (renombrar variable, ajuste menor de texto, formateo)
 - Lecturas rápidas de estado sin implementación
 - Cambios totalmente definidos en la conversación sin criterio técnico adicional
@@ -118,6 +138,7 @@ Cuándo NO consultar skills:
 ## Contexto adicional
 
 Para detalles extendidos y excepciones:
+
 - `CLAUDE.md`
 - `IA_Memoria/progreso.md`
 - `IA_Memoria/arquitectura.md`
