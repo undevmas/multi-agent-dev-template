@@ -1,7 +1,7 @@
 # SKILL — Política de Zonas de Riesgo (Verde / Ámbar / Roja)
 
-Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
-y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+Esta skill especializa, pero no reemplaza, la `Política de autonomía y ambigüedades`
+de `IA_Skill/SKILL-autonomy-policy.md` (**AUTONOMY_POLICY_VERSION: 1**).
 
 ## Cuándo usar esta skill
 

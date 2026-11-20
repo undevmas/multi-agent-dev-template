@@ -1,7 +1,7 @@
 # Skills oficiales de Microsoft (github.com/dotnet/skills) instaladas en esta plantilla.
 # Formato: <plugin>/<skill> — una por línea. Fuente única que leen sync-dotnet-skills.ps1 / .sh.
 # Para agregar o quitar una skill: editar esta lista, correr el script y actualizar
-# el ruteo en CLAUDE.md (+ AGENTS.md, GEMINI.md, copilot-instructions.md, .cursor/rules/project.mdc).
+# el catálogo IA_Skill/README.md (sección "Backend .NET — skills oficiales de Microsoft").
 # Criterios de selección y exclusiones: ver README.md de esta carpeta.
 
 # --- C# / build ---
@@ -27,7 +27,7 @@ dotnet-diag/dotnet-trace-collect
 dotnet-diag/dump-collect
 dotnet-diag/microbenchmarking
 
-# --- IA / ML en .NET (librerías aprobadas con reglas: ver CLAUDE.md "IA / ML (.NET)") ---
+# --- IA / ML en .NET (librerías aprobadas con reglas: ver IA_Skill/SKILL-stack-policy.md "IA / ML (.NET)") ---
 dotnet-ai/technology-selection
 
 # --- Testing (agnóstico de framework; el stack usa xUnit) ---

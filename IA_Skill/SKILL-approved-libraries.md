@@ -21,7 +21,7 @@ candidata razonable — de lo contrario, preguntar antes de sumarla.
 
 ## Backend .NET — librerías aprobadas con reglas
 
-Fuera de los tracks de UI. Las reglas completas viven en `CLAUDE.md` ("IA / ML (.NET)" y "Benchmarking (.NET)").
+Fuera de los tracks de UI. Las reglas completas viven en `IA_Skill/SKILL-stack-policy.md` ("IA / ML (.NET)" y "Benchmarking (.NET)").
 
 | Necesidad | Librería aprobada | Condiciones |
 |---|---|---|
@@ -237,7 +237,7 @@ mezclados dentro del mismo.
 
 - **jQuery** — y cualquier plugin que lo requiera como dependencia
   (jQuery UI, plugins de Bootstrap 4 o anteriores que aún dependen de él)
-- **Bootstrap** (ya prohibido en `CLAUDE.md`) — su JS de versiones ≤4
+- **Bootstrap** (ya prohibido en el catálogo `IA_Skill/README.md`, fila HTML/JS vanilla) — su JS de versiones ≤4
   arrastra jQuery; incluso en v5 el resultado visual es genérico por
   default (ver el síntoma documentado en `SKILL-frontend-design.md`)
 - **Materialize CSS** — sin mantenimiento activo, alto riesgo de que un

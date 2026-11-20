@@ -343,7 +343,7 @@ npx playwright codegen "$E2E_BASE_URL"       # grabar flujo y obtener locators s
 
 ## CI en Azure DevOps (PROPUESTA)
 
-> Modificar pipelines requiere confirmación explícita del dev (CLAUDE.md).
+> Modificar pipelines requiere confirmación explícita del dev (`AGENTS.md`).
 > Este YAML se **propone** en la respuesta o en un archivo aparte; no se aplica al pipeline real.
 > El template no incluye workflows de GitHub Actions: el CI/CD aprobado es Azure DevOps.
 

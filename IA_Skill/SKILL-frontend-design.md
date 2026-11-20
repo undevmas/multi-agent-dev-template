@@ -264,7 +264,7 @@ select:focus { outline: none; border-color: var(--color-action-primary); box-sha
 - No dejar el link `<a>` con el azul/morado por defecto del navegador — siempre `color: var(--color-text-link); text-decoration: none;` con hover explícito.
 - No usar `<select>`, `<table>`, `<button>` sin clase — el estilo del navegador/SO es el primer indicador de "no diseñado".
 - No escribir estados (Closed, Critical, High) como texto plano — siempre badge con color semántico.
-- No usar sombras o bordes por defecto de un framework CSS de terceros (Bootstrap, Bulma) — está prohibido por `CLAUDE.md`.
+- No usar sombras o bordes por defecto de un framework CSS de terceros (Bootstrap, Bulma) — está prohibido en la fila HTML/JS vanilla del catálogo `IA_Skill/README.md`.
 - No mezclar `style="..."` inline con el archivo CSS — todo el estilo vive en `tokens.css` + `styles.css`.
 
 ---

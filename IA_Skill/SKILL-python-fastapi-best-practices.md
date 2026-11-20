@@ -5,7 +5,7 @@ Antes de crear o modificar cualquier archivo del backend Python de
 `Codigo/Reportes/ReporteadorV2/` (ReporteadorV2). Leer antes de implementar
 routers, servicios, clientes HTTP hacia Azure DevOps o generación de PDF.
 
-> Python (FastAPI) está aprobado en `CLAUDE.md` **solo para este tooling
+> Python (FastAPI) está aprobado en el stack (`AGENTS.md` / `IA_Skill/SKILL-stack-policy.md`) **solo para este tooling
 > interno de reporting** — no usarlo como backend de una app de línea de
 > negocio sin la misma aprobación explícita.
 
@@ -124,7 +124,7 @@ async def get_ado_client(x_ado_pat: str = Header(..., alias="X-ADO-PAT")) -> Ado
 
 ## Respuesta estandarizada
 
-Sigue la convención de `CLAUDE.md` (`{ success, data, message, errors }`),
+Sigue la convención de `AGENTS.md` (`{ success, data, message, errors }`),
 igual que las apps .NET/NestJS del resto del stack.
 
 ```python

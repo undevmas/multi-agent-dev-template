@@ -6,3 +6,11 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Instrucciones locales del desarrollador (no se comparten)
+CLAUDE.local.md
+**/CLAUDE.local.md
+AGENTS.override.md
+**/AGENTS.override.md
+.claude/settings.local.json
+.claude/*.lock

@@ -6,7 +6,7 @@ description: Router central de instrucciones, selección de skills primaria/auxi
 # SKILL — Instruction Router y Optimización Operativa Multiagente
 
 Esta skill es el motor operativo de ruteo, jerarquía y gestión de contexto del sistema multiagente.
-Especializa y opera bajo `CLAUDE.md` (**AUTONOMY_POLICY_VERSION: 1**).
+Especializa y opera bajo `AGENTS.md` (fuente única; `CLAUDE.md` la importa) y `IA_Skill/SKILL-autonomy-policy.md` (**AUTONOMY_POLICY_VERSION: 1**).
 
 ---
 
@@ -17,7 +17,7 @@ Todo agente (Antigravity, Claude Code, Gemini CLI, OpenCode, Codex CLI, Cursor, 
 ```text
 1. Plataforma / Reglas de Sistema (límites de seguridad inviolables del runtime)
    └── 2. Solicitud actual del usuario (intención, parámetros y límites específicos de la sesión)
-        └── 3. Fuente canónica local (CLAUDE.md: principios, stack tecnológico, autonomía y seguridad)
+        └── 3. Fuente canónica local (AGENTS.md + SKILL-autonomy-policy.md + SKILL-stack-policy.md)
              └── 4. Router de instrucciones (IA_Skill/SKILL-instruction-router.md: ruteo y presupuesto)
                   └── 5. Skill primaria (lidera el ciclo de vida de la tarea)
                        └── 6. Skills auxiliares (cargadas progresivamente bajo demanda)
@@ -31,8 +31,8 @@ Todo agente (Antigravity, Claude Code, Gemini CLI, OpenCode, Codex CLI, Cursor, 
 | --------------------------------------------- | ----------------------- | --------------------------------- | ---------------------------------- | ------------------------------------------- |
 | **1. Plataforma**                             | Suprema de ejecución    | Sandbox, herramientas y runtime   | Todo nivel inferior                | Nada                                        |
 | **2. Solicitud actual**                       | Intención de sesión     | Tarea puntual y alcances          | Contratos y prioridades previas    | Políticas de seguridad S1 y stack base      |
-| **3. Fuente canónica (`CLAUDE.md`)**          | Normativa transversal   | Autonomía, stack, zonas de riesgo | Bridges locales y convenciones     | Solicitud explícita del dev dentro de stack |
-| **4. Router (`SKILL-instruction-router.md`)** | Orquestación operativa  | Selección de skills y contexto    | Listas planas de skills en bridges | Precedencia canónica de CLAUDE.md           |
+| **3. Fuente canónica (`AGENTS.md`)**          | Normativa transversal   | Autonomía, stack, zonas de riesgo | Bridges locales y convenciones     | Solicitud explícita del dev dentro de stack |
+| **4. Router (`SKILL-instruction-router.md`)** | Orquestación operativa  | Selección de skills y contexto    | Listas planas de skills en bridges | Precedencia canónica de AGENTS.md           |
 | **5. Skill primaria**                         | Conducción del flujo    | Ciclo de vida y artefactos clave  | Pasos genéricos no especializados  | Criterios de parada de la fuente canónica   |
 | **6. Skills auxiliares**                      | Especialización técnica | Implementación puntual de capa    | Valores por defecto del lenguaje   | Límites de la skill primaria o spec         |
 | **7. Contrato específico**                    | Definición funcional    | Reglas de negocio del módulo      | Supuestos previos no aprobados     | Restricciones de seguridad o arquitectura   |
@@ -73,10 +73,19 @@ Todo agente (Antigravity, Claude Code, Gemini CLI, OpenCode, Codex CLI, Cursor, 
 | **Investigar ambigüedad / Spike**                | `SKILL-instruction-router.md`                                        | `SKILL-risk-zone-policy.md`                                                                              | Fuentes internas relevantes (código, spec, contratos)  | `arquitectura.md`, `convenciones.md`                         | Lectura completa del repo, snapshots masivos                 |
 | **Tratar riesgo de seguridad / Hallazgo**        | `SKILL-risk-zone-policy.md`                                          | `SKILL-dependency-vulnerability-triage.md` o `SKILL-secrets-scanning.md`                                 | Archivo con el hallazgo o reporte SAST/SCA             | Skill del stack afectado                                     | `SKILL-preprod-security-audit.md` (salvo auditoría completa) |
 | **Acción destructiva o sensible**                | `SKILL-risk-zone-policy.md`                                          | Ninguna (detenerse y solicitar autorización S1)                                                          | Contexto exacto de la acción solicitada                | Ninguna                                                      | Herramientas de ejecución sin autorización humana            |
-| **Agregar IA / ML en .NET**                     | `dotnet-official/dotnet-ai/technology-selection/SKILL.md`           | `SKILL-dotnet-best-practices.md` + reglas "IA / ML (.NET)" de `CLAUDE.md`                                 | `IA_Memoria/arquitectura.md` (proveedor de modelo aprobado) |
+| **Agregar IA / ML en .NET**                     | `dotnet-official/dotnet-ai/technology-selection/SKILL.md`           | `SKILL-dotnet-best-practices.md` + reglas "IA / ML (.NET)" de `IA_Skill/SKILL-stack-policy.md`                                 | `IA_Memoria/arquitectura.md` (proveedor de modelo aprobado) |
 | **Medir rendimiento .NET (benchmarks)**          | `dotnet-official/dotnet-diag/microbenchmarking/SKILL.md`            | `dotnet-official/dotnet-diag/analyzing-dotnet-performance/SKILL.md`                                      | Código a medir + baseline a comparar |
 
-Las skills oficiales de Microsoft en `IA_Skill/dotnet-official/` son **auxiliares** de las tareas .NET (la primaria sigue siendo la skill propia del stack), salvo en las dos filas anteriores, donde no hay skill propia. Ruteo completo y regla de precedencia: sección "Backend .NET — skills oficiales de Microsoft" de `CLAUDE.md` e `IA_Skill/dotnet-official/README.md`.
+Las skills oficiales de Microsoft en `IA_Skill/dotnet-official/` son **auxiliares** de las tareas .NET (la primaria sigue siendo la skill propia del stack), salvo en las dos filas anteriores, donde no hay skill propia. Ruteo completo y regla de precedencia: sección "Backend .NET — skills oficiales de Microsoft" de `IA_Skill/README.md` e `IA_Skill/dotnet-official/README.md`.
+
+**Cuándo NO cargar ninguna skill:** tareas triviales o mecánicas (renombrar una variable, ajuste menor de texto,
+formateo local, cambio de ruta simple); lecturas rápidas de estado sin implementación; cambios ya totalmente definidos
+en la conversación que no requieren criterio técnico adicional.
+
+**Auxiliar transversal:** `SKILL-execution-principles.md` (principios de ejecución basados en Karpathy). Sus cuatro
+principios ya están resumidos en `AGENTS.md` y aplican siempre; cargar la skill solo en implementar, corregir un bug,
+modificar un contrato o revisar código cuando haya duda de alcance, riesgo de sobrediseño o un pedido vago que
+convertir en criterios verificables. No cuenta como skill primaria.
 
 ---
 
@@ -199,3 +208,50 @@ Trabajo no bloqueado ya completado: [Lista de código, contratos y pruebas ya te
 5. Validar continuidad de trabajo independiente.
 6. Resolver duplicaciones menores en bridges.
 7. Mejoras de redacción o estilo.
+
+## 8. Protocolo de lectura al iniciar una tarea y snapshot (Repomix)
+
+> Movido desde el antiguo `CLAUDE.md` extenso. Aplica después de elegir skill primaria con la matriz de la sección 3.
+
+
+### Lecturas según tipo de tarea
+
+1. **Implementar SPEC `ready` o reanudar `in-progress`:**
+   - Leer `Features/[feature].spec.md`, `[feature].checks.md` y `[feature].md`.
+   - Consultar `IA_Memoria/arquitectura.md` y `convenciones.md` únicamente antes de generar código nuevo o navegar entre servicios.
+2. **Corregir un bug puntual o refactor acotado:**
+   - Ir directamente al archivo afectado y su suite de tests. NO leer `progreso.md` ni snapshots globales.
+3. **Generar una SPEC o Spike técnico:**
+   - Leer insumos del dev y `[feature]-epic.md` (si aplica); no cargar skills de backend, frontend ni frameworks.
+4. **Tareas de investigación pura o consultas de usuario:**
+   - No cargar memoria global; buscar evidencia quirúrgica con herramientas dirigidas (búsqueda por nombre/contenido y lectura de rangos acotados).
+
+Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica:
+Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna de estas condiciones:
+
+- La tarea afecta más de un módulo o capa (ej. frontend + backend, backend + BD).
+- Es la primera sesión en el proyecto o no hay contexto previo del código.
+- Se toma una decisión de arquitectura o un refactor amplio.
+- Se depura un bug cuya causa no es evidente en un solo archivo.
+
+NO leer el snapshot si la tarea es: fix puntual en un archivo conocido, cambio de texto/estilo, modificación de config aislada.
+
+Si el snapshot no existe o tiene más de 7 días, sugerir al usuario ejecutar:
+
+- Windows: `.\repomix-scan.ps1`
+- Linux/macOS: `./repomix-scan.sh`
+
+Protocolo post-snapshot (obligatorio al leer el snapshot):
+Después de leer el snapshot, ANTES de codificar:
+
+1. Comparar lo que muestra el snapshot contra `IA_Memoria/arquitectura.md` — actualizar módulos, dependencias o estructura que hayan cambiado.
+2. Comparar contra `IA_Memoria/progreso.md` — marcar como hecho lo que ya existe en el código aunque no estuviera registrado.
+3. Si el proyecto tiene código existente, actualizar `IA_Memoria/convenciones.md` con los patrones arquitectónicos detectados en el snapshot — solo agregar lo que no esté ya documentado, nunca reemplazar entradas ya completas:
+   - Estructura de capas detectada (Clean Architecture, N-capas, Vertical Slice, etc.)
+   - Patrón de acceso a datos (Repository, DbContext directo, CQRS + MediatR, etc.)
+   - Estructura de carpetas dentro de cada capa
+   - Patrón de manejo de excepciones y validaciones
+   - Formato de responses detectado en controllers existentes
+4. Solo después de actualizar los tres archivos, proceder con la tarea solicitada.
+
+Nunca empezar a codificar lógica de negocio sin verificar las convenciones y arquitectura del módulo correspondiente.

@@ -1,7 +1,7 @@
 # SKILL — Implementation (Agente de Implementación Guiado por Spec)
 
-Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
-y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+Esta skill especializa, pero no reemplaza, la `Política de autonomía y ambigüedades`
+de `IA_Skill/SKILL-autonomy-policy.md` (**AUTONOMY_POLICY_VERSION: 1**).
 
 ## Cuándo usar esta skill
 Cuando la tarea es implementar una feature que ya tiene spec generada.
@@ -14,7 +14,7 @@ Triggers:
 - Existe `Features/[mod].spec.md` con **Estado:** `ready`
 
 Si no existe `[mod].spec.md`, o está `draft`/`needs-clarification`, aplicar la
-definición estricta de `NEEDS CLARIFICATION` de `CLAUDE.md`.
+definición estricta de `NEEDS CLARIFICATION` de `IA_Skill/SKILL-autonomy-policy.md`.
 Una Spec `ready` puede implementarse y una implementación `in-progress` puede
 reanudarse cuando la solicitud actual ordena continuar, reanudar o finalizar.
 
@@ -373,7 +373,7 @@ Siguiente paso:
 | Dependencia SOFT no disponible | Implementar contrato degradado y pruebas; no bloquear. |
 | T1/T2 | Investigar, decidir, implementar y documentar sin preguntar. |
 | B1 | Implementar soporte configurable; regla deshabilitada y estado explícito. |
-| B2/S1/X1 no aislable | Escalar usando el formato de `CLAUDE.md`; continuar lo independiente. |
+| B2/S1/X1 no aislable | Escalar usando el formato de `IA_Skill/SKILL-autonomy-policy.md`; continuar lo independiente. |
 | Gap propiedad de otra Spec | Registrar deuda con Spec propietaria y `Retomar en`; continuar lo independiente. |
 | Gap T1/T2 propiedad de la Spec actual | Resolver, implementar, probar y documentar; no diferir ni preguntar. |
 | Código legado fuera del cambio autorizado contradice la Spec | El código real manda en ese alcance; registrar sin detener lo independiente. |

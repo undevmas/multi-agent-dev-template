@@ -85,7 +85,7 @@ var orderBy = allowedSort.GetValueOrDefault(sortKey, "CreatedAt");
 ```
 
 - Toda consulta Dapper filtra `IsActive = 1` explícitamente — los query filters globales de EF Core no aplican aquí.
-- Dapper solo lee: escrituras y esquema van por EF Core (ver "Perfiles de acceso a datos" en CLAUDE.md).
+- Dapper solo lee: escrituras y esquema van por EF Core (ver "Perfiles de acceso a datos" en `IA_Skill/SKILL-stack-policy.md`).
 
 ---
 

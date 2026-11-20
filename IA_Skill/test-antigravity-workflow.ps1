@@ -41,6 +41,9 @@ $requiredFiles = @(
     '.cursor/rules/project.mdc',
     '.github/copilot-instructions.md',
     'IA_Skill/SKILL-instruction-router.md',
+    'IA_Skill/SKILL-autonomy-policy.md',
+    'IA_Skill/SKILL-stack-policy.md',
+    'IA_Skill/README.md',
     'IA_Skill/SKILL-implementation.md',
     'IA_Skill/SKILL-risk-zone-policy.md',
     'IA_Skill/SKILL-spec-generator.md'
@@ -62,6 +65,7 @@ $policyFiles = @(
     '.gemini/GEMINI.md',
     '.github/copilot-instructions.md',
     '.cursor/rules/project.mdc',
+    'IA_Skill/SKILL-autonomy-policy.md',
     'IA_Skill/SKILL-implementation.md',
     'IA_Skill/SKILL-risk-zone-policy.md',
     'IA_Skill/SKILL-spec-generator.md'
@@ -79,7 +83,7 @@ foreach ($pf in $policyFiles) {
 }
 Record-TestResult "Estatica" "Sincronizacion AUTONOMY_POLICY_VERSION: 1" ($invalidMarkers.Count -eq 0) ("Desincronizados: " + ($invalidMarkers -join ', '))
 
-$bridgeFiles = @('AGENTS.md', '.gemini/GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/project.mdc')
+$bridgeFiles = @('CLAUDE.md', 'AGENTS.md', '.gemini/GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/project.mdc')
 $duplications = @()
 foreach ($bf in $bridgeFiles) {
     $p = Join-Path $workspaceRoot $bf
@@ -105,17 +109,18 @@ $forbiddenRules = @(
     'Si la spec no lo dice, no existe',
     'No modificar el contrato durante',
     'todas las features listadas deben estar en estado `done`',
-    'alguien ya está trabajando esto, confirmar con el dev',
+    'alguien ya est. trabajando esto, confirmar con el dev',
     'nunca requiere ticket, se hace de inmediato',
     'resolverlas con defaults razonables',
-    'sin una spec aprobada y evidencia explícita'
+    'sin una spec aprobada y evidencia expl.cita'
 )
 
 $forbiddenFound = @()
 foreach ($fr in $forbiddenRules) {
     foreach ($pf in $policyFiles) {
         $p = Join-Path $workspaceRoot $pf
-        if (Select-String -LiteralPath $p -SimpleMatch $fr -Quiet) {
+        # Patron regex ASCII + lectura UTF-8: evita falsos negativos con acentos en PS 5.1
+        if (Select-String -LiteralPath $p -Pattern $fr -Encoding UTF8 -Quiet) {
             $forbiddenFound += "$pf contiene '$fr'"
         }
     }

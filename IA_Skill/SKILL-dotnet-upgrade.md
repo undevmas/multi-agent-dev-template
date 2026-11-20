@@ -107,7 +107,7 @@ Probar manualmente los flujos críticos:
 > usar `IA_Skill/dotnet-official/dotnet-upgrade/migrate-dotnet8-to-dotnet9/SKILL.md` y después
 > `migrate-dotnet9-to-dotnet10/SKILL.md`, en el mismo upgrade con destino `net10.0` (nunca liberar
 > en .NET 9). Si el upgrade también activa nullable, `migrate-nullable-references/SKILL.md`, en un
-> PR aparte. Precedencia: si chocan con esta skill o con CLAUDE.md, gana la plantilla.
+> PR aparte. Precedencia: si chocan con esta skill o con `AGENTS.md`, gana la plantilla.
 
 ### De .NET 6 a .NET 7
 - Minimal APIs recibieron actualizaciones de routing

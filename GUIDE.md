@@ -10,12 +10,12 @@
 | Agente                            | Archivo de instrucciones          | Lo lee automáticamente    | Skills y snapshots                                                                     |
 | --------------------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
 | **Antigravity** (Google DeepMind) | AGENTS.md / .gemini/GEMINI.md     | ✅ Sí, automático         | Lectura bajo demanda con herramientas nativas vía IA_Skill/SKILL-instruction-router.md |
-| **Claude Code**                   | `CLAUDE.md`                       | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas                                             |
-| **Gemini CLI**                    | `.gemini/GEMINI.md`               | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **Claude Code**                   | `CLAUDE.md` → importa `AGENTS.md` | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas                                             |
+| **Gemini CLI**                    | `.gemini/GEMINI.md` → importa `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas                                     |
 | **OpenCode**                      | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
 | **Codex CLI**                     | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
-| **Cursor**                        | `.cursor/rules/project.mdc`       | ✅ Sí, automático         | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto                  |
-| **GitHub Copilot**                | `.github/copilot-instructions.md` | ✅ Sí, automático         | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente                             |
+| **Cursor**                        | `AGENTS.md` + `.cursor/rules/project.mdc` (puntero) | ✅ Sí, automático | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto |
+| **GitHub Copilot**                | `AGENTS.md` + `.github/copilot-instructions.md` (puntero) | ✅ Sí, automático | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente |
 
 > **Nota Cursor:** las instrucciones base (`.cursor/rules/project.mdc`) se cargan automáticamente. Skills, specs y snapshots se adjuntan arrastrando el archivo al chat o usando `@archivo` en el prompt.
 >
@@ -412,7 +412,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-58 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `CLAUDE.md`. El agente lee solo la que corresponde a la tarea actual.
+59 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
@@ -426,7 +426,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
 | **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
 | **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
-| **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` |
+| **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` · `SKILL-execution-principles.md` (principios de ejecución basados en Karpathy; resumen siempre activo en `AGENTS.md`) |
 
 Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` antes del prompt.
 
@@ -434,8 +434,7 @@ Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` ant
 
 ## Candado de comprobación ("Claro team")
 
-Las 5 copias de instrucciones (`CLAUDE.md`, `AGENTS.md`, `.gemini/GEMINI.md`,
-`.github/copilot-instructions.md`, `.cursor/rules/project.mdc`) obligan al agente a empezar
+`AGENTS.md` (y los punteros de Copilot y Cursor, que no soportan imports) obliga al agente a empezar
 **cada respuesta** con `Claro team`. No es un saludo: es una señal de integridad.
 
 **Si una respuesta del agente no empieza con `Claro team`, sospechar que algo se rompió:**
@@ -447,12 +446,28 @@ cambió, o el contexto se compactó y el agente perdió las reglas. Qué hacer:
    ```powershell
    .\IA_Skill\check-instruction-policy-sync.ps1
    ```
-   Verifica que el candado esté en las 5 copias, que no haya marcadores de conflicto de merge y
-   que todas las skills citadas existan (además de la política de autonomía).
+   Verifica la fuente única (`AGENTS.md`) y los imports de `CLAUDE.md`/`GEMINI.md`, el candado, el
+   presupuesto de líneas, que no haya marcadores de conflicto de merge, que todas las skills citadas
+   existan y la política de autonomía. `.\IA_Skill\test-antigravity-workflow.ps1` valida el ruteo.
 3. Corregir lo que reporte y abrir una sesión nueva del agente.
 
 El candado aplica solo a los mensajes del chat: el agente nunca lo escribe en archivos, código,
-commits ni PRs. Si se cambia la frase, cambiarla en las 5 copias y en el script.
+commits ni PRs. Si se cambia la frase, cambiarla en `AGENTS.md`, en los punteros de Copilot y
+Cursor, y en el script.
+
+## Estructura de las instrucciones (estándar AGENTS.md)
+
+- **`AGENTS.md` es la fuente única** y se mantiene en ≤150 líneas (lo hace cumplir el script):
+  contexto, candado, stack en una línea por capa, comandos de verificación, reglas críticas e índice.
+- `CLAUDE.md` = `@AGENTS.md` + lo propio de Claude Code; `.gemini/GEMINI.md` = `@../AGENTS.md`;
+  Copilot y Cursor tienen punteros cortos (≤40 líneas).
+- Lo detallado se lee bajo demanda: política de autonomía (`IA_Skill/SKILL-autonomy-policy.md`),
+  stack y reglas por tecnología (`IA_Skill/SKILL-stack-policy.md`), catálogo situación → skill
+  (`IA_Skill/README.md`) y router (`IA_Skill/SKILL-instruction-router.md`).
+- Cada proyecto puede tener su `Codigo/<proyecto>/AGENTS.md` (≤100 líneas, plantilla en
+  `IA_Skill/templates/AGENTS.project.md`) con sus comandos de build/test y reglas locales.
+- Preferencias personales: `CLAUDE.local.md` / `AGENTS.override.md`, ignorados por git.
+- Regla para crecer: si algo nuevo es un procedimiento paso a paso, va a una skill, no a `AGENTS.md`.
 
 ---
 

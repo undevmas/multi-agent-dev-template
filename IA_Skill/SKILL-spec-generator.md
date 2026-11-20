@@ -1,7 +1,7 @@
 # SKILL — Spec Generator (Agente Especializado en Especificaciones)
 
-Esta skill especializa, pero no reemplaza, `CLAUDE.md` → `Política de autonomía
-y ambigüedades` (**AUTONOMY_POLICY_VERSION: 1**).
+Esta skill especializa, pero no reemplaza, la `Política de autonomía y ambigüedades`
+de `IA_Skill/SKILL-autonomy-policy.md` (**AUTONOMY_POLICY_VERSION: 1**).
 
 ## Cuándo usar esta skill
 
@@ -187,7 +187,7 @@ o la experiencia de usuario. NO preguntar sobre detalles técnicos de implementa
 — esos los decide el agente de implementación con las Skills del proyecto.
 
 Antes de crear un `[NEEDS CLARIFICATION]`, aplicar la definición estricta de
-`CLAUDE.md` y clasificar el gap como T1/T2/B1/B2/S1/X1. T1 y T2 nunca generan
+`IA_Skill/SKILL-autonomy-policy.md` y clasificar el gap como T1/T2/B1/B2/S1/X1. T1 y T2 nunca generan
 una pregunta al usuario. B1 debe incluir una estrategia desactivada y segura.
 Solo B2/S1/X1 no aislables pueden bloquear la Spec completa.
 

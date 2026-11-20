@@ -8,7 +8,8 @@ Capa de contexto y gobierno para sesiones de desarrollo con IA. Estandariza cóm
 
 ```
 workspace-proyecto/
-├── CLAUDE.md / AGENTS.md / GEMINI.md    ← Instrucciones del agente (fuente de verdad)
+├── AGENTS.md                            ← Instrucciones del agente (fuente única, ≤150 líneas)
+├── CLAUDE.md / .gemini/GEMINI.md        ← Punteros que importan AGENTS.md
 │
 ├── Insumos/                             ← Material de entrada para el agente
 │   ├── mockups/                         ← Pantallas y wireframes
@@ -125,7 +126,7 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 | Testing | xUnit · Jest · pytest · Playwright (E2E por defecto; Cypress solo con autorización) |
 | Documentación API | OpenAPI nativo (`Microsoft.AspNetCore.OpenApi`) · Scalar (`Scalar.AspNetCore`) · Redoc / Swagger UI opcionales |
 
-**Política de versiones:** los proyectos nuevos usan siempre el último LTS liberado de cada runtime/framework (o la última versión mayor estable si la tecnología no publica LTS). El detalle, junto con los perfiles de autenticación y de acceso a datos, está en `CLAUDE.md`.
+**Política de versiones:** los proyectos nuevos usan siempre el último LTS liberado de cada runtime/framework (o la última versión mayor estable si la tecnología no publica LTS). El detalle, junto con los perfiles de autenticación y de acceso a datos, está en `IA_Skill/SKILL-stack-policy.md`.
 
 ---
 
@@ -147,7 +148,7 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 | Qué | ¿Va a git? |
 |---|---|
 | `Codigo/` | ✅ Siempre |
-| `CLAUDE.md`, `AGENTS.md`, bridges | ✅ Recomendado |
+| `AGENTS.md`, `CLAUDE.md` y punteros | ✅ Recomendado |
 | `IA_Memoria/` | Opcional — útil para equipos |
 | `Features/`, `Issues/` | Opcional — útil como documentación compartida |
 | `IA_Skill/` | No recomendado |

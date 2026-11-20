@@ -18,7 +18,7 @@ políglota) es el **orquestador de desarrollo local** del stack aprobado
 ### Cuándo NO usarla
 - Servicio único (una sola API sin dependencias levantables) — no aporta, no forzarlo.
 - Tooling Python de ReporteadorV2 (`Codigo/Reportes/`): sigue con `Dockerfile` +
-  `docker-compose.yml` obligatorios (ver CLAUDE.md, sección Python).
+  `docker-compose.yml` obligatorios (ver `IA_Skill/SKILL-stack-policy.md`, sección Python).
 - Despliegue a producción: **Docker Compose sigue siendo el artefacto de despliegue
   en VM** (y el de `Tools/`). Aspire no lo reemplaza en producción salvo decisión
   registrada en `IA_Memoria/arquitectura.md`.
@@ -262,7 +262,7 @@ public class ApiIntegrationTests
   ```
   El dev revisa el resultado, lo ajusta y lo versiona. El `.env` generado nunca
   se versiona con valores reales.
-- **Requiere confirmación explícita del dev** (reglas de CLAUDE.md):
+- **Requiere confirmación explícita del dev** (reglas de `AGENTS.md`):
   - `aspire deploy` o cualquier publicación hacia un entorno remoto.
   - `docker build` / `docker push` (si `aspire publish` va a construir imágenes, avisar antes).
   - Modificar `.env`, `appsettings*.json` o archivos de entorno.

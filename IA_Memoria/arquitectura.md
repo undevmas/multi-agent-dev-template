@@ -106,6 +106,20 @@ Ruta completa al código fuente: `Codigo/[COMPLETAR]/src/` (o la que corresponda
 
 ---
 
+## Comandos de verificación
+
+> El agente los ejecuta antes de dar una tarea por terminada (ver `AGENTS.md`). Completar con los comandos reales.
+
+| Qué | Comando | Desde |
+|---|---|---|
+| Build | [COMPLETAR — ej. `dotnet build src/Proyecto.sln --no-restore`] | [ruta] |
+| Tests unitarios | [COMPLETAR — ej. `dotnet test --filter Category=Unit` / `npm test`] | [ruta] |
+| Formato / lint | [COMPLETAR — ej. `dotnet format --verify-no-changes` / `npm run lint`] | [ruta] |
+| Levantar la app local | [COMPLETAR — ej. `aspire run` / `npm start`] | [ruta] |
+| E2E | [COMPLETAR — ej. `npm run test:e2e`] | raíz del workspace |
+
+---
+
 ## Flujo principal del sistema
 
 [COMPLETAR: diagrama de cómo se comunican las capas del sistema]

@@ -10,7 +10,7 @@ buscar información actualizada en internet mientras trabaja en el proyecto.
 ## Cuándo usar búsqueda web
 
 Solo cuando estas fuentes no responden la duda:
-1. CLAUDE.md del proyecto
+1. AGENTS.md del workspace (y `Codigo/<proyecto>/AGENTS.md` si existe)
 2. Skills en IA_Skill/
 3. Código actual del proyecto
 4. Conocimiento base del modelo (tiene fecha de corte — puede no conocer el último LTS)
@@ -18,7 +18,7 @@ Solo cuando estas fuentes no responden la duda:
 ### Casos válidos para buscar
 - Versión más reciente y estable de una dependencia antes de instalarla
 - Último LTS vigente de .NET / Node.js y última versión mayor estable de Angular / React / NestJS
-  antes de crear un proyecto nuevo (Política de versiones en CLAUDE.md) — fuentes:
+  antes de crear un proyecto nuevo (Política de versiones en `IA_Skill/SKILL-stack-policy.md`) — fuentes:
   dotnet.microsoft.com/platform/support/policy · nodejs.org/en/about/previous-releases ·
   angular.dev/reference/releases · react.dev/versions · npmjs.com/package/@nestjs/core
 - Error muy específico con número de versión de librería
@@ -30,7 +30,7 @@ Solo cuando estas fuentes no responden la duda:
 - Conceptos generales de programación (ya los sé)
 - Patrones de arquitectura conocidos (REST, MVC, Repository, etc.)
 - Sintaxis básica del stack del proyecto
-- Algo que ya está respondido en CLAUDE.md o en las Skills
+- Algo que ya está respondido en AGENTS.md o en las Skills
 
 ---
 

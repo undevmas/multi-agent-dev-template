@@ -16,9 +16,9 @@ por el equipo de .NET de Microsoft, formato [Agent Skills](https://agentskills.i
 
 Estas skills **complementan** a las skills propias de `IA_Skill/`; no las reemplazan.
 
-1. `CLAUDE.md` (y sus copias) → 2. `IA_Memoria/convenciones.md` → 3. skill propia de `IA_Skill/`
+1. `AGENTS.md` (fuente única; `CLAUDE.md` y demás punteros la importan) → 2. `IA_Memoria/convenciones.md` → 3. skill propia de `IA_Skill/`
    → 4. skill oficial de esta carpeta.
-2. Leer primero la skill propia de la situación (según la tabla de ruteo de `CLAUDE.md`); la
+2. Leer primero la skill propia de la situación (según el catálogo `IA_Skill/README.md`); la
    oficial aporta el detalle técnico.
 3. Si una skill oficial contradice a la plantilla, gana la plantilla. Conflictos ya identificados:
 
@@ -84,7 +84,7 @@ cualquier script antes de ejecutarlo.
 | `dotnet11/*`, `dotnet-upgrade/migrate-dotnet10-to-dotnet11` | .NET 11 es STS; la política es solo LTS. Se agregará `10→11` cuando se planee el salto 10→12 (LTS) |
 | `dotnet-test/writing-mstest-tests`, `mtp-hot-reload`, `dotnet-test-migration/migrate-*-to-mstest`, `migrate-mstest-*` | El framework del stack es xUnit |
 | `dotnet-msbuild/*` (21 skills) | Su contenido ya viene en `dotnet/msbuild/references/` |
-| `dotnet/csharp-expert` | Es un enrutador hacia el marketplace de plugins; aquí el ruteo lo hace `CLAUDE.md` |
+| `dotnet/csharp-expert` | Es un enrutador hacia el marketplace de plugins; aquí el ruteo lo hacen el router y `IA_Skill/README.md` |
 | `dotnet/setup-local-sdk` | Orientada a SDKs preview; la política es LTS estable |
 | `dotnet-data/create-datadriven-aspnetcore` | Genera Razor Pages/Blazor/MVC y no sigue la arquitectura en capas de la plantilla |
 | `dotnet-advanced/*`, `dotnet-upgrade/dotnet-aot-compat`, `thread-abort-migration`, `dotnet-template-engine/*`, `dotnet-test/find-untested-sources`, `test-smell-detection`, `test-tagging`, `test-value-evidence`, `grade-tests`, testability wrappers, `dotnet-experimental/*` | Nicho para este stack, dependencias externas (tree-sitter) o experimentales. Candidatas a agregar si un proyecto las necesita |
@@ -110,8 +110,8 @@ copia `LICENSE` y reescribe `SOURCE.txt`. Acepta la ruta de un clon existente pa
 Después de sincronizar:
 1. Revisar el diff (`git diff IA_Skill/dotnet-official`) — es contenido de terceros que los agentes
    van a seguir. Buscar scripts nuevos y cambios que choquen con la tabla de precedencia.
-2. Si se agregó o quitó una skill del manifest, actualizar el ruteo en `CLAUDE.md`, `AGENTS.md`,
-   `.gemini/GEMINI.md`, `.github/copilot-instructions.md` y `.cursor/rules/project.mdc`.
+2. Si se agregó o quitó una skill del manifest, actualizar el catálogo `IA_Skill/README.md`
+   (sección "Backend .NET — skills oficiales de Microsoft") y correr `IA_Skill/check-instruction-policy-sync.ps1`.
 3. Actualizar la tabla de conflictos de este README si aparece uno nuevo.
 
 ## Alternativa: instalarlas como plugin (por desarrollador)
