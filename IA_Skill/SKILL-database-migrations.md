@@ -4,18 +4,24 @@
 Al crear, modificar o revertir migraciones de base de datos en cualquier capa del stack.
 Leer antes de tocar el esquema de BD en .NET o NestJS.
 
-| Backend | ORM estándar del proyecto |
-|---|---|
-| .NET 8 | Entity Framework Core (obligatorio) |
-| NestJS | TypeORM · Prisma (elegir uno por proyecto) |
+| Backend | Herramienta de esquema/migraciones | Notas |
+|---|---|---|
+| .NET (LTS vigente — hoy .NET 10) | Entity Framework Core Migrations (obligatorio) | Dapper solo lee — nunca crea ni altera esquema |
+| NestJS — proyecto nuevo | Prisma · Drizzle ORM (`drizzle-kit`) · Kysely (`Migrator`) — uno por proyecto | Según el perfil de acceso a datos registrado en `IA_Memoria/arquitectura.md` |
+| NestJS — proyecto existente | TypeORM | Solo mantenimiento; no se elige para proyectos nuevos |
 
 Motores soportados: SQL Server 2019+ · PostgreSQL 15+
+
+> **SQL Server + TypeScript:** Prisma y Kysely (`MssqlDialect`) lo soportan. El soporte
+> de SQL Server en Drizzle era reciente/beta — verificar contra la versión instalada
+> antes de elegir Drizzle para SQL Server.
 
 ---
 
 ## Reglas generales (aplican a todos los ORM)
 
-- Toda migración tiene `up` (aplicar) Y `down` (revertir) — sin excepciones
+- Toda migración tiene `up` (aplicar) Y `down` (revertir) — sin excepciones. En herramientas sin `down` nativo (Prisma, `drizzle-kit`), el `down` es un script de rollback versionado en `database/scripts/rollback/` con el mismo nombre que la migración
+- El esquema lo gestiona solo la herramienta del ORM principal — nunca DDL desde Dapper, Kysely queries de aplicación ni scripts sueltos
 - Nunca eliminar una migración que ya fue aplicada a cualquier entorno
 - Nunca ejecutar `DROP TABLE` ni `DELETE FROM` en tablas de negocio
 - El soft delete se implementa con `IsActive`/`is_active` — no con borrado físico
@@ -56,12 +62,15 @@ updated_by  UUID              NULL REFERENCES users(id)
 # Instalar herramientas EF Core
 dotnet tool install --global dotnet-ef
 
-# Paquetes del proyecto (según motor de BD)
+# Paquetes del proyecto (según motor de BD) — misma versión mayor que el runtime .NET (EF Core 10 ↔ .NET 10)
 dotnet add package Microsoft.EntityFrameworkCore
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer   # SQL Server
-dotnet add package Microsoft.EntityFrameworkCore.Npgsql      # PostgreSQL
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL     # PostgreSQL
 dotnet add package Microsoft.EntityFrameworkCore.Tools
 ```
+
+> Con Aspire, la connection string llega inyectada desde el AppHost — ver
+> `IA_Skill/SKILL-aspire-orchestration.md` para correr migraciones contra la BD que levanta.
 
 ### Entidad base reutilizable
 
@@ -233,7 +242,43 @@ protected override void Up(MigrationBuilder migrationBuilder)
 
 ---
 
-## TypeORM (NestJS)
+## Dapper (.NET — lado de lectura, perfil Alto rendimiento / CQRS)
+
+Dapper no tiene migraciones ni modelo de esquema: lee tablas que crea y versiona EF Core.
+
+```csharp
+// Infrastructure/Queries/ContractQueries.cs — lado de lectura
+public sealed class ContractQueries(IDbConnectionFactory connectionFactory)
+{
+    public async Task<IReadOnlyList<ContractListItem>> GetActiveByUserAsync(Guid userId, CancellationToken ct)
+    {
+        // Filtro IsActive explícito: los query filters globales de EF Core NO aplican a Dapper
+        const string sql = """
+            SELECT Id, Title, Status, CreatedAt
+            FROM Contracts
+            WHERE UserId = @UserId AND IsActive = 1
+            ORDER BY CreatedAt DESC
+            """;
+
+        using var connection = await connectionFactory.OpenAsync(ct);
+        var rows = await connection.QueryAsync<ContractListItem>(
+            new CommandDefinition(sql, new { UserId = userId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+}
+```
+
+- Misma connection string que el `DbContext` (inyectada por configuración/Aspire, nunca literal).
+- Solo `SELECT`. Escrituras por EF Core para conservar validaciones, auditoría (`UpdatedAt`) y soft delete.
+- Parametrización obligatoria — ver `SKILL-security-dotnet.md` (sección Dapper).
+
+---
+
+## TypeORM (NestJS — solo proyectos existentes)
+
+> No elegir TypeORM para proyectos nuevos: usar Prisma, Drizzle ORM o Kysely según el
+> perfil de acceso a datos. Migrar un proyecto existente de TypeORM a otro ORM es zona
+> roja (`SKILL-risk-zone-policy.md`) — requiere ticket.
 
 ### Setup inicial
 
@@ -392,6 +437,10 @@ npm install prisma @prisma/client
 npx prisma init --datasource-provider postgresql   # o sqlserver
 ```
 
+> **Prisma 7+:** el generador recomendado pasó a `prisma-client` (con `output` explícito)
+> y la URL de conexión se configura en `prisma.config.ts` en lugar del `schema.prisma`.
+> Verificar contra la versión instalada antes de copiar el bloque de abajo.
+
 ```prisma
 // prisma/schema.prisma
 generator client {
@@ -485,27 +534,175 @@ main()
 }
 ```
 
-### Soft delete con Prisma (middleware)
+### Soft delete con Prisma (Client Extensions)
 
 ```typescript
-// Prisma no tiene soft delete nativo — implementar con middleware
-prisma.$use(async (params, next) => {
-  // Interceptar delete → convertir a update de is_active
-  if (params.action === 'delete') {
-    params.action = 'update';
-    params.args.data = { isActive: false };
-  }
-  if (params.action === 'deleteMany') {
-    params.action = 'updateMany';
-    params.args.data = { isActive: false };
-  }
-  // Filtrar automáticamente registros inactivos en findMany/findFirst
-  if (params.action === 'findMany' || params.action === 'findFirst') {
-    params.args.where = { ...params.args.where, isActive: true };
-  }
-  return next(params);
+// Prisma no tiene soft delete nativo. El middleware $use fue eliminado en versiones
+// recientes — usar Client Extensions ($extends).
+// $allModels asume que todos los modelos son de negocio (tienen isActive); si hay modelos
+// sin isActive, declarar la extensión por modelo en lugar de $allModels.
+export const prisma = new PrismaClient().$extends({
+  name: 'soft-delete',
+  query: {
+    $allModels: {
+      // Bloquear borrado físico — desactivar con update({ data: { isActive: false } })
+      async delete() {
+        throw new Error('DELETE físico prohibido: usar update con isActive = false');
+      },
+      async deleteMany() {
+        throw new Error('DELETE físico prohibido: usar updateMany con isActive = false');
+      },
+      // Filtrar automáticamente registros inactivos
+      async findMany({ args, query }) {
+        args.where = { ...args.where, isActive: true };
+        return query(args);
+      },
+      async findFirst({ args, query }) {
+        args.where = { ...args.where, isActive: true };
+        return query(args);
+      },
+    },
+  },
 });
 ```
+
+---
+
+## Drizzle ORM (NestJS — perfiles Equilibrado y Alto rendimiento)
+
+### Setup inicial
+
+```bash
+npm install drizzle-orm pg
+npm install -D drizzle-kit @types/pg
+```
+
+```typescript
+// drizzle.config.ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'postgresql',
+  schema: './src/database/schema/*.ts',
+  out: './src/database/migrations',
+  dbCredentials: { url: process.env.DATABASE_URL! }, // nunca literal
+});
+```
+
+### Schema con columnas obligatorias
+
+```typescript
+// src/database/schema/columns.ts — columnas de auditoría reutilizables
+import { boolean, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+export const auditColumns = {
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdate(() => new Date()),
+  createdBy: uuid('created_by'),
+  updatedBy: uuid('updated_by'),
+};
+
+// src/database/schema/contracts.ts
+import { index, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
+
+export const contracts = pgTable('contracts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 300 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  ...auditColumns,
+}, (t) => [index('ix_contracts_user_id').on(t.userId)]);
+```
+
+### Comandos del ciclo de vida
+
+```bash
+# Generar migración SQL desde los cambios en el schema
+npx drizzle-kit generate --name=add_contracts_table
+
+# Aplicar migraciones pendientes
+npx drizzle-kit migrate
+
+# Verificar consistencia de las migraciones generadas
+npx drizzle-kit check
+
+# PROHIBIDO fuera de prototipos locales: aplica cambios sin generar migración versionada
+# npx drizzle-kit push
+```
+
+- `drizzle-kit` no genera `down`: crear el script de rollback en `database/scripts/rollback/` con el mismo nombre.
+- Soft delete: desactivar con `db.update(contracts).set({ isActive: false }).where(eq(contracts.id, id))`; toda lectura filtra `eq(contracts.isActive, true)`.
+- Queries con el builder o con el template `sql\`...\`` (parametrizado). Nunca `sql.raw()` con input del usuario.
+
+---
+
+## Kysely (NestJS — perfil Alto rendimiento / SQL type-safe)
+
+Kysely es un query builder type-safe con migraciones propias (`Migrator`). Funciona con
+PostgreSQL (`PostgresDialect`) y SQL Server (`MssqlDialect`).
+
+### Estructura de una migración
+
+```typescript
+// src/database/migrations/2026_11_20_001_add_contracts_table.ts
+import { Kysely, sql } from 'kysely';
+
+export async function up(db: Kysely<unknown>): Promise<void> {
+  await db.schema
+    .createTable('contracts')
+    .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
+    .addColumn('title', 'varchar(300)', (col) => col.notNull())
+    .addColumn('status', 'varchar(50)', (col) => col.notNull())
+    .addColumn('user_id', 'uuid', (col) => col.notNull().references('users.id').onDelete('restrict'))
+    .addColumn('is_active', 'boolean', (col) => col.notNull().defaultTo(true))
+    .addColumn('created_at', 'timestamp', (col) => col.notNull().defaultTo(sql`now()`))
+    .addColumn('updated_at', 'timestamp', (col) => col.notNull().defaultTo(sql`now()`))
+    .addColumn('created_by', 'uuid')
+    .addColumn('updated_by', 'uuid')
+    .execute();
+
+  await db.schema.createIndex('ix_contracts_user_id').on('contracts').column('user_id').execute();
+}
+
+export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropTable('contracts').execute();
+}
+```
+
+### Runner de migraciones
+
+```typescript
+// src/database/migrate.ts — ejecutar con: node dist/database/migrate.js [latest|down]
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { FileMigrationProvider, Migrator } from 'kysely';
+import { db } from './db';
+
+async function main(): Promise<void> {
+  const migrator = new Migrator({
+    db,
+    provider: new FileMigrationProvider({ fs, path, migrationFolder: path.join(__dirname, 'migrations') }),
+  });
+
+  const { error, results } = process.argv[2] === 'down'
+    ? await migrator.migrateDown()
+    : await migrator.migrateToLatest();
+
+  results?.forEach((r) => console.log(`${r.status}: ${r.migrationName}`));
+  await db.destroy();
+  if (error) {
+    console.error(error);
+    process.exit(1);
+  }
+}
+
+void main();
+```
+
+- Tipos de la BD: definirlos a mano o generarlos con `kysely-codegen` (paquete adicional — confirmar con el dev antes de instalar).
+- Valores siempre por el builder o `sql\`...\`` (parametrizado). Nunca `sql.raw()` con input del usuario.
+- Soft delete: `updateTable('contracts').set({ is_active: false })`; toda lectura con `.where('is_active', '=', true)`.
 
 ---
 
@@ -525,8 +722,9 @@ Codigo/
 
 ## Checklist antes de hacer PR con migración
 
-- [ ] La migración tiene `up` Y `down` implementados
+- [ ] La migración tiene `up` Y `down` implementados (o script de rollback versionado si la herramienta no genera `down`)
 - [ ] El `down` fue probado localmente (revertir y volver a aplicar)
+- [ ] La migración la generó la herramienta del ORM principal (sin `drizzle-kit push`, sin DDL desde Dapper ni scripts sueltos)
 - [ ] Se incluyen las columnas obligatorias: `id`, `created_at`, `updated_at`, `is_active`, `created_by`, `updated_by`
 - [ ] Las claves foráneas usan `ON DELETE RESTRICT` (no CASCADE en tablas de negocio)
 - [ ] Sin `DROP TABLE` ni `DELETE FROM` en tablas de negocio

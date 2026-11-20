@@ -167,6 +167,15 @@ no aplica (p.ej. si no hay API REST, omite esa sección).
 - Escribe `[Pendiente — requiere información del equipo de desarrollo]`
 - NO escribas contenido genérico como "El sistema utiliza buenas prácticas..."
 
+**Solo hechos, nunca justificaciones.** La memoria técnica describe lo que el sistema ES y cómo funciona. No explica por qué se eligió una tecnología, qué ocurrió históricamente, ni compara con alternativas no usadas:
+- ❌ "El sistema se construyó con Node.js por velocidad de entrega durante el prototipo"
+- ❌ "Esta decisión difiere del template institucional aprobado (NestJS / Angular)"
+- ❌ "Esta desviación está registrada como deuda técnica"
+- ❌ "Se utilizó X en lugar de Y debido a Z"
+- ✅ "El sistema utiliza Node.js 22.x con Express 4.21.2"
+
+Si las fuentes contienen notas de deuda técnica, justificaciones de diseño o contexto histórico, ignorarlos. Extraer únicamente el dato técnico concreto (qué tecnología, qué versión, qué hace).
+
 **Lenguaje institucional:**
 - ❌ "El backend expone endpoints REST"
 - ✅ "El servidor de aplicaciones proporciona servicios web mediante interfaz REST"

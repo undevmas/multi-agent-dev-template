@@ -4,8 +4,15 @@
 Solo cuando se necesita migrar el proyecto de una versión anterior de .NET
 a una versión más reciente. No usar en desarrollo normal.
 
-Versión actual del proyecto: .NET 8
-Próxima versión objetivo cuando aplique: .NET 9 / .NET 10
+Versión actual del proyecto: la registrada en `IA_Memoria/arquitectura.md`.
+Versión objetivo: **siempre el último LTS** (hoy .NET 10, soporte hasta 2028-11-10).
+Verificar el LTS vigente en dotnet.microsoft.com/platform/support/policy antes de iniciar.
+
+- Saltar de LTS a LTS (ej. .NET 8 → .NET 10). No detenerse en una STS (versiones impares).
+- **.NET 8 y .NET 9 terminaron soporte el 2026-11-10** — ya no reciben parches de seguridad.
+  Un proyecto en esas versiones se registra en `IA_Memoria/deuda-tecnica.md` y su upgrade
+  es prioritario, pero se ejecuta como tarea propia con confirmación del equipo, nunca como
+  efecto colateral de otra tarea.
 
 ---
 
@@ -26,12 +33,15 @@ Checklist previo obligatorio:
 
 En cada archivo .csproj:
 ```xml
-<!-- Antes (ejemplo desde .NET 7) -->
-<TargetFramework>net7.0</TargetFramework>
-
-<!-- Después -->
+<!-- Antes (ejemplo desde .NET 8) -->
 <TargetFramework>net8.0</TargetFramework>
+
+<!-- Después (último LTS) -->
+<TargetFramework>net10.0</TargetFramework>
 ```
+
+Si existe `global.json`, actualizar también el SDK (`"version": "10.0.xxx"`).
+Si existe `Directory.Packages.props` (Central Package Management), actualizar ahí las versiones.
 
 ### Paso 2 — Actualizar paquetes NuGet
 
@@ -52,9 +62,16 @@ Paquetes críticos a revisar en orden:
 3. Serilog y sinks
 4. FluentValidation
 5. AutoMapper (si se usa)
-6. Paquetes de autenticación (JWT, Identity)
-7. Paquetes de terceros restantes
+6. Paquetes de autenticación (JWT, Identity, Microsoft.Identity.Web)
+7. Swashbuckle.AspNetCore → reemplazar por Microsoft.AspNetCore.OpenApi + Scalar.AspNetCore
+   (ver SKILL-dotnet-best-practices.md, sección "Documentación API")
+8. Paquetes de terceros restantes
 ```
+
+> Revisar también la licencia de cada paquete al subir de versión mayor: algunas librerías
+> populares cambiaron a licencia comercial en versiones recientes. Si la nueva versión mayor
+> exige licencia, no actualizar sin confirmación — quedarse en la última versión con
+> licencia compatible y registrarlo en `IA_Memoria/deuda-tecnica.md`.
 
 ### Paso 3 — Compilar y revisar breaking changes
 
@@ -86,6 +103,12 @@ Probar manualmente los flujos críticos:
 
 ## Breaking changes más comunes por versión
 
+> **Detalle por área (oficial de Microsoft):** para el inventario completo de breaking changes
+> usar `IA_Skill/dotnet-official/dotnet-upgrade/migrate-dotnet8-to-dotnet9/SKILL.md` y después
+> `migrate-dotnet9-to-dotnet10/SKILL.md`, en el mismo upgrade con destino `net10.0` (nunca liberar
+> en .NET 9). Si el upgrade también activa nullable, `migrate-nullable-references/SKILL.md`, en un
+> PR aparte. Precedencia: si chocan con esta skill o con CLAUDE.md, gana la plantilla.
+
 ### De .NET 6 a .NET 7
 - Minimal APIs recibieron actualizaciones de routing
 - Rate limiting nativo agregado (Microsoft.AspNetCore.RateLimiting)
@@ -100,11 +123,19 @@ Probar manualmente los flujos críticos:
 - Collection expressions en C# 12
 - Cambios en serialización System.Text.Json
 
-### De .NET 8 a .NET 9 (referencia futura)
-- Verificar breaking changes en: aka.ms/dotnet9-breaking-changes
-- LINQ nuevos métodos (CountBy, AggregateBy, Index)
-- Mejoras en HybridCache
-- OpenAPI integrado nativamente
+### De .NET 8 a .NET 10 (LTS → LTS — incluye los cambios de .NET 9)
+- Verificar breaking changes en: learn.microsoft.com/dotnet/core/compatibility/9.0 y /10.0
+- Swashbuckle ya no viene en las plantillas (desde .NET 9): migrar a `Microsoft.AspNetCore.OpenApi`
+  + Scalar; en .NET 10 el documento se genera en OpenAPI 3.1
+- LINQ nuevos métodos (CountBy, AggregateBy, Index); HybridCache
+- C# 13/14 (`params` collections, `field` keyword, extension members)
+- EF Core 10: revisar breaking changes del proveedor (SQL Server / Npgsql) y regenerar el
+  snapshot de migraciones si cambia el modelo (ver sección EF Core abajo)
+- Imágenes de contenedor: revisar la distro base por defecto de las imágenes 10.0 y los
+  paquetes del sistema que asuma el Dockerfile (verificar contra mcr.microsoft.com)
+- Autenticación: revisar cambios de ASP.NET Core Identity y del pipeline de auth si el
+  proyecto migra a perfil A/B (ver SKILL-auth-patterns.md) — no mezclarlo con el upgrade,
+  hacerlo en un PR aparte
 
 ---
 
@@ -138,14 +169,16 @@ dotnet ef migrations remove
 Si el proyecto usa Docker, actualizar el Dockerfile:
 
 ```dockerfile
-# Antes (ejemplo .NET 7)
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-
-# Después (.NET 8)
+# Antes (ejemplo .NET 8)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Después (.NET 10 — último LTS)
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ```
+
+El agente edita el Dockerfile, pero no ejecuta `docker build` ni `docker push` sin confirmación.
 
 Imágenes disponibles en: mcr.microsoft.com/dotnet/aspnet
 
@@ -153,25 +186,25 @@ Imágenes disponibles en: mcr.microsoft.com/dotnet/aspnet
 
 ## Actualizar Azure DevOps pipeline
 
-En los archivos de workflow de CI/CD:
+Modificar pipelines requiere confirmación explícita: proponer el cambio al dev, no aplicarlo.
 
 ```yaml
 # Antes
 - task: UseDotNet@2
   inputs:
-    version: '7.x'
+    version: '8.x'
 
 # Después
 - task: UseDotNet@2
   inputs:
-    version: '8.x'
+    version: '10.x'
 ```
 
 ---
 
 ## Aprovechar nuevas features del upgrade
 
-### .NET 8 — features a adoptar gradualmente
+### .NET 8+ — features a adoptar gradualmente (disponibles en .NET 10)
 
 Primary constructors (C# 12):
 ```csharp

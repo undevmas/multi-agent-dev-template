@@ -115,15 +115,17 @@ No usar tecnologías fuera de esta tabla sin aprobación explícita.
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Angular 17+ · React 18+ |
-| Backend | .NET 8+ (C#) · NestJS 10+ (TypeScript) |
+| Frontend | Angular · React — última versión mayor estable |
+| Backend | .NET último LTS (hoy .NET 10) · NestJS sobre Node.js Active LTS · Python 3.11+ (FastAPI, solo tooling interno) |
 | Base de datos | SQL Server 2019+ · PostgreSQL 15+ |
-| ORM | Entity Framework Core · TypeORM · Prisma |
-| Autenticación | JWT + Refresh Token · OAuth2 · ASP.NET Identity |
-| Contenedores | Docker · Docker Compose |
+| ORM / acceso a datos | **Equilibrado (default):** EF Core · Dapper · Prisma · Drizzle ORM — **Alto rendimiento / CQRS:** EF Core 10 · Dapper · Drizzle ORM · Kysely |
+| Autenticación | **Empresarial / microservicios / multi-tenant:** OAuth 2.1 / OpenID Connect (PKCE) · JWT · patrón BFF · Entra ID / Keycloak / OpenIddict — **Monolito / desarrollo rápido (.NET 10):** ASP.NET Core Identity (Identity API endpoints) · Bearer tokens / cookies HttpOnly · Policy-Based Authorization |
+| Contenedores y orquestación | Docker · Docker Compose · Aspire |
 | CI/CD | Azure DevOps Pipelines |
-| Testing | xUnit · Jest · Cypress |
-| Documentación API | Swagger / OpenAPI |
+| Testing | xUnit · Jest · pytest · Playwright (E2E por defecto; Cypress solo con autorización) |
+| Documentación API | OpenAPI nativo (`Microsoft.AspNetCore.OpenApi`) · Scalar (`Scalar.AspNetCore`) · Redoc / Swagger UI opcionales |
+
+**Política de versiones:** los proyectos nuevos usan siempre el último LTS liberado de cada runtime/framework (o la última versión mayor estable si la tecnología no publica LTS). El detalle, junto con los perfiles de autenticación y de acceso a datos, está en `CLAUDE.md`.
 
 ---
 

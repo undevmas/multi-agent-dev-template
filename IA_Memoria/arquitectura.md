@@ -77,8 +77,10 @@ Ruta completa al código fuente: `Codigo/[COMPLETAR]/src/` (o la que corresponda
 |---|---|---|---|
 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
 
-**Autenticación:** [COMPLETAR — JWT + Refresh Token / OAuth2 / otro]
-**Documentación API:** [COMPLETAR — Swagger en /swagger / otro]
+**Versión de runtime/framework:** [COMPLETAR — ej. .NET 10 (LTS) / NestJS 11 sobre Node.js 24 LTS — verificada en fuente oficial el AAAA-MM-DD]
+**Autenticación — perfil:** [COMPLETAR — A: OIDC + PKCE + BFF, IdP = Entra ID / Keycloak / OpenIddict · B: ASP.NET Core Identity API endpoints (cookie / bearer)] — ver `IA_Skill/SKILL-auth-patterns.md`
+**Autorización:** [COMPLETAR — políticas definidas y fallback policy (denegar por defecto)]
+**Documentación API:** [COMPLETAR — OpenAPI en /openapi/v1.json + Scalar en /scalar (solo Development) / otro]
 
 ---
 
@@ -88,7 +90,8 @@ Ruta completa al código fuente: `Codigo/[COMPLETAR]/src/` (o la que corresponda
 |---|---|---|---|
 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
 
-**Herramienta de migraciones:** [COMPLETAR — EF Core Migrations / TypeORM / Prisma / otro]
+**Perfil de acceso a datos:** [COMPLETAR — Equilibrado (EF Core / Prisma / Drizzle) · Alto rendimiento-CQRS (EF Core 10 + Dapper / Drizzle / Kysely)]
+**Herramienta de migraciones:** [COMPLETAR — EF Core Migrations / prisma migrate / drizzle-kit / Kysely Migrator / TypeORM (solo legado)]
 
 ---
 
@@ -96,7 +99,9 @@ Ruta completa al código fuente: `Codigo/[COMPLETAR]/src/` (o la que corresponda
 
 | Componente | Tecnología | Notas |
 |---|---|---|
-| Contenedores | [COMPLETAR si usa Docker] | — |
+| Contenedores | [COMPLETAR si usa Docker / Docker Compose] | — |
+| Orquestación local | [COMPLETAR — Aspire AppHost en `Codigo/.../[Proyecto].AppHost/` / no aplica (servicio único)] | Dashboard Aspire en [puerto] |
+| Testing E2E | [COMPLETAR — Playwright / Cypress (legado, autorizado)] | — |
 | CI/CD | [COMPLETAR] | — |
 
 ---

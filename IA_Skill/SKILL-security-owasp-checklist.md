@@ -1,5 +1,17 @@
 # SKILL — OWASP Security Checklist (Multi-Stack)
 
+> **Rol en la auditoría pre-productiva (v2):** este archivo no es un
+> checklist que el agente "camina" leyendo código feature por feature — es
+> la lente de clasificación que se aplica a hallazgos que **ya** vienen de
+> SonarQube/Semgrep/ZAP (`SKILL-preprod-security-audit.md`). Sirve para
+> mapear un rule-ID o alert de la herramienta a la categoría OWASP correcta
+> y su severidad (tabla al final de este archivo), no para descubrir el
+> hallazgo desde cero por lectura manual. La única excepción sigue siendo
+> A01 cuando el hallazgo es autorización a nivel de dato de negocio (ej.
+> "¿puede el capturista A editar un registro asignado al capturista B?")
+> — eso ningún scanner genérico lo puede expresar, y sí requiere revisión
+> manual dirigida, marcada como tal en el entregable.
+
 ## Cuándo usar esta skill
 Como revisión final antes de subir a staging o producción.
 Al implementar cualquier feature que maneje autenticación, datos de usuarios, archivos o pagos.
@@ -7,8 +19,9 @@ Como punto de entrada para auditorías de seguridad.
 Para determinar qué skill específica leer según la tecnología involucrada.
 
 Para implementaciones detalladas, ir a la skill correspondiente:
+- Patrón de autenticación (perfil A/B) → SKILL-auth-patterns.md
 - Angular → SKILL-security-angular.md
-- .NET 8  → SKILL-security-dotnet.md
+- .NET    → SKILL-security-dotnet.md
 - NestJS  → SKILL-security-nestjs.md
 
 ---
@@ -97,12 +110,13 @@ Checklist A02:
 ```
 Angular
   [ ] Sin secretos ni API keys en environment.ts (son públicos en el bundle)
-  [ ] Tokens en memoria o sessionStorage (no localStorage)
+  [ ] Ningún token en localStorage ni sessionStorage (perfil A/B con cookie: sin tokens en la SPA; auth propia: solo en memoria)
   [ ] HTTPS configurado en el servidor/CDN de producción
 
 .NET
-  [ ] BCrypt con work factor >= 12
-  [ ] Secreto JWT >= 32 caracteres en variables de entorno
+  [ ] Perfil A: API valida tokens del IdP con Authority + Audience (sin clave simétrica compartida)
+  [ ] Perfil B: hashing y lockout de ASP.NET Core Identity (no reimplementados)
+  [ ] Solo auth propia heredada: BCrypt con work factor >= 12, secreto JWT >= 32 caracteres en variables de entorno
   [ ] HSTS configurado (Strict-Transport-Security)
   [ ] ConnectionString en variables de entorno (no en appsettings.json commiteado)
 
@@ -194,7 +208,7 @@ Checklist A05:
 ```
 Angular
   [ ] CSP configurado en el servidor (no solo meta tag)
-  [ ] HttpClientXsrfModule habilitado
+  [ ] CSRF con provideHttpClient(withXsrfConfiguration(...)) o header anti-CSRF del BFF
 
 .NET
   [ ] Helmet equivalente (headers manuales en middleware)
@@ -209,7 +223,7 @@ NestJS
   [ ] Variables de entorno validadas con Joi
 
 Todos los stacks
-  [ ] Sin Swagger expuesto en producción (o protegido con auth)
+  [ ] Sin documento OpenAPI ni UI de documentación (Scalar / Swagger UI / Redoc) expuestos en producción (o protegidos con auth)
   [ ] Sin stack traces en respuestas HTTP
   [ ] Sin modo debug activo en producción
 ```
@@ -237,14 +251,17 @@ Ejecutar antes de cada release:
 Checklist A07:
 ```
 Angular
-  [ ] Token expirado maneja refresh automático o logout
-  [ ] Sin tokens en localStorage
+  [ ] Sesión expirada maneja refresh automático (BFF / Identity) o logout
+  [ ] Sin tokens en localStorage ni sessionStorage
 
 .NET
+  [ ] Perfil de auth registrado en IA_Memoria/arquitectura.md e implementado según SKILL-auth-patterns.md
+  [ ] OAuth 2.1 (perfil A): Authorization Code + PKCE; sin implicit ni password grant; redirect URIs exactas
+  [ ] Fallback policy activa (denegar por defecto)
   [ ] Rate limiting en /login con [EnableRateLimiting]
-  [ ] Bloqueo tras 5 intentos fallidos (15 min mínimo)
+  [ ] Bloqueo tras 5 intentos fallidos (15 min mínimo) — Identity: options.Lockout configurado
   [ ] Refresh token con rotación y revocación
-  [ ] JWT con ClockSkew = TimeSpan.Zero
+  [ ] JWT propio heredado: ClockSkew = TimeSpan.Zero
 
 NestJS
   [ ] @Throttle en endpoints de auth

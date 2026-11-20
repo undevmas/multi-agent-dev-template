@@ -7,7 +7,7 @@ autenticación, pagos, archivos, o información sensible.
 Al hacer auditoría de seguridad del proyecto.
 
 Esta skill cubre el OWASP Top 10 (2021) aplicado al stack
-Angular / .NET 8 / NestJS / SQL Server / PostgreSQL.
+Angular / .NET (LTS vigente) / NestJS / SQL Server / PostgreSQL.
 
 ---
 
@@ -111,7 +111,7 @@ const apiKey = process.env.EXTERNAL_API_KEY;
 ### A03 — Injection
 
 ```typescript
-// SQL Injection — ya cubierto en SKILL-checkmarx.md
+// SQL Injection — ver también SKILL-security-owasp-checklist.md (A03)
 // Regla principal: NUNCA concatenar input del usuario en queries
 
 // XSS — Cross-Site Scripting
@@ -208,7 +208,7 @@ requiredEnvVars.forEach(varName => {
 
 // Deshabilitar características peligrosas en producción
 if (process.env.NODE_ENV === 'production') {
-  // Deshabilitar Swagger en producción (o proteger con auth)
+  // Deshabilitar el documento OpenAPI y la UI de docs (Scalar / Swagger UI) en producción (o proteger con auth)
   // No exponer /health con información detallada
   // No mostrar stack traces
 }

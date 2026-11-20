@@ -1,0 +1,3 @@
+# Configuración local con tokens (SONAR_TOKEN, DEPCHECK_NVD_API_KEY).
+# Se versiona solo .env.example con valores vacíos.
+.env

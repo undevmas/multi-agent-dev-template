@@ -21,7 +21,6 @@ services:
   # ============================================================
   sonarqube-db:
     image: postgres:17
-    container_name: preprod-sonarqube-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: sonar
@@ -41,7 +40,6 @@ services:
 
   sonarqube:
     image: sonarqube:community
-    container_name: preprod-sonarqube
     restart: unless-stopped
     depends_on:
       sonarqube-db:
@@ -69,7 +67,6 @@ services:
   # ============================================================
   trivy:
     image: aquasec/trivy:latest
-    container_name: preprod-trivy
     restart: unless-stopped
     command: ["server", "--listen", "0.0.0.0:4954"]
     volumes:
@@ -88,7 +85,6 @@ services:
   # ============================================================
   zap:
     image: zaproxy/zap-stable
-    container_name: preprod-zap
     restart: unless-stopped
     command: ["zap.sh", "-daemon", "-host", "0.0.0.0", "-port", "8080", "-config", "api.disablekey=true"]
     ports:
@@ -122,6 +118,24 @@ services:
       - ../:/src
     entrypoint: ["gitleaks"]
 
+  # ============================================================
+  # OWASP Dependency-Check — SCA, segundo motor como confirmación
+  # cruzada de Trivy (un CVE reportado por cualquiera de los dos entra
+  # al triage, ver SKILL-dependency-vulnerability-triage.md). Especialmente
+  # útil para los stacks .NET/Java del template, donde su cobertura suele
+  # ser más completa que la de Trivy.
+  # Volumen de datos NVD como named volume -- sin esto, cada corrida
+  # re-descarga toda la base de vulnerabilidades (ver DEPCHECK_NVD_API_KEY
+  # en .env.example para acelerar solo la primera vez).
+  # ============================================================
+  dependency-check:
+    image: owasp/dependency-check:latest
+    profiles: ["tools"]
+    volumes:
+      - ../Codigo:/src
+      - ../Insumos:/report
+      - dependency_check_data:/usr/share/dependency-check/data
+
   pa11y:
     image: pa11y/pa11y
     profiles: ["tools"]
@@ -139,7 +153,13 @@ services:
       - ../Codigo:/usr/src
     environment:
       SONAR_HOST_URL: "http://sonarqube:9000"
-      SONAR_TOKEN: "${SONAR_TOKEN:?Falta SONAR_TOKEN en Tools/.env — ver README.md, sección 'Primer arranque de SonarQube'}"
+      # Sin ":?" -- Compose interpola TODO el archivo (incluidos servicios
+      # con profile no activo) antes de filtrar por servicio, así que un
+      # required-var aquí rompía "docker compose up sonarqube ..." aunque
+      # sonar-scanner ni siquiera se estuviera levantando. La validación
+      # real ocurre al invocar sonar-scanner sin token: falla solo, con
+      # su propio error de autenticación contra SonarQube.
+      SONAR_TOKEN: "${SONAR_TOKEN:-}"
     networks:
       - preprod-tools
 
@@ -154,3 +174,4 @@ volumes:
   sonarqube_temp:
   sonarqube_db_data:
   trivy_cache:
+  dependency_check_data:

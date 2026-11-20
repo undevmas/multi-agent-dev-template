@@ -48,20 +48,56 @@ para prevenir.
 
 ---
 
+## Principio v2 — el output de la herramienta es la fuente, no la lectura de código
+
+El output crudo de SonarQube/Semgrep/Trivy/Dependency-Check/Gitleaks/ZAP/pa11y
+**es la fuente primaria** de cada hallazgo. Leer código a mano para "buscar"
+hallazgos ya no es el método por default — es la excepción, permitida
+únicamente en dos casos:
+
+1. **Confirmar o descartar un falso positivo** que ya señaló una herramienta
+   (ej. revisar si una variable interpolada sin escapar viene de input de
+   usuario o de una env var, como ya se hacía en el piloto).
+2. **La clase residual de hallazgos que ningún scanner genérico puede
+   expresar** — típicamente autorización a nivel de dato de negocio (A01):
+   "¿puede el capturista A editar un amparo asignado al capturista B?" no es
+   algo que SonarQube/Semgrep puedan inferir sin conocer la regla de negocio.
+   Ver `SKILL-security-owasp-checklist.md` para el criterio de A01.
+
+Todo hallazgo que venga de lectura manual (caso 2) debe decirlo explícito en
+el entregable — "detectado por revisión manual dirigida, no por herramienta"
+— con el mismo rigor con el que hoy se distingue "no evaluado" de "sin
+hallazgos". Un entregable que mezcla hallazgos de herramienta con hallazgos
+de lectura manual sin decir cuál es cuál le hace creer al equipo que todo
+pasó por el mismo nivel de cobertura automatizada, y no es cierto.
+
+---
+
 ## Las 10 categorías, en orden, con su skill
 
 | # | Categoría | Skill / acción |
 |---|---|---|
-| 1 | Dependencias (SCA) | Trivy (`Tools/`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`), luego `SKILL-dependency-vulnerability-triage.md` |
-| 2 | SAST / código propio | Semgrep + SonarQube (`Tools/`) para el hallazgo bruto. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
+| 1 | Dependencias (SCA) | Trivy + OWASP Dependency-Check (`Tools/`, confirmación cruzada — un CVE reportado por cualquiera de los dos entra al triage) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`) como respaldo si Docker no está disponible, luego `SKILL-dependency-vulnerability-triage.md` |
+| 2 | SAST / código propio | Semgrep + SonarQube (`Tools/`, correr `sonar-scanner` de verdad — no asumir que "revisar el código" reemplaza el análisis) para el hallazgo bruto, leído vía `/api/issues/search`. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
 | 3 | Secretos | Gitleaks (`Tools/`), triage con `SKILL-secrets-scanning.md` |
-| 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, ataque real si la app está corriendo) + `SKILL-security-owasp-checklist.md` para interpretar |
+| 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, modo `spider` + `passive scan` únicamente — **sin Active Scan por decisión del proyecto**, ver nota abajo) + `SKILL-security-owasp-checklist.md` para interpretar |
 | 5 | Testing / cobertura | Correr el comando de cobertura del stack (`npm test -- --coverage`, `dotnet test /p:CollectCoverage=true`, `pytest --cov`) — importable a SonarQube si se desea, pero el número real es lo que se reporta, nunca se asume |
 | 6 | Accesibilidad (solo frontend) | pa11y (`Tools/`, requiere la app corriendo) para el hallazgo real, `SKILL-accessibility-a11y.md` para interpretar/priorizar. Si el proyecto no tiene frontend: estado "No aplica" (distinto de "no evaluado") |
 | 7 | Rendimiento | **NO EVALUADO — sin skill de referencia** |
 | 8 | Observabilidad | **NO EVALUADO — sin skill de referencia** |
 | 9 | CI/CD (Azure DevOps) | **NO EVALUADO — sin skill de referencia** |
 | 10 | Compliance PII/salud | **NO EVALUADO — sin skill de referencia** |
+
+**Nota sobre el modo de ZAP (categoría 4):** por default, ZAP corre solo
+`spider` (mapea rutas) + `passive scan` (analiza el tráfico observado sin
+enviar payloads propios) — nunca Active Scan. Active Scan envía payloads
+reales (SQLi, XSS, etc.) contra la app objetivo; en un sistema con datos
+legales/PII reales y que dispara correos/SMS reales, eso puede generar
+tráfico de negocio real (altas, notificaciones) contra la instancia
+escaneada. Los hallazgos que solo un Active Scan puede confirmar (inyección
+verificada, no solo sospechada) quedan fuera de alcance de esta auditoría
+salvo que el equipo pida explícitamente correrlo contra un entorno aislado
+con datos de prueba — eso se decide caso por caso, nunca por default.
 
 Todo hallazgo de las categorías 1-6, sin excepción, se clasifica con
 `SKILL-risk-zone-policy.md` (verde/ámbar/roja) antes de entrar al
@@ -160,7 +196,32 @@ fi
 ```bash
 cd Tools
 
-# SCA (complementa/reemplaza npm audit según lo que ya cubra Trivy)
+# En Windows con Git Bash (MSYS): sin esto, argumentos como /src o /report
+# se reinterpretan como rutas de Windows (ej. "C:/Program Files/Git/src")
+# ANTES de llegar al contenedor, y todo comando de abajo con una ruta Unix
+# falla con "path does not exist" -- confirmado corriendo dependency-check
+# real en este entorno. No-op en Linux/Mac, seguro dejarlo siempre.
+export MSYS_NO_PATHCONV=1
+
+# --- SCA: dos motores, confirmación cruzada ---
+docker compose run --rm -v "$(pwd)/../Codigo:/src" -v "$(pwd)/../Insumos:/report" \
+  trivy fs --server http://trivy:4954 --format json --output /report/trivy-report.json /src \
+  || echo "Trivy (Tools/) falló — verificar Docker, o correr localmente si está instalado"
+
+docker compose --profile tools run --rm dependency-check \
+  --scan /src --format JSON --out /report --project "preprod-audit" \
+  || echo "Dependency-Check (Tools/) falló — ver Tools/README.md (primera corrida puede tardar por la descarga NVD)"
+
+# --- SAST: correr el análisis real, no asumir que "leer el código" lo reemplaza ---
+docker compose --profile tools run --rm sonar-scanner \
+  -Dsonar.projectKey=preprod-audit -Dsonar.sources=. \
+  || echo "sonar-scanner falló — revisar SONAR_TOKEN en Tools/.env y que el proyecto ya tenga un análisis previo (Paso 1c)"
+
+curl -sf -u "${SONAR_TOKEN}:" \
+  "http://localhost:${SONARQUBE_HOST_PORT}/api/issues/search?componentKeys=preprod-audit&resolved=false&ps=500" \
+  > ../Insumos/sonar-issues.json || echo "No se pudo leer /api/issues/search — revisar SONAR_TOKEN"
+
+# --- Secretos ---
 docker compose --profile tools run --rm gitleaks detect --source /src --log-opts="--all" \
   --report-path /src/Insumos/gitleaks-report.json \
   || echo "gitleaks (Tools/) falló — verificar Docker, o correr localmente si está instalado"
@@ -168,7 +229,26 @@ docker compose --profile tools run --rm gitleaks detect --source /src --log-opts
 docker compose --profile tools run --rm semgrep --config=auto --json --output=/src/Insumos/semgrep-report.json /src \
   || echo "semgrep (Tools/) falló — verificar Docker, o correr localmente si está instalado"
 
-# Accesibilidad real (requiere la app corriendo en el host)
+# --- OWASP dinámico: ZAP en modo spider + passive únicamente (sin Active Scan,
+# ver nota en la tabla de categorías). Se consulta SIEMPRE desde dentro del
+# contenedor (puerto interno 8080) -- ZAP rechaza el Host header del puerto
+# remapeado del host y responde "Connection Refused" contra sí mismo si se le
+# pega por localhost:$ZAP_HOST_PORT (confirmado, no es un bug de esta skill).
+TARGET_URL="http://host.docker.internal:4200"  # ajustar al puerto real de la app
+
+docker compose exec -T zap curl -s \
+  "http://localhost:8080/JSON/spider/action/scan/?url=${TARGET_URL}" > /dev/null
+
+# Poll hasta que el spider termine (status llega a 100) antes de leer alerts —
+# el passive scan corre en paralelo sobre lo que el spider va encontrando.
+until [[ "$(docker compose exec -T zap curl -s 'http://localhost:8080/JSON/spider/view/status/' | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')" == "100" ]]; do
+  sleep 5
+done
+
+docker compose exec -T zap curl -s "http://localhost:8080/JSON/core/view/alerts/" \
+  > ../Insumos/zap-alerts.json || echo "No se pudieron leer las alertas de ZAP"
+
+# --- Accesibilidad real (requiere la app corriendo en el host) ---
 docker compose --profile tools run --rm pa11y http://host.docker.internal:4200 \
   > ../Insumos/pa11y-report.txt 2>&1 || echo "pa11y no corrió — ¿la app está levantada en el puerto indicado?"
 
@@ -181,7 +261,9 @@ npm test -- --coverage 2>&1 | tee Insumos/coverage-output.txt || true
 Si Docker no está disponible en el entorno en absoluto, caer a las
 versiones locales de cada herramienta (`npm audit`, `pip-audit`,
 `dotnet list package --vulnerable`) tal como en la versión anterior de
-este skill — degradado, pero no bloqueante.
+este skill — degradado, pero no bloqueante. En ese caso, SonarQube/ZAP/
+Dependency-Check/pa11y quedan como "no evaluado — herramienta no disponible"
+(no hay equivalente local razonable para esos cuatro).
 
 ---
 
@@ -236,6 +318,7 @@ distinto sin cambiar una palabra, está mal escrito.
 - Categorías evaluadas: [N]/10 · No evaluadas: [N] (ver sección al final)
 
 ## 1. Dependencias (SCA)
+*Motores usados: Trivy [versión] + OWASP Dependency-Check [versión].*
 ### [🔴|🟡|🟢] [Paquete] — [severidad CVSS] — [ID del advisory/CVE]
 **Dónde:** `package.json` (o equivalente)
 **Qué es:** [descripción concreta y específica del hallazgo — nombre del paquete, versión instalada, versión con fix, qué vulnerabilidad es exactamente. Nunca una frase genérica que aplicaría a cualquier dependencia]
@@ -246,12 +329,23 @@ distinto sin cambiar una palabra, está mal escrito.
 [... un bloque por hallazgo ...]
 
 ## 2. Código / SAST
+*Motores usados: SonarQube [versión] + Semgrep [versión].*
 [mismo formato, con archivo:línea exacto]
+
+### Autorización a nivel de dato de negocio (revisión manual dirigida, no herramienta)
+*Ningún scanner genérico de SAST puede evaluar reglas de negocio como
+"¿solo el capturista asignado puede editar este registro?" — esta
+subsección es la única de todo el documento que sale de lectura manual en
+vez de output de herramienta, ver principio v2 de esta skill.*
+[mismo formato, o "Evaluado, sin hallazgos" si no se detectó nada]
 
 ## 3. Secretos
 [mismo formato]
 
 ## 4. OWASP
+*Motor dinámico: ZAP [versión] en modo spider + passive scan — sin Active
+Scan (ver nota de alcance). Hallazgos que solo un Active Scan confirmaría
+(inyección verificada) no están cubiertos.*
 [mismo formato]
 
 ## 5. Testing / Cobertura
@@ -368,6 +462,15 @@ Entregables en: Entregables/[TS]/
   autenticación (`api.disablekey=true`) a propósito para simplificar el
   uso local, nunca lo publiques en un servidor accesible desde internet
 - No commitear `Tools/.env` (tiene `SONAR_TOKEN`) — ver `SKILL-secrets-scanning.md`
+- No leer código a mano para buscar hallazgos de las categorías 1-4 y 6
+  (SCA, SAST, secretos, OWASP, accesibilidad) cuando la herramienta
+  correspondiente está disponible — eso es exactamente el análisis manual
+  que este skill v2 existe para reemplazar. Lectura manual solo para
+  confirmar falsos positivos o para autorización a nivel de dato de negocio
+  (ver "Principio v2" arriba)
+- No correr Active Scan de ZAP por default — solo `spider` + `passive
+  scan`. Active Scan envía payloads reales contra la app y solo se activa
+  si el equipo lo pide explícitamente para un entorno aislado
 - No dejar ninguna referencia a `IA_Memoria/`, `IA_Skill/`, `SKILL-*.md` ni
   a la palabra "template" dentro del cuerpo de un hallazgo en los 2
   entregables — quien los recibe (dev o su propia IA) no tiene ese

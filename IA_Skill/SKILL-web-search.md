@@ -13,10 +13,14 @@ Solo cuando estas fuentes no responden la duda:
 1. CLAUDE.md del proyecto
 2. Skills en IA_Skill/
 3. Código actual del proyecto
-4. Conocimiento base de Claude (hasta agosto 2025)
+4. Conocimiento base del modelo (tiene fecha de corte — puede no conocer el último LTS)
 
 ### Casos válidos para buscar
 - Versión más reciente y estable de una dependencia antes de instalarla
+- Último LTS vigente de .NET / Node.js y última versión mayor estable de Angular / React / NestJS
+  antes de crear un proyecto nuevo (Política de versiones en CLAUDE.md) — fuentes:
+  dotnet.microsoft.com/platform/support/policy · nodejs.org/en/about/previous-releases ·
+  angular.dev/reference/releases · react.dev/versions · npmjs.com/package/@nestjs/core
 - Error muy específico con número de versión de librería
 - Cambio de API en versión reciente de Angular / .NET / NestJS
 - CVE o vulnerabilidad de seguridad reciente
@@ -32,12 +36,13 @@ Solo cuando estas fuentes no responden la duda:
 
 ## Cómo formular la búsqueda
 
-Incluir siempre la versión específica:
+Incluir siempre la versión específica que usa el proyecto (la registrada en `IA_Memoria/arquitectura.md`):
 ```
-"NestJS 10 guard JWT example 2024"
-"Angular 17 standalone components lazy loading"
-".NET 8 minimal API FluentValidation"
-"TypeORM PostgreSQL migration rollback"
+".NET 10 Microsoft.AspNetCore.OpenApi document transformer bearer"
+"Scalar.AspNetCore MapScalarApiReference options"
+"Playwright storageState setup project authentication"
+"Drizzle ORM drizzle-kit migrate PostgreSQL"
+"Aspire AppHost AddJavaScriptApp"
 ```
 
 Priorizar fuentes oficiales:

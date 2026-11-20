@@ -17,6 +17,19 @@ docker compose up -d sonarqube-db sonarqube trivy zap
 Sonar tarda 30-60 segundos en arrancar la primera vez (crea el esquema en
 Postgres). Los demás (Trivy, ZAP) arrancan casi de inmediato.
 
+### Aislamiento entre copias del template
+
+Por default, Docker Compose deriva el nombre de proyecto del nombre de esta
+carpeta (`Tools`) — igual en cualquier clon de este template. Sin
+`COMPOSE_PROJECT_NAME` en `.env`, dos proyectos distintos en la misma
+máquina terminarían compartiendo el mismo SonarQube/Trivy/ZAP (misma red,
+mismos volúmenes de datos) sin ningún error visible.
+`setup-tools.ps1`/`setup-tools.sh` lo autocompletan en `.env` con un valor
+derivado del nombre de la carpeta raíz del proyecto la primera vez que
+corren — no hace falta tocarlo a mano. Si levantas los servicios sin pasar
+por el script, corre el script al menos una vez primero (o define
+`COMPOSE_PROJECT_NAME` tú mismo en `.env`) para no pisar otra instancia.
+
 ## Verificar que están arriba
 
 ```bash
@@ -57,6 +70,13 @@ docker compose --profile tools run --rm sonar-scanner \
 
 ## Herramientas on-demand (no quedan corriendo, un solo uso)
 
+**Windows con Git Bash:** anteponer `export MSYS_NO_PATHCONV=1` antes de
+correr cualquiera de estos comandos. Sin eso, Git Bash reinterpreta
+argumentos como `/src` o `/report` como rutas de Windows (ej.
+`C:/Program Files/Git/src`) antes de que lleguen al contenedor, y el
+comando falla con `path does not exist` — confirmado corriendo
+Dependency-Check real en este entorno. No-op en Linux/Mac/PowerShell.
+
 ```bash
 # Semgrep — SAST
 docker compose --profile tools run --rm semgrep --config=auto /src
@@ -66,14 +86,31 @@ docker compose --profile tools run --rm gitleaks detect --source /src --log-opts
 
 # pa11y — accesibilidad real (la app objetivo debe estar corriendo en tu host)
 docker compose --profile tools run --rm pa11y http://host.docker.internal:4200
+
+# OWASP Dependency-Check — SCA, segundo motor como confirmación cruzada de
+# Trivy (ver SKILL-dependency-vulnerability-triage.md). El reporte queda en
+# Insumos/dependency-check-report.json.
+docker compose --profile tools run --rm dependency-check \
+  --scan /src --format JSON --out /report --project "nombre-del-proyecto"
 ```
+
+**Primer arranque de Dependency-Check — lento, no es una falla:** la primera
+corrida descarga la base de vulnerabilidades NVD completa, lo que sin API key
+puede tardar 10-40 minutos (NIST limita la tasa de descarga sin autenticación).
+Con una key gratuita (`DEPCHECK_NVD_API_KEY` en `.env`, ver `.env.example`) baja
+a unos minutos. El dato queda cacheado en un volumen persistente
+(`dependency_check_data`), así que corridas posteriores no vuelven a descargar
+la base completa — solo la actualización incremental.
 
 ## Escanear con Trivy (ya corriendo como servidor)
 
 ```bash
-docker run --rm --network tools_preprod-tools -v "$(pwd)/../Codigo:/src" \
-  aquasec/trivy fs --server http://preprod-trivy:4954 /src
+docker compose run --rm -v "$(pwd)/../Codigo:/src" trivy fs --server http://trivy:4954 /src
 ```
+
+Usa `docker compose run` (no `docker run --network ...`) para que se
+conecte automáticamente a la red del proyecto correcto — el nombre de esa
+red varía según `COMPOSE_PROJECT_NAME` (ver sección de aislamiento arriba).
 
 ## Atacar con ZAP (la app objetivo debe estar corriendo y ser alcanzable)
 

@@ -74,12 +74,57 @@ export class SafeLinkComponent {
 
 ## Autenticación — manejo seguro de tokens
 
-### Almacenamiento de JWT
-```typescript
-// MAL — localStorage es accesible desde JavaScript (vulnerable a XSS)
-localStorage.setItem('access_token', token);
+El perfil de autenticación del proyecto (registrado en `IA_Memoria/arquitectura.md`)
+define qué hace Angular con los tokens. Detalle completo en `IA_Skill/SKILL-auth-patterns.md`.
 
-// MEJOR — memory storage (se pierde al recargar, pero es más seguro)
+| Perfil | ¿Angular maneja tokens? | Qué hace el frontend |
+|---|---|---|
+| **A — OIDC + BFF** | **No.** El BFF guarda los tokens del lado servidor | Llama al BFF en el mismo origen con la cookie de sesión HttpOnly; login = navegar a `/bff/login`; usuario actual desde `/bff/user`; header anti-CSRF en cada request |
+| **B — Identity API endpoints (cookie)** | **No.** Cookie HttpOnly de Identity (`/login?useCookies=true`) | Requests al mismo sitio; la cookie viaja sola; protección CSRF obligatoria |
+| **Auth propia con JWT (NestJS / legado)** | Sí, solo el access token **en memoria** | Refresh token en cookie HttpOnly; interceptor adjunta el Bearer (código abajo) |
+
+**Nunca** `localStorage` ni `sessionStorage` para tokens — ambos son legibles desde JavaScript (XSS).
+
+### Perfil A — SPA detrás de un BFF (sin tokens en el navegador)
+```typescript
+// app.config.ts — sin interceptor de Bearer; solo el header anti-CSRF que exige el BFF
+// (únicamente hacia el propio origen — nunca a APIs de terceros)
+export const bffCsrfInterceptor: HttpInterceptorFn = (req, next) =>
+  req.url.startsWith('/')
+    ? next(req.clone({ setHeaders: { 'X-CSRF': '1' } }))
+    : next(req);
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideHttpClient(withInterceptors([bffCsrfInterceptor]))],
+};
+
+// auth.service.ts — el estado de sesión viene del BFF, no de un token
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly http = inject(HttpClient);
+  readonly user = signal<BffUser | null>(null);
+
+  loadUser(): Observable<BffUser | null> {
+    return this.http.get<BffUser>('/bff/user').pipe(
+      tap(u => this.user.set(u)),
+      catchError(() => { this.user.set(null); return of(null); }),
+    );
+  }
+
+  login(returnUrl = '/'): void {
+    // Navegación completa: el BFF inicia Authorization Code + PKCE contra el IdP
+    window.location.href = `/bff/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+  }
+}
+```
+
+### Auth propia con JWT — access token en memoria
+```typescript
+// MAL — localStorage y sessionStorage son accesibles desde JavaScript (vulnerables a XSS)
+localStorage.setItem('access_token', token);
+sessionStorage.setItem('access_token', token);
+
+// BIEN — memory storage (se pierde al recargar; el refresh token en cookie HttpOnly lo recupera)
 @Injectable({ providedIn: 'root' })
 export class TokenService {
   private accessToken: string | null = null;
@@ -97,11 +142,7 @@ export class TokenService {
   }
 }
 
-// ALTERNATIVA ACEPTABLE — sessionStorage (solo dura la sesión del tab)
-// Más seguro que localStorage, menos que memory
-sessionStorage.setItem('access_token', token);
-
-// MEJOR PRÁCTICA — refresh token en cookie HttpOnly (manejado por el backend)
+// Refresh token en cookie HttpOnly (manejado por el backend)
 // El access token vive en memoria, el refresh token en cookie HttpOnly
 // La cookie HttpOnly no es accesible desde JavaScript
 ```
@@ -315,17 +356,22 @@ El backend SIEMPRE debe verificar permisos independientemente de lo que muestre 
 
 ## CSRF Protection
 
-Angular tiene protección CSRF automática con `HttpClientXsrfModule`:
+Obligatorio en perfiles con cookie (A — BFF, y B — Identity con cookie). Angular
+lee el cookie de antiforgery y lo envía en un header con `withXsrfConfiguration`
+(`HttpClientModule`/`HttpClientXsrfModule` están deprecados — usar la API standalone):
 
 ```typescript
-// app.module.ts — Angular lee el cookie XSRF-TOKEN y lo envía en el header
-imports: [
-  HttpClientModule,
-  HttpClientXsrfModule.withOptions({
-    cookieName: 'XSRF-TOKEN',      // nombre del cookie que envía el backend
-    headerName: 'X-XSRF-TOKEN',   // nombre del header que Angular adjunta
-  }),
-]
+// app.config.ts — Angular lee el cookie XSRF-TOKEN y lo envía en el header
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(
+      withXsrfConfiguration({
+        cookieName: 'XSRF-TOKEN',      // nombre del cookie que envía el backend
+        headerName: 'X-XSRF-TOKEN',   // nombre del header que Angular adjunta
+      }),
+    ),
+  ],
+};
 
 // El backend debe:
 // 1. Enviar el cookie XSRF-TOKEN en cada respuesta
@@ -445,9 +491,10 @@ async onSubmit(): Promise<void> {
 - [ ] URLs dinámicas validadas (solo http/https)
 
 ### Autenticación
-- [ ] Token no guardado en localStorage (usar memory o sessionStorage)
-- [ ] Interceptor HTTP adjunta token en requests
-- [ ] Interceptor maneja 401 con refresh o logout
+- [ ] Implementación acorde al perfil registrado en `IA_Memoria/arquitectura.md` (ver `SKILL-auth-patterns.md`)
+- [ ] Ningún token en `localStorage` ni `sessionStorage`
+- [ ] Perfil A / B con cookie: Angular no maneja tokens; header anti-CSRF en cada request
+- [ ] Solo auth propia con JWT: access token en memoria, interceptor adjunta el Bearer y maneja 401 con refresh o logout
 
 ### Autorización
 - [ ] Rutas protegidas tienen AuthGuard
@@ -461,5 +508,5 @@ async onSubmit(): Promise<void> {
 
 ### Configuración
 - [ ] Sin secretos ni API keys en environment.ts
-- [ ] CSRF habilitado con HttpClientXsrfModule
+- [ ] CSRF habilitado con `provideHttpClient(withXsrfConfiguration(...))` (o header anti-CSRF del BFF)
 - [ ] CSP configurado en el servidor para producción

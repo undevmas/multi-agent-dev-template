@@ -411,17 +411,19 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-33 skills organizadas por dominio. El agente lee solo la que corresponde a la tarea actual.
+54 skills propias organizadas por dominio, más 28 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `CLAUDE.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
-| **Especificaciones** | `SKILL-spec-generator.md` |
-| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` |
+| **Especificaciones** | `SKILL-spec-generator.md` (flujo completo Features/) · `SKILL-functional-spec-elicitation.md` (armar la HU desde insumos ambiguos) · `SKILL-technical-foundations-brief.md` (fundamentos técnicos no prescriptivos a partir de una HU + código) |
+| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` · `SKILL-aspire-orchestration.md` (orquestación local con Aspire) |
+| **Testing E2E** | `SKILL-e2e-playwright.md` (Playwright por defecto; Cypress solo con autorización) |
 | **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
 | **Testing frontend** | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md` |
 | **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
+| **.NET — oficiales de Microsoft** | `dotnet-official/` — 28 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
-| **Seguridad** | `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
+| **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
 | **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
 | **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` |
 

@@ -1,7 +1,7 @@
 # SKILL — NestJS Best Practices
 
 ## Cuándo usar esta skill
-Antes de crear o modificar cualquier archivo de backend en NestJS 10+.
+Antes de crear o modificar cualquier archivo de backend en NestJS (proyectos nuevos: última versión mayor estable sobre Node.js Active LTS; existentes: la versión registrada en `IA_Memoria/arquitectura.md`).
 Leer antes de implementar modules, controllers, services, guards, pipes o interceptors.
 
 ---
@@ -438,6 +438,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 ## Configuración en main.ts
 
 ```typescript
+import { apiReference } from '@scalar/nestjs-api-reference';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -458,13 +460,20 @@ async function bootstrap() {
   // Interceptor de transformación global
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('API Documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup('swagger', app, SwaggerModule.createDocument(app, config));
+  // Documentación API — @nestjs/swagger genera el documento OpenAPI; Scalar es la UI por defecto
+  // Solo fuera de producción (o protegida con auth) — nunca pública en prod
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('API Documentation')
+      .setVersion('1.0')
+      .addBearerAuth() // o addOAuth2()/addCookieAuth() según el perfil de auth del proyecto
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    // Paquete: @scalar/nestjs-api-reference (verificar la firma contra la versión instalada)
+    app.use('/scalar', apiReference({ content: document }));
+    // Swagger UI opcional, solo si el proyecto lo pide:
+    // SwaggerModule.setup('swagger', app, document);
+  }
 
   // CORS
   app.enableCors({ origin: process.env.FRONTEND_URL });
@@ -496,5 +505,5 @@ async function bootstrap() {
 - [ ] Guards aplicados en endpoints protegidos
 - [ ] Logging en operaciones críticas
 - [ ] Respuesta estandarizada con ApiResponse
-- [ ] Swagger documentado en endpoints públicos
+- [ ] Endpoints documentados en OpenAPI (`@ApiOperation`, `@ApiResponse`); UI Scalar solo fuera de producción o protegida
 - [ ] Variables de entorno en config/ (no hardcoded)

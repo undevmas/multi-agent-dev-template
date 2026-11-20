@@ -2,8 +2,14 @@
 
 ## Cuándo usar esta skill
 Al crear o revisar cualquier endpoint, service, middleware o configuración
-en el proyecto .NET 8 que maneje autenticación, autorización, datos del
-usuario, archivos, o información sensible.
+en el proyecto .NET (LTS vigente — hoy .NET 10) que maneje autenticación,
+autorización, datos del usuario, archivos, o información sensible.
+
+> **Autenticación:** el patrón (perfil A — OIDC + PKCE + BFF, o perfil B —
+> ASP.NET Core Identity API endpoints) se decide y se implementa con
+> `IA_Skill/SKILL-auth-patterns.md`. Esta skill cubre el endurecimiento
+> transversal (inyección, secretos, headers, rate limiting, archivos, logging)
+> y el mantenimiento de auth propia heredada.
 
 ---
 
@@ -56,9 +62,39 @@ var users = await _context.Users
     .ToListAsync();
 ```
 
+### Dapper (lado de lectura en perfil CQRS)
+
+Dapper ejecuta el SQL tal cual lo recibe — la parametrización es responsabilidad del código:
+
+```csharp
+// MAL — interpolación directa: SQL injection
+var sql = $"SELECT Id, Title FROM Contracts WHERE Status = '{status}' AND IsActive = 1";
+var rows = await connection.QueryAsync<ContractListItem>(sql);
+
+// BIEN — parámetros con objeto anónimo
+const string sql = """
+    SELECT Id, Title, Status
+    FROM Contracts
+    WHERE Status = @Status AND UserId = @UserId AND IsActive = 1
+    """;
+var rows = await connection.QueryAsync<ContractListItem>(sql, new { Status = status, UserId = userId });
+
+// BIEN — ORDER BY dinámico solo contra lista blanca (los parámetros no aplican a nombres de columna)
+var allowedSort = new Dictionary<string, string> { ["title"] = "Title", ["created"] = "CreatedAt" };
+var orderBy = allowedSort.GetValueOrDefault(sortKey, "CreatedAt");
+```
+
+- Toda consulta Dapper filtra `IsActive = 1` explícitamente — los query filters globales de EF Core no aplican aquí.
+- Dapper solo lee: escrituras y esquema van por EF Core (ver "Perfiles de acceso a datos" en CLAUDE.md).
+
 ---
 
-## Contraseñas — BCrypt obligatorio
+## Contraseñas — solo en auth propia heredada
+
+> Con ASP.NET Core Identity (perfil B) el hashing (PBKDF2 vía `PasswordHasher`) y
+> el lockout ya vienen incluidos — no reimplementarlos. Con perfil A las
+> contraseñas viven en el IdP. Esta sección aplica solo a proyectos existentes
+> que ya tienen su propia tabla de usuarios y login.
 
 ```csharp
 // Instalar: dotnet add package BCrypt.Net-Next
@@ -95,10 +131,30 @@ public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
 
 ---
 
-## JWT — configuración segura
+## JWT — validación y emisión
+
+**Proyectos nuevos no emiten JWT propios con clave simétrica.**
+- Perfil A: la API es *resource server* y valida los tokens del IdP por discovery/JWKS:
 
 ```csharp
-// Program.cs — configuración JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = builder.Configuration["Auth:Authority"]; // Entra ID / Keycloak / OpenIddict
+        options.Audience = builder.Configuration["Auth:Audience"];
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters.ClockSkew = TimeSpan.FromSeconds(30);
+    });
+```
+
+- Perfil B: Identity API endpoints emiten y validan sus propios tokens — ver `SKILL-auth-patterns.md`.
+
+El bloque siguiente (clave simétrica + emisión propia) aplica **solo a proyectos
+existentes** que ya funcionan así. No replicarlo en código nuevo; si hay que
+evolucionarlo, registrar la migración a perfil A/B en `IA_Memoria/deuda-tecnica.md`.
+
+```csharp
+// Program.cs — configuración JWT (auth propia heredada)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -176,7 +232,7 @@ public class JwtService
 ## Rate Limiting — limitar intentos
 
 ```csharp
-// Program.cs — .NET 8 tiene rate limiting nativo
+// Program.cs — rate limiting nativo de ASP.NET Core (Microsoft.AspNetCore.RateLimiting)
 builder.Services.AddRateLimiter(options =>
 {
     // Política para login — 5 intentos por minuto por IP
@@ -378,39 +434,43 @@ builder.Configuration.AddAzureKeyVault(
 
 ---
 
-## Autorización basada en roles
+## Autorización basada en políticas (Policy-Based)
 
 ```csharp
-// Definir política de autorización
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole(UserRole.Admin.ToString()));
+// Políticas por permiso + denegar por defecto (fallback policy)
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("contracts:read", policy => policy.RequireClaim("permission", "contracts:read"))
+    .AddPolicy("contracts:write", policy => policy.RequireClaim("permission", "contracts:write"))
+    .AddPolicy("contracts:deactivate", policy => policy.RequireRole("Admin"))
+    // Todo endpoint sin [Authorize]/[AllowAnonymous] explícito exige usuario autenticado
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
 
-    options.AddPolicy("ManagerOrAdmin", policy =>
-        policy.RequireRole(UserRole.Admin.ToString(), UserRole.Manager.ToString()));
-
-    options.AddPolicy("AnyAuthenticatedUser", policy =>
-        policy.RequireAuthenticatedUser());
-});
-
-// En controllers — aplicar por acción o por clase
+// En controllers — la política nombra el permiso, no el rol
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize] // requiere autenticación en todo el controller
+[Authorize(Policy = "contracts:read")]
 public class ContractsController : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll() { } // cualquier usuario autenticado
+    public async Task<IActionResult> GetAll() { }
 
     [HttpPost]
-    [Authorize(Policy = "ManagerOrAdmin")] // solo managers y admins
+    [Authorize(Policy = "contracts:write")]
     public async Task<IActionResult> Create([FromBody] CreateContractDto dto) { }
 
-    [HttpDelete("{id:guid}")]
-    [Authorize(Policy = "AdminOnly")] // solo admins
-    public async Task<IActionResult> Delete(Guid id) { }
+    [HttpDelete("{id:guid}")] // soft delete — IsActive = 0
+    [Authorize(Policy = "contracts:deactivate")]
+    public async Task<IActionResult> Deactivate(Guid id) { }
 }
+
+// Minimal APIs — mismo criterio
+app.MapGroup("/api/v1/contracts")
+   .RequireAuthorization("contracts:read");
+
+// Solo login, callbacks OIDC y health checks son anónimos — explícito
+app.MapHealthChecks("/health").AllowAnonymous();
 
 // Verificar pertenencia del recurso en el service
 public async Task<ContractResponseDto> GetByIdAsync(Guid id, Guid requestingUserId, string requestingUserRole)
@@ -535,17 +595,19 @@ public async Task<IActionResult> Upload(IFormFile file)
 ### SQL y datos
 - [ ] Sin concatenación en queries raw (usar FromSqlInterpolated o parámetros)
 - [ ] EF Core usado correctamente (no raw strings con variables)
+- [ ] Consultas Dapper 100% parametrizadas, ORDER BY dinámico solo por lista blanca, filtro `IsActive = 1` explícito
 - [ ] Soft delete implementado (no DELETE físico)
 
 ### Autenticación
-- [ ] Contraseñas con BCrypt (work factor >= 12)
-- [ ] JWT con expiración (8h access, 30d refresh)
-- [ ] Secreto JWT en variables de entorno (mínimo 32 caracteres)
+- [ ] Perfil de auth (A o B) registrado en `IA_Memoria/arquitectura.md` e implementado según `SKILL-auth-patterns.md`
+- [ ] Perfil A: API valida tokens con Authority + Audience del IdP (sin clave simétrica)
+- [ ] Perfil B: Identity API endpoints con lockout configurado; `/register` no expuesto si el negocio no permite auto-registro
+- [ ] Solo auth propia heredada: contraseñas con BCrypt (work factor >= 12), secreto JWT en variables de entorno (mínimo 32 caracteres), bloqueo por intentos fallidos
 - [ ] Rate limiting en endpoints de auth con [EnableRateLimiting]
-- [ ] Bloqueo por intentos fallidos implementado
 
 ### Autorización
-- [ ] [Authorize] en todos los controllers/acciones que lo requieren
+- [ ] Fallback policy activa (denegar por defecto); `[AllowAnonymous]` solo en login, callbacks OIDC y health checks
+- [ ] Políticas por permiso (`[Authorize(Policy = ...)]` / `RequireAuthorization`), no chequeos de rol dispersos
 - [ ] Pertenencia de recursos verificada en el service (no solo autenticación)
 - [ ] Mensajes de error genéricos cuando se deniega acceso (no revelar existencia)
 
@@ -554,6 +616,7 @@ public async Task<IActionResult> Upload(IFormFile file)
 - [ ] CORS con origins específicos (no AllowAnyOrigin)
 - [ ] Secretos en variables de entorno o Azure Key Vault
 - [ ] Sin secretos en appsettings.json comiteado
+- [ ] Documento OpenAPI y UI (Scalar / Swagger UI / Redoc) solo en Development o protegidos con auth
 
 ### Archivos
 - [ ] Validación de tamaño máximo

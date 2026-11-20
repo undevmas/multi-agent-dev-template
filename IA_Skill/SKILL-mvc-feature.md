@@ -90,7 +90,7 @@ En errores:
 
 ## Estructura de archivos por feature
 
-### .NET 8
+### .NET (LTS vigente)
 ```
 Features/[NombreFeature]/
 ├── [NombreFeature]Controller.cs

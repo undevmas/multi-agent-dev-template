@@ -1,0 +1,47 @@
+# Skills oficiales de Microsoft (github.com/dotnet/skills) instaladas en esta plantilla.
+# Formato: <plugin>/<skill> — una por línea. Fuente única que leen sync-dotnet-skills.ps1 / .sh.
+# Para agregar o quitar una skill: editar esta lista, correr el script y actualizar
+# el ruteo en CLAUDE.md (+ AGENTS.md, GEMINI.md, copilot-instructions.md, .cursor/rules/project.mdc).
+# Criterios de selección y exclusiones: ver README.md de esta carpeta.
+
+# --- C# / build ---
+dotnet/csharp-refactoring
+dotnet/dotnet-breaking-changes
+dotnet/msbuild
+
+# --- ASP.NET Core / datos ---
+dotnet-aspnetcore/dotnet-webapi
+dotnet-data/optimizing-ef-core-queries
+
+# --- Upgrade (ruta LTS → LTS: 8 → 9 → 10 en un solo upgrade) ---
+dotnet-upgrade/migrate-dotnet8-to-dotnet9
+dotnet-upgrade/migrate-dotnet9-to-dotnet10
+dotnet-upgrade/migrate-nullable-references
+
+# --- NuGet ---
+dotnet-nuget/convert-to-cpm
+
+# --- Diagnóstico y rendimiento ---
+dotnet-diag/analyzing-dotnet-performance
+dotnet-diag/dotnet-trace-collect
+dotnet-diag/dump-collect
+
+# --- Testing (agnóstico de framework; el stack usa xUnit) ---
+dotnet-test/run-tests
+dotnet-test/platform-detection
+dotnet-test/filter-syntax
+dotnet-test/code-testing
+dotnet-test/code-testing-extensions
+dotnet-test/test-anti-patterns
+dotnet-test/assertion-quality
+dotnet-test/test-gap-analysis
+dotnet-test/test-analysis-extensions
+dotnet-test/coverage-analysis
+dotnet-test/crap-score
+dotnet-test/testability-obstacle
+dotnet-test/detect-static-dependencies
+dotnet-test/scaffold-dotnet-test-project
+
+# --- Migración de tests (dentro de xUnit / plataforma de ejecución) ---
+dotnet-test-migration/migrate-xunit-to-xunit-v3
+dotnet-test-migration/migrate-vstest-to-mtp

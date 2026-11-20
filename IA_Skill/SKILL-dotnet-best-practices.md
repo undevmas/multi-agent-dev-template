@@ -1,8 +1,11 @@
 # SKILL — .NET Best Practices
 
 ## Cuándo usar esta skill
-Antes de crear o modificar cualquier archivo de backend en .NET 8+.
-Leer antes de implementar controllers, services, repositories, DTOs o middleware.
+Antes de crear o modificar cualquier archivo de backend en .NET (proyectos nuevos: último
+LTS — hoy .NET 10; proyectos existentes: la versión registrada en `IA_Memoria/arquitectura.md`).
+Leer antes de implementar controllers, services, repositories, DTOs, middleware o la
+documentación OpenAPI de la API.
+Complemento oficial de Microsoft (en inglés): `IA_Skill/dotnet-official/dotnet-aspnetcore/dotnet-webapi/SKILL.md` (semántica HTTP, metadata OpenAPI, archivos `.http`). Si choca con esta skill gana esta: respuesta estandarizada en vez de `ProblemDetails`, arquitectura en capas y soft delete.
 
 ---
 
@@ -626,6 +629,52 @@ public static class ServiceCollectionExtensions
 
 ---
 
+## Documentación API — OpenAPI nativo + Scalar
+
+El documento OpenAPI lo genera `Microsoft.AspNetCore.OpenApi` (incluido en las plantillas
+desde .NET 9; en .NET 10 emite OpenAPI 3.1). **No agregar Swashbuckle para generar el
+documento.** La UI por defecto es Scalar; Redoc y Swagger UI son opcionales y solo si el
+proyecto lo pide (consumen el mismo `/openapi/v1.json`).
+
+```bash
+dotnet add package Microsoft.AspNetCore.OpenApi   # misma versión mayor que .NET
+dotnet add package Scalar.AspNetCore
+```
+
+```csharp
+// Program.cs
+builder.Services.AddOpenApi(); // documento "v1" → /openapi/v1.json
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();              // /openapi/v1.json
+    app.MapScalarApiReference();   // /scalar — UI por defecto
+
+    // Opcionales (solo si el proyecto lo pide):
+    // Swagger UI → paquete Swashbuckle.AspNetCore.SwaggerUI
+    // app.UseSwaggerUI(o => o.SwaggerEndpoint("/openapi/v1.json", "v1"));
+    // Redoc      → paquete Swashbuckle.AspNetCore.ReDoc
+    // app.UseReDoc(o => o.SpecUrl("/openapi/v1.json"));
+}
+```
+
+Reglas:
+- Documento y UI **solo en Development**. Si un entorno no productivo los necesita, exponerlos
+  con `.RequireAuthorization(...)` — nunca públicos en producción.
+- Documentar endpoints con metadata, no con comentarios sueltos: `[ProducesResponseType]`,
+  `[EndpointSummary]` / `[EndpointDescription]`, o `.WithSummary()` / `.Produces<T>()` en
+  minimal APIs. Los comentarios XML (`<GenerateDocumentationFile>true</GenerateDocumentationFile>`)
+  se incorporan al documento en .NET 10.
+- Esquema de seguridad (Bearer u OIDC según el perfil de auth): agregarlo con un document
+  transformer (`AddOpenApi(o => o.AddDocumentTransformer<...>())`) — verificar la API de
+  `Microsoft.OpenApi` de la versión instalada (cambió entre .NET 9 y .NET 10).
+- Las respuestas documentadas reflejan la respuesta estandarizada del proyecto
+  (`ApiResponse<T>` o la forma registrada en `IA_Memoria/convenciones.md`).
+
+---
+
 ## Convenciones de nomenclatura .NET
 
 - Clases: PascalCase → `UserService`, `ContractRepository`
@@ -652,6 +701,7 @@ public static class ServiceCollectionExtensions
 - [ ] Migración de BD si hay cambios en entidades
 - [ ] DTOs derivados no redeclaran propiedades de la clase base (no property hiding)
 - [ ] Constantes de dominio en UPPER_SNAKE_CASE con nombre que refleje el concepto de negocio
+- [ ] Endpoints nuevos documentados en OpenAPI (summary + códigos de respuesta); `/openapi` y `/scalar` solo en Development o protegidos
 
 ### Logging
 - [ ] Sin interpolación de strings en llamadas de log (usar parámetros nombrados)

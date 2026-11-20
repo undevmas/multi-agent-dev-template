@@ -7,7 +7,9 @@ Leer antes de crear cualquier archivo de test.
 Framework principal: xUnit
 Mocking: Moq o NSubstitute
 Assertions: FluentAssertions
-E2E/Integration: Cypress (frontend) + WebApplicationFactory (backend)
+Integración: WebApplicationFactory (backend) · Aspire.Hosting.Testing si la solución usa Aspire (ver SKILL-aspire-orchestration.md)
+E2E: Playwright (ver SKILL-e2e-playwright.md) — Cypress solo con autorización explícita
+Complemento oficial de Microsoft (en inglés): `IA_Skill/dotnet-official/dotnet-test/` — `run-tests` (comando `dotnet test` y filtros), `code-testing`, auditoría de calidad (`test-anti-patterns`, `assertion-quality`, `test-gap-analysis`), cobertura (`coverage-analysis`) y `dotnet-test-migration/migrate-xunit-to-xunit-v3`. Si sugieren otro framework, se mantiene xUnit.
 
 ---
 
@@ -46,7 +48,7 @@ Ejemplo: `CreateAsync_WithDuplicateEmail_ThrowsBusinessException`
 <!-- tests/Unit/Unit.csproj -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework> <!-- mismo TFM que el proyecto bajo prueba -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
