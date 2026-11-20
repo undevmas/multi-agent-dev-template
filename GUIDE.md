@@ -7,14 +7,15 @@
 
 ## Agentes soportados y cómo leen el contexto
 
-| Agente | Archivo de instrucciones | Lo lee automáticamente | Skills y snapshots |
-|---|---|---|---|
-| **Claude Code** | `CLAUDE.md` | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas |
-| **Gemini CLI** | `.gemini/GEMINI.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **OpenCode** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **Codex CLI** | `AGENTS.md` | ✅ Sí, al iniciar | El agente los lee con herramientas nativas |
-| **Cursor** | `.cursor/rules/project.mdc` | ✅ Sí, automático | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto |
-| **GitHub Copilot** | `.github/copilot-instructions.md` | ✅ Sí, automático | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente |
+| Agente                            | Archivo de instrucciones          | Lo lee automáticamente    | Skills y snapshots                                                                     |
+| --------------------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| **Antigravity** (Google DeepMind) | AGENTS.md / .gemini/GEMINI.md     | ✅ Sí, automático         | Lectura bajo demanda con herramientas nativas vía IA_Skill/SKILL-instruction-router.md |
+| **Claude Code**                   | `CLAUDE.md`                       | ✅ Sí, al abrir la sesión | El agente los lee con herramientas nativas                                             |
+| **Gemini CLI**                    | `.gemini/GEMINI.md`               | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **OpenCode**                      | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **Codex CLI**                     | `AGENTS.md`                       | ✅ Sí, al iniciar         | El agente los lee con herramientas nativas                                             |
+| **Cursor**                        | `.cursor/rules/project.mdc`       | ✅ Sí, automático         | ⚠️ Skills y snapshots adjuntar con `@archivo` o arrastrar al contexto                  |
+| **GitHub Copilot**                | `.github/copilot-instructions.md` | ✅ Sí, automático         | ⚠️ Requiere adjuntar cada archivo con `#file:` manualmente                             |
 
 > **Nota Cursor:** las instrucciones base (`.cursor/rules/project.mdc`) se cargan automáticamente. Skills, specs y snapshots se adjuntan arrastrando el archivo al chat o usando `@archivo` en el prompt.
 >
@@ -85,7 +86,7 @@ El snapshot se guarda en `IA_Memoria/snapshots/snapshot-latest.md` (o `snapshot-
 **Cuándo escanear un módulo puntual:** la tarea toca 1-2 módulos conocidos — evita empaquetar todo el monorepo por un cambio acotado.
 **Cuándo omitir cualquier scan:** fix puntual en un archivo ya conocido, cambio de texto, ajuste de config aislado.
 
-> Requisito: Node.js 18+ instalado (Repomix corre vía `npx` sin instalación previa).
+> Requisito: Node.js 18+ instalado. El primer escaneo puede hacer que `npx` descargue en su caché la versión fijada de Repomix; requiere acceso a npm y no modifica las dependencias de `Codigo/`.
 
 ### Escaneo dirigido por módulo (proyectos con varios servicios)
 
@@ -121,13 +122,13 @@ Cópialo y pégalo en tu agente para que llene la memoria del proyecto.
 
 El agente leerá el snapshot para llenar automáticamente:
 
-| Archivo | Qué escribe el agente |
-|---|---|
-| `IA_Memoria/arquitectura.md` | Tecnologías detectadas, módulos, puertos, variables de entorno |
-| `IA_Memoria/progreso.md` | Qué módulos existen y cuáles están pendientes |
-| `IA_Memoria/convenciones.md` | Patrones de naming encontrados en el código real |
-| `IA_Memoria/deuda-tecnica.md` | Antipatrones reales detectados (solo si el proyecto ya tiene código) |
-| `IA_Memoria/modulos.json` | Manifest de módulos (nombre, ruta, stack) — lo consume `repomix-scan-modules` |
+| Archivo                       | Qué escribe el agente                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `IA_Memoria/arquitectura.md`  | Tecnologías detectadas, módulos, puertos, variables de entorno                |
+| `IA_Memoria/progreso.md`      | Qué módulos existen y cuáles están pendientes                                 |
+| `IA_Memoria/convenciones.md`  | Patrones de naming encontrados en el código real                              |
+| `IA_Memoria/deuda-tecnica.md` | Antipatrones reales detectados (solo si el proyecto ya tiene código)          |
+| `IA_Memoria/modulos.json`     | Manifest de módulos (nombre, ruta, stack) — lo consume `repomix-scan-modules` |
 
 Esto evita que el agente te haga preguntas de arranque en cada sesión.
 Si el proyecto está vacío, el agente lo indica — no inventa estructura.

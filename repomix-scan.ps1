@@ -1,3 +1,24 @@
+<#
+.SYNOPSIS
+Genera snapshots Repomix del contenido de Codigo/.
+
+.DESCRIPTION
+Usa npx para ejecutar la version fijada de Repomix. En la primera ejecucion,
+npx la descarga automaticamente a su cache local y el progreso se muestra en consola.
+
+.EXAMPLE
+.\repomix-scan.ps1
+Genera el snapshot comprimido de todo Codigo/.
+
+.EXAMPLE
+.\repomix-scan.ps1 -Target "MiApp/src/Gateway" -Stack dotnet
+Genera un snapshot puntual usando el preset de ignore de .NET.
+
+.EXAMPLE
+.\repomix-scan.ps1 -?
+Muestra esta ayuda sin escanear.
+#>
+[CmdletBinding()]
 param(
     # "all" escanea Codigo/ completo; cualquier otro valor escanea Codigo/<Target>/
     [string]$Target = "all",
@@ -6,12 +27,19 @@ param(
     # La usa principalmente repomix-scan-modules.ps1; en uso manual es opcional.
     [string]$Stack = "",
     [switch]$Full,
-    [switch]$NoCompress
+    [switch]$NoCompress,
+    [Alias("?")]
+    [switch]$Help
 )
 # Nota: el contexto git (diffs y logs) se controla en repomix.config.json
 # mediante git.includeDiffs y git.includeLogs - no hay flags CLI equivalentes en repomix.
 
 $ErrorActionPreference = "Stop"
+
+if ($Help) {
+    Get-Help -Name $PSCommandPath -Detailed
+    exit 0
+}
 
 # Fix de encoding - PowerShell (sobre todo 5.1, el que trae Windows por
 # default) no usa UTF-8 para la salida de consola salvo que se fuerce.

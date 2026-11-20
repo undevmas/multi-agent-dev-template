@@ -1,34 +1,54 @@
 # SKILL — E2E con Playwright
 
 ## Cuándo usar esta skill
-Al escribir, revisar o estructurar tests end-to-end (E2E) del frontend Angular o React.
-Leer antes de crear cualquier archivo en `e2e/` o tocar `playwright.config.ts`.
+Al escribir, revisar o ejecutar tests end-to-end (E2E) del frontend Angular o React, al
+validar un flujo desde la UI o al reproducir un bug visual/funcional en el navegador.
+Leer antes de crear cualquier archivo en `tests/e2e/` o tocar `playwright.config.ts`.
+Complementa — no reemplaza — los tests unitarios del stack.
 
-Framework E2E aprobado (default): **Playwright** — `@playwright/test` con TypeScript.
+Framework E2E aprobado (default): **Playwright** — `@playwright/test` con TypeScript, más
+`playwright-cli` para automatización interactiva del navegador.
 Cypress: solo con autorización explícita del dev. Si el proyecto ya usa Cypress, se
 conserva y **no se migra sin ticket** (zona roja según `SKILL-risk-zone-policy.md` →
 registrar la propuesta en `IA_Memoria/deuda-tecnica.md`). Ver tabla al final.
 
 Skills relacionadas: `SKILL-auth-patterns.md` (perfil de auth del proyecto) ·
 `SKILL-aspire-orchestration.md` (levantar el entorno local) ·
-`SKILL-approved-libraries.md` (antes de agregar plugins, ej. `@axe-core/playwright`).
+`SKILL-approved-libraries.md` (antes de agregar plugins, ej. `@axe-core/playwright`) ·
+`.claude/skills/playwright-cli/SKILL.md` (automatización interactiva).
 
 ---
 
-## Setup inicial
+## Mapa operativo del template
+
+El tooling de Playwright vive en la **raíz del workspace**, no dentro de cada frontend.
+
+| Recurso | Ruta / comando |
+|---|---|
+| Paquete local | `package.json` en la raíz (`@playwright/test`) |
+| Configuración | `playwright.config.ts` en la raíz |
+| Pruebas persistentes | `tests/e2e/**/*.spec.ts` |
+| Ejecución local por defecto | `npm run test:e2e` (Chromium) |
+| Todos los navegadores | `npm run test:e2e:all` |
+| Depuración interactiva | `npm run test:e2e:debug` o `npm run test:e2e:ui` |
+| Reporte de la última ejecución | `npm run test:e2e:report` |
+| Automatización por consola | `playwright-cli` — ver `.claude/skills/playwright-cli/SKILL.md` |
+| Artefactos efímeros | `test-results/`, `playwright-report/`, `blob-report/`, `playwright/.auth/` (ignorados por Git) |
+
+Primera vez en el workspace:
 
 ```bash
-# Proyecto Angular o React (desde la raíz del frontend)
-npm init playwright@latest          # TypeScript, carpeta e2e/, sin GitHub Actions
-
-# Angular — alternativa con schematic (agrega target `ng e2e`)
-ng add playwright-ng-schematics     # (verificar contra la versión instalada)
+npm install                      # instala @playwright/test desde el lockfile
+npx playwright install chromium  # navegadores (agregar firefox/webkit si se necesitan)
 ```
 
-Estructura sugerida:
+Antes de ejecutar, leer `IA_Memoria/arquitectura.md` para confirmar la URL y el comando de
+arranque del proyecto afectado.
+
+Estructura sugerida dentro de `tests/e2e/`:
 
 ```
-e2e/
+tests/e2e/
 ├── setup/
 │   └── auth.setup.ts          ← login real una vez, guarda storageState
 ├── fixtures/
@@ -36,79 +56,66 @@ e2e/
 │   └── data/                  ← JSON estáticos para mocks
 ├── pages/
 │   └── contracts.page.ts      ← Page Objects ligeros
-└── tests/
-    └── contracts/
-        └── create-contract.spec.ts
-playwright/.auth/              ← storageState generado (NO se versiona)
-playwright.config.ts
+└── contracts/
+    └── create-contract.spec.ts   ← tests/e2e/<modulo>/<escenario>.spec.ts
 ```
 
-Agregar a `.gitignore`: `playwright/.auth/`, `test-results/`, `playwright-report/`, `blob-report/`, `results/`.
-
 Variables de entorno (nunca hardcodear URLs ni credenciales — documentarlas en `.env.e2e.example`):
-`E2E_BASE_URL`, `E2E_USER`, `E2E_PASSWORD`, `E2E_SKIP_WEBSERVER` (opcional).
+`E2E_BASE_URL`, `E2E_USER`, `E2E_PASSWORD`.
 
 ---
 
 ## playwright.config.ts
 
+La configuración de la raíz es la fuente de verdad:
+
+- `testDir: './tests/e2e'`.
+- `baseURL` desde `E2E_BASE_URL`; si no se define, `http://localhost:4200` (puerto por defecto de Angular).
+- Proyectos `chromium`, `firefox` y `webkit`; los scripts `npm run test:e2e*` usan Chromium salvo `test:e2e:all`.
+- `trace`, `video` en `retain-on-failure` y `screenshot` en `only-on-failure`.
+- En CI: `forbidOnly`, 2 reintentos y 1 worker.
+- **Sin `webServer` global:** cada proyecto puede requerir dependencias y variables de
+  desarrollo distintas. La app se arranca con su mecanismo documentado antes de lanzar los tests.
+
+Cuando la app requiere login, agregar un proyecto `setup` y hacer que los navegadores
+dependan de él (ver "Autenticación reutilizable"):
+
 ```typescript
-import { defineConfig, devices } from '@playwright/test';
-
-const baseURL = process.env.E2E_BASE_URL;
-if (!baseURL) {
-  throw new Error('E2E_BASE_URL no definida (ver .env.e2e.example)');
-}
-
+// playwright.config.ts — fragmento de `projects`
 const authFile = 'playwright/.auth/user.json';
-const isCI = !!process.env.CI;
 
-export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
-  forbidOnly: isCI,                 // falla si quedó un test.only
-  retries: isCI ? 2 : 0,
-  workers: isCI ? 2 : undefined,
-  reporter: [
-    ['html', { open: 'never' }],
-    ['junit', { outputFile: 'results/e2e-junit.xml' }],
-  ],
-  use: {
-    baseURL,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+projects: [
+  { name: 'setup', testMatch: /.*\.setup\.ts/ },
+  {
+    name: 'chromium',
+    use: { ...devices['Desktop Chrome'], storageState: authFile },
+    dependencies: ['setup'],
   },
-  projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: authFile },
-      dependencies: ['setup'],
-    },
-    // Navegadores adicionales solo en CI (más lentos en local)
-    ...(isCI
-      ? [
-          { name: 'firefox', use: { ...devices['Desktop Firefox'], storageState: authFile }, dependencies: ['setup'] },
-          { name: 'webkit', use: { ...devices['Desktop Safari'], storageState: authFile }, dependencies: ['setup'] },
-        ]
-      : []),
-  ],
-  // Si el entorno ya lo levanta Aspire o un ambiente de QA, definir E2E_SKIP_WEBSERVER=1
-  webServer: process.env.E2E_SKIP_WEBSERVER
-    ? undefined
-    : {
-        command: 'npm run start',
-        url: baseURL,
-        reuseExistingServer: !isCI,
-        timeout: 120_000,
-      },
-});
+  // firefox / webkit con el mismo storageState y dependencies
+],
 ```
 
 **Con Aspire:** levantar el AppHost (`aspire run` o `dotnet run --project src/AppHost`),
-tomar la URL del frontend desde el dashboard, exportarla en `E2E_BASE_URL` y poner
-`E2E_SKIP_WEBSERVER=1`. Detalle en `SKILL-aspire-orchestration.md`.
+tomar la URL del frontend desde el dashboard y exportarla en `E2E_BASE_URL`. Detalle en
+`SKILL-aspire-orchestration.md`.
+
+---
+
+## Flujo de trabajo
+
+1. Leer la spec de la feature cuando exista y ubicar los datos de prueba ya declarados;
+   no inventar credenciales ni hardcodearlas en un `.spec.ts`.
+2. Iniciar el proyecto con su mecanismo documentado y comprobar que la UI está disponible
+   antes de diagnosticar una falla de test.
+3. Para un comportamiento que debe mantenerse, crear o actualizar una prueba en
+   `tests/e2e/<modulo>/<escenario>.spec.ts`.
+4. Para exploración o reproducción puntual, usar `playwright-cli`: abrir una sesión, tomar
+   `snapshot`, operar mediante refs/locators y revisar `console` y `requests` si el resultado
+   es inesperado. Si el flujo corrige una regresión con frontend, convertirlo en prueba persistente.
+5. Ejecutar primero Chromium. Ejecutar Firefox/WebKit cuando la tarea pida compatibilidad
+   entre navegadores, responsividad crítica o un bug específico de navegador.
+6. Reportar qué escenario se validó, navegador, URL base usada, resultado y cualquier dato
+   de desarrollo creado. Cerrar la sesión de `playwright-cli` al terminar.
 
 ---
 
@@ -149,7 +156,7 @@ ambiente de QA — **nunca** cuentas reales ni de producción.
 La SPA no maneja tokens: el BFF redirige al IdP y al volver deja una cookie HttpOnly.
 
 ```typescript
-// e2e/setup/auth.setup.ts
+// tests/e2e/setup/auth.setup.ts
 import { test as setup, expect } from '@playwright/test';
 
 const authFile = 'playwright/.auth/user.json';
@@ -178,7 +185,7 @@ setup('autenticar usuario de prueba (IdP)', async ({ page }) => {
 Login directo por API con cookie (ruta según el `MapGroup` del proyecto):
 
 ```typescript
-// e2e/setup/auth.setup.ts
+// tests/e2e/setup/auth.setup.ts
 setup('autenticar vía Identity API', async ({ page }) => {
   const response = await page.request.post('/api/auth/login?useCookies=true', {
     data: { email: process.env.E2E_USER, password: process.env.E2E_PASSWORD },
@@ -196,7 +203,7 @@ El modo bearer de Identity es para clientes no-browser; en E2E de la SPA usar co
 ## Page Object Model ligero + fixtures
 
 ```typescript
-// e2e/pages/contracts.page.ts
+// tests/e2e/pages/contracts.page.ts
 import { type Page, type Locator } from '@playwright/test';
 
 export class ContractsPage {
@@ -227,7 +234,7 @@ export class ContractsPage {
 ```
 
 ```typescript
-// e2e/fixtures/test.ts
+// tests/e2e/fixtures/test.ts
 import { test as base } from '@playwright/test';
 import { ContractsPage } from '../pages/contracts.page';
 
@@ -250,8 +257,8 @@ export { expect } from '@playwright/test';
 ```
 
 ```typescript
-// e2e/tests/contracts/create-contract.spec.ts
-import { test, expect } from '../../fixtures/test';
+// tests/e2e/contracts/create-contract.spec.ts
+import { test, expect } from '../fixtures/test';
 
 test.describe('Contratos — alta', () => {
   test('crea un contrato y lo muestra en la tabla', { tag: '@smoke' }, async ({ contractsPage, uniqueName }) => {
@@ -293,11 +300,17 @@ test('muestra error amigable si la API falla', async ({ page, contractsPage }) =
 
 ---
 
-## Datos de prueba
+## Datos de prueba y seguridad
 
+- Usar únicamente entornos locales o autorizados. No automatizar producción.
+- Las credenciales y secretos se inyectan por variables de entorno; nunca se escriben en
+  tests, snapshots, traces, videos ni reportes.
 - Crear datos vía API (`page.request`, que comparte las cookies de la sesión) con identificadores únicos (`uniqueName`).
+  Cada test crea/aísla sus propios datos o usa seeds idempotentes; no depender del orden de ejecución.
 - **Nunca** limpiar con `DELETE` ni `DELETE FROM` (soft delete obligatorio). Si hace falta limpieza, usar el endpoint de baja lógica de la propia API o recrear la BD efímera de QA (contenedor Aspire/Docker).
 - Si el BFF exige header anti-CSRF en mutaciones (ej. `X-CSRF: 1`), agregarlo en la llamada o en `use.extraHTTPHeaders`.
+- Al fallar, conservar trace, captura y video; no desactivar aserciones ni convertir una
+  regresión en `skip` sin una decisión explícita del dev.
 
 ```typescript
 test('edita un contrato existente', async ({ page, contractsPage, uniqueName }) => {
@@ -316,13 +329,13 @@ test('edita un contrato existente', async ({ page, contractsPage, uniqueName }) 
 ## Comandos
 
 ```bash
-npx playwright test                          # todos los tests (headless)
-npx playwright test --ui                     # modo UI interactivo (time-travel)
-npx playwright test --project=chromium       # un solo navegador
+npm run test:e2e                             # Chromium (default local)
+npm run test:e2e:all                         # todos los navegadores configurados
+npm run test:e2e:ui                          # modo UI interactivo (time-travel)
+npm run test:e2e:debug                       # inspector paso a paso
+npm run test:e2e:report                      # abrir reporte HTML
 npx playwright test --grep "@smoke"          # por tag o texto del título
-npx playwright test e2e/tests/contracts      # por carpeta/archivo
-npx playwright test --debug                  # inspector paso a paso
-npx playwright show-report                   # abrir reporte HTML
+npx playwright test tests/e2e/contracts      # por carpeta/archivo
 npx playwright codegen "$E2E_BASE_URL"       # grabar flujo y obtener locators sugeridos
 ```
 
@@ -332,6 +345,10 @@ npx playwright codegen "$E2E_BASE_URL"       # grabar flujo y obtener locators s
 
 > Modificar pipelines requiere confirmación explícita del dev (CLAUDE.md).
 > Este YAML se **propone** en la respuesta o en un archivo aparte; no se aplica al pipeline real.
+> El template no incluye workflows de GitHub Actions: el CI/CD aprobado es Azure DevOps.
+
+Para publicar resultados en CI, agregar el reporter JUnit en `playwright.config.ts`
+(`['junit', { outputFile: 'results/e2e-junit.xml' }]`) y `results/` al `.gitignore`.
 
 ```yaml
 # Pasos a agregar al job del frontend — PROPUESTA, no aplicar sin confirmación
@@ -384,10 +401,10 @@ mientras tanto. Si hay ticket aprobado, equivalencias:
 
 ## Checklist E2E antes de PR
 
-- [ ] Tests en `e2e/tests/`, Page Objects en `e2e/pages/`, fixtures en `e2e/fixtures/`
+- [ ] Tests en `tests/e2e/<modulo>/`, Page Objects en `tests/e2e/pages/`, fixtures en `tests/e2e/fixtures/`
 - [ ] Locators semánticos (`getByRole` / `getByLabel` / `getByText`); `getByTestId` solo como último recurso
 - [ ] Sin `waitForTimeout` ni selectores CSS frágiles; solo web-first assertions
-- [ ] Login vía proyecto `setup` + `storageState`; `playwright/.auth/` en `.gitignore`
+- [ ] Login vía proyecto `setup` + `storageState`; `playwright/.auth/` ignorado por Git
 - [ ] `baseURL` y credenciales de prueba desde variables de entorno (nada hardcodeado)
 - [ ] Usuarios de prueba del ambiente de QA, nunca de producción
 - [ ] Datos creados vía API con identificadores únicos; sin `DELETE` para limpieza

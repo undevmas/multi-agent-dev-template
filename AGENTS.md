@@ -1,10 +1,17 @@
 # AGENTS.md — Instrucciones del Proyecto
 
-> Este archivo es leído automáticamente por **OpenCode** y **Codex CLI (OpenAI)**.
+> Este archivo es leído automáticamente por **Antigravity (Google DeepMind)**, **OpenCode** y **Codex CLI (OpenAI)**.
 > Leer antes de cualquier acción en el workspace.
 > Fuente de verdad: `CLAUDE.md`. En caso de conflicto, prevalece CLAUDE.md.
 
 ---
+
+> Antigravity, Codex and OpenCode must read `CLAUDE.md` completely before acting; it resolves any conflict with this bridge.
+>
+> **AUTONOMY_POLICY_VERSION: 1**
+> La política canónica para ambigüedades, autonomía técnica, estados seguros,
+> presupuesto de contexto y `NEEDS CLARIFICATION` vive en `CLAUDE.md`, sección
+> `Política de autonomía y ambigüedades`. No duplicarla en este bridge.
 
 ## Stack tecnológico (reglas duras — no sugerir alternativas)
 
@@ -63,21 +70,28 @@ Elegir el perfil al arrancar el proyecto y registrarlo en `IA_Memoria/arquitectu
 
 ---
 
-## Protocolo de inicio
+## Protocolo de inicio contextualizado y ruteo de skills
 
-Antes de cualquier tarea, leer en este orden:
-1. `IA_Memoria/progreso.md` — qué está hecho y qué sigue
-2. `IA_Memoria/arquitectura.md` — cada pieza del sistema
-3. `IA_Memoria/convenciones.md` — naming y estructura
-4. `Features/[feature].md` — si la tarea involucra un módulo específico
-   `Features/[feature].spec.md` — además, si existe y su Estado es `ready` o `in-progress`
-5. `IA_Skill/[skill].md` — la skill relevante antes de codificar
+Antes de cualquier acción, consultar `IA_Skill/SKILL-instruction-router.md` para determinar la **Skill Primaria**, las **Skills Auxiliares** y las lecturas estrictamente requeridas según el tipo de tarea.
 
-Nunca empezar a codificar sin haber leído al menos 1, 2 y 3.
+### Lecturas según tipo de tarea:
+
+1. **Implementar SPEC `ready` o reanudar `in-progress`:**
+   - Leer `Features/[feature].spec.md`, `[feature].checks.md` y `[feature].md`.
+   - Consultar `IA_Memoria/arquitectura.md` y `convenciones.md` únicamente antes de generar código nuevo o navegar entre servicios.
+2. **Corregir un bug puntual o refactor acotado:**
+   - Ir directamente al archivo afectado y su suite de tests. NO leer `progreso.md` ni snapshots globales.
+3. **Generar una SPEC o Spike técnico:**
+   - Leer insumos del dev y `[feature]-epic.md` (si aplica); no cargar skills de backend, frontend ni frameworks.
+4. **Tareas de investigación pura o consultas de usuario:**
+   - No cargar memoria global; buscar evidencia quirúrgica con herramientas dirigidas (`find_by_name`, `grep_search`, `view_file` acotado).
+
+Nunca empezar a codificar lógica de negocio sin verificar las convenciones y arquitectura del módulo correspondiente.
 
 ### Regla de snapshot (Repomix) — leer solo cuando la tarea lo justifica
 
 Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna de estas condiciones:
+
 - La tarea afecta más de un módulo o capa (frontend + backend, backend + BD, etc.).
 - Es la primera sesión en el proyecto o no hay contexto previo del código.
 - Se toma una decisión de arquitectura o refactor amplio.
@@ -86,11 +100,13 @@ Leer `IA_Memoria/snapshots/snapshot-latest.md` ÚNICAMENTE si se cumple alguna d
 NO leer el snapshot para: fix puntual en un archivo conocido, cambio de texto/estilo, modificación de config aislada.
 
 Si el snapshot no existe o tiene más de 7 días, sugerir al usuario ejecutar:
+
 - Windows: `.\repomix-scan.ps1`
 - Linux/macOS: `./repomix-scan.sh`
 
 Protocolo post-snapshot (obligatorio al leer el snapshot):
 Después de leer el snapshot, ANTES de codificar:
+
 1. Comparar contra `IA_Memoria/arquitectura.md` — actualizar módulos, dependencias o estructura que hayan cambiado.
 2. Comparar contra `IA_Memoria/progreso.md` — marcar como hecho lo que ya existe en el código aunque no estuviera registrado.
 3. Si el proyecto tiene código existente, actualizar `IA_Memoria/convenciones.md` con los patrones arquitectónicos detectados en el snapshot — solo agregar lo que no esté ya documentado, nunca reemplazar entradas ya completas:
@@ -104,6 +120,8 @@ Después de leer el snapshot, ANTES de codificar:
 ---
 
 ## Cuándo leer cada Skill
+
+> **Router central:** La selección de la **Skill Primaria** (una sola por tarea) y **Skills Auxiliares** (bajo demanda) se rige por [`IA_Skill/SKILL-instruction-router.md`](IA_Skill/SKILL-instruction-router.md). No cargar catálogos completos de skills de forma indiscriminada.
 
 ### Punto de entrada — Auditoría Pre-Productiva
 
@@ -132,7 +150,7 @@ Después de leer el snapshot, ANTES de codificar:
 | Crear o modificar una vista pública indexable (login, landing) — SEO | IA_Skill/SKILL-seo.md |
 | Escribir tests en Angular (TestBed, Jest) | IA_Skill/SKILL-angular-test-frameworks.md |
 | Escribir tests en React (Jest + Testing Library) | IA_Skill/SKILL-react-test-frameworks.md |
-| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/frontend-design/SKILL-animation-microinteractions.md → IA_Skill/frontend-design/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
+| Diseño moderno en HTML/JS vanilla (sin framework, sin npm) | Leer en secuencia: IA_Skill/SKILL-frontend-design.md (tokens, tipografía, layout y componentes para HTML/CSS/JS puro) → IA_Skill/SKILL-animation-microinteractions.md → IA_Skill/SKILL-gradient-accents.md → IA_Skill/frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin npm, sin build step, sin frameworks JS (React, Vue, Alpine). Google Fonts vía `<link>` permitido. CSS en archivo propio, no inline. |
 
 ### Backend .NET
 
@@ -170,20 +188,20 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 
 ### Backend NestJS
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar módulo, controller, service o guard en NestJS | IA_Skill/SKILL-nestjs-best-practices.md |
-| Implementar CQRS, eventos de dominio, colas o caching en NestJS | IA_Skill/SKILL-nestjs-patterns.md |
-| Mejorar calidad o revisión de TypeScript en NestJS | IA_Skill/SKILL-nestjs-clean-typescript.md |
-| Escribir tests unitarios o de integración en NestJS | IA_Skill/SKILL-nestjs-test-frameworks.md |
+| Situación                                                       | Skill a leer                              |
+| --------------------------------------------------------------- | ----------------------------------------- |
+| Crear o modificar módulo, controller, service o guard en NestJS | IA_Skill/SKILL-nestjs-best-practices.md   |
+| Implementar CQRS, eventos de dominio, colas o caching en NestJS | IA_Skill/SKILL-nestjs-patterns.md         |
+| Mejorar calidad o revisión de TypeScript en NestJS              | IA_Skill/SKILL-nestjs-clean-typescript.md |
+| Escribir tests unitarios o de integración en NestJS             | IA_Skill/SKILL-nestjs-test-frameworks.md  |
 
 ### Backend Python (FastAPI — solo tooling interno, ver nota de stack)
 
-| Situación | Skill a leer |
-|---|---|
-| Crear o modificar cualquier archivo del backend Python de ReporteadorV2 (router, service, cliente HTTP) | IA_Skill/SKILL-python-fastapi-best-practices.md |
-| Escribir tests unitarios o de integración en el backend Python | IA_Skill/SKILL-python-test-frameworks.md |
-| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio) | IA_Skill/SKILL-security-python.md |
+| Situación                                                                                                                                     | Skill a leer                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Crear o modificar cualquier archivo del backend Python de ReporteadorV2 (router, service, cliente HTTP)                                       | IA_Skill/SKILL-python-fastapi-best-practices.md |
+| Escribir tests unitarios o de integración en el backend Python                                                                                | IA_Skill/SKILL-python-test-frameworks.md        |
+| Seguridad en el backend Python (manejo del PAT, subprocess/PDF, exposición del servicio)                                                      | IA_Skill/SKILL-security-python.md               |
 
 ### Full Stack
 
@@ -192,7 +210,7 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 | Implementar una feature con `Features/[mod].spec.md` en estado `ready` | IA_Skill/SKILL-implementation.md |
 | Implementar un módulo completo de principio a fin (sin spec previa) | IA_Skill/SKILL-mvc-feature.md |
 | Crear, aplicar o revertir migraciones de BD (.NET/NestJS) | IA_Skill/SKILL-database-migrations.md |
-| Escribir o mantener tests E2E (Playwright por defecto) | IA_Skill/SKILL-e2e-playwright.md |
+| Escribir o mantener tests E2E, validar un flujo UI o reproducir un bug visual/funcional (Playwright por defecto) | IA_Skill/SKILL-e2e-playwright.md — para automatización interactiva del navegador, `.claude/skills/playwright-cli/SKILL.md` |
 | Orquestar la solución en local con Aspire (AppHost, service discovery, dashboard) — soluciones con 2+ servicios | IA_Skill/SKILL-aspire-orchestration.md |
 
 ### Seguridad
@@ -226,20 +244,23 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 | Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
 | Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
 | Generar una memoria técnica formal (.docx) para cliente de gobierno/externo | IA_Skill/SKILL-technical-memory.md |
+| Generar especificaciones técnicas formales (.docx) para auditorías | IA_Skill/technical-audit-spec-generic.md |
+| Crear, editar o inspeccionar entregables en Word o PDF | IA_Skill/document-artifacts/SKILL.md |
 
 ### Herramientas del agente
 
-| Situación | Skill a leer |
-|---|---|
-| Necesitar información externa actualizada (versiones, CVEs, docs) | IA_Skill/SKILL-web-search.md |
-| Activar respuestas ultra-concisas para sesiones largas | IA_Skill/SKILL-caveman.md |
-| Resolver comentarios de revisión de un Pull Request en GitHub | IA_Skill/SKILL-pr-review-fixes.md |
+| Situación                                                         | Skill a leer                      |
+| ----------------------------------------------------------------- | --------------------------------- |
+| Necesitar información externa actualizada (versiones, CVEs, docs) | IA_Skill/SKILL-web-search.md      |
+| Activar respuestas ultra-concisas para sesiones largas            | IA_Skill/SKILL-caveman.md         |
+| Resolver comentarios de revisión de un Pull Request en GitHub     | IA_Skill/SKILL-pr-review-fixes.md |
 
 ---
 
 ## Reglas de codificación
 
 ### General
+
 - Código en inglés (variables, funciones, clases, tablas)
 - Comentarios y documentación en español
 - Nunca hardcodear credenciales, URLs base ni valores de entorno
@@ -248,10 +269,12 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 - IDs siempre UUID/GUID (nunca int secuencial)
 
 ### Soft delete obligatorio
+
 Nunca ejecutar DELETE en tablas de negocio.
 Siempre: `IsActive = 0` (SQL Server) o `is_active = false` (PostgreSQL).
 
 ### Respuesta estandarizada de API
+
 Todos los endpoints deben retornar la misma estructura de respuesta — sin excepciones y sin inventar formatos nuevos por endpoint.
 La forma concreta (campos, anidamiento, errores, paginación) la define el proyecto en `IA_Memoria/convenciones.md`.
 Si el proyecto aún no tiene convención definida, usar como punto de partida:
@@ -276,12 +299,14 @@ Si el código existente ya usa otra forma, registrarla en convenciones.md y usar
 ### Testing E2E
 - Playwright (`@playwright/test`) para todo E2E nuevo. Introducir Cypress requiere autorización explícita.
 - Proyectos que ya usan Cypress lo conservan: no migrar a Playwright sin ticket.
+- Tooling en la raíz del workspace (`package.json`, `playwright.config.ts`, `tests/e2e/`) y `playwright-cli` para automatización interactiva del navegador. Mapa operativo en `IA_Skill/SKILL-e2e-playwright.md`. No sustituye los tests unitarios de cada stack.
 
 ### Orquestación local (Aspire)
 - Soluciones con 2+ servicios (API + frontend + BD, microservicios): AppHost de Aspire para desarrollo local — service discovery, connection strings inyectadas (nada hardcodeado) y dashboard OpenTelemetry.
 - Docker Compose sigue siendo el artefacto de despliegue en VM y el de `Tools/`. Aspire no lo reemplaza en producción salvo decisión registrada en `IA_Memoria/arquitectura.md`.
 
 ### Python (FastAPI — tooling interno)
+
 - El Dockerfile y docker-compose.yml son entregable obligatorio en todo proyecto FastAPI
 - Documentar los pasos de deploy en un README.md dentro de la carpeta del proyecto
 - El deploy real en la VM lo ejecuta el dev manualmente — el agente no hace push ni accede a servidores remotos
@@ -314,7 +339,6 @@ Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zo
 (verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias (esta,
 CLAUDE.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 
-
 ---
 
 ## NUNCA sin confirmación explícita
@@ -326,3 +350,27 @@ CLAUDE.md, GEMINI.md, copilot-instructions.md) diverjan entre sí.
 - Modificar pipelines de CI/CD
 - Subir archivos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/`, `Insumos/` al repositorio
 - Ejecutar `docker build`, `docker push`, `aspire deploy` ni acceder a servidores remotos
+
+## Regla de módulo completo
+
+Cuando una tarea construya un módulo funcional, el módulo incluye por defecto:
+
+- Backend/API, persistencia y reglas de negocio que correspondan.
+- Frontend/pantalla/flujo de usuario cuando el módulo tenga interacción visual.
+- Validación directa del flujo completo mediante Playwright, ejecutando la aplicación y comprobando el comportamiento desde la UI.
+
+La única excepción es un servicio o módulo explícitamente sin frontend (por ejemplo, un worker, una API interna, un proceso de integración o un servicio de infraestructura). En ese caso, documentar en la entrega que no aplica UI/Playwright y validar mediante pruebas de contrato, integración o smoke tests apropiados.
+
+No considerar terminado un módulo con frontend si solo compila o tiene tests unitarios: debe existir al menos una validación Playwright del happy path y de los errores principales del flujo.
+Para ejecutar esta validación, el agente debe verificar de forma autónoma que los servicios locales (AppHost/Angular en localhost:4200) estén activos (o arrancarlos en segundo plano sin bloquear la terminal) y ejecutar la prueba en modo visual/encabezado (--headed en desarrollo local contra Chromium, o interactivamente con playwright-cli open). No asumir ejecución headless silenciosa ni esperar a que el operador tenga que indicarlo en el prompt.
+
+## Regla para librerías y plugins recomendados
+
+Si una librería o plugin recomendado no aparece en el stack aprobado, no descartarlo automáticamente por ese único motivo. Antes de decidir no usarlo, detener la implementación y consultar al usuario presentando brevemente:
+
+1. Qué problema resuelve y qué ventajas aporta frente a la opción aprobada o a no incorporar dependencia.
+2. Evidencia de seguridad, mantenimiento, comunidad, licencia y compatibilidad con el proyecto.
+3. Por qué puede ser la mejor opción para esta tarea y cuáles son las alternativas consideradas.
+4. Impacto de adoptarlo: instalación, mantenimiento, lockfile, CI/CD, superficie de ataque y migración futura.
+
+Solo después de la confirmación explícita del usuario se puede instalar o implementar una tecnología fuera del stack. Si el usuario decide no adoptarla, registrar la decisión y su razón en la memoria o spec correspondiente.

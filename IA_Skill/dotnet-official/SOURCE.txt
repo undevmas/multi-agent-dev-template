@@ -1,5 +1,5 @@
-﻿repo: https://github.com/dotnet/skills
+repo: https://github.com/dotnet/skills
 commit: c227688ed14de4467e3e45f95dc69a94e905e219
 fecha_commit: 2026-11-20T10:40:02+01:00
-sincronizado: 2026-11-20T18:38:39Z
-skills: 28
+sincronizado: 2026-11-20T19:16:24Z
+skills: 30

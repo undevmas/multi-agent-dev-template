@@ -3,9 +3,13 @@
 ## Prioridad de instrucciones (desempate)
 Si hay conflicto entre instrucciones, aplicar este orden:
 1. CLAUDE.md
-2. IA_Memoria/convenciones.md
-3. Este archivo
-4. IA_Skill/[skill].md específica de la tarea
+2. Contrato específico de la tarea (`Features/*.md`, `.spec.md`, `.checks.md`)
+   para comportamiento funcional, y `IA_Skill/[skill].md` para procedimiento.
+3. `IA_Memoria/convenciones.md`, `arquitectura.md` y `progreso.md` como contexto.
+4. Este archivo compacto.
+
+**AUTONOMY_POLICY_VERSION: 1** — para ambigüedades y solicitudes de
+confirmación aplicar `CLAUDE.md` → `Política de autonomía y ambigüedades`.
 
 ## Stack aprobado (bloqueado)
 Usar solo:
@@ -33,6 +37,8 @@ Antes de codificar, leer en este orden:
 4. Features/[feature].md (si aplica) + Features/[feature].spec.md si existe en estado `ready` o `in-progress`
 5. IA_Skill/[skill].md relevante
 
+Para validar UI, depurar un flujo desde el navegador o escribir/ejecutar E2E, leer `IA_Skill/SKILL-e2e-playwright.md`. Para la automatización interactiva, consultar `.claude/skills/playwright-cli/SKILL.md`.
+
 Regla de snapshot (Repomix) — solo cuando la tarea lo justifica:
 Adjuntar IA_Memoria/snapshots/snapshot-latest.md con #file: SOLO si:
 - La tarea afecta más de un módulo o capa.
@@ -49,6 +55,7 @@ Al leer el snapshot, ANTES de codificar:
 No iniciar código sin haber leído al menos 1, 2 y 3.
 
 ## Cuándo consultar skills
+> **Router central:** La selección de la **Skill Primaria** (una sola por tarea) y **Skills Auxiliares** (bajo demanda) se rige por IA_Skill/SKILL-instruction-router.md.
 Consultar IA_Skill solo cuando la tarea lo requiera por dominio técnico.
 
 Mapa rápido:
@@ -60,7 +67,7 @@ Mapa rápido:
 - Testing frontend: SKILL-angular-test-frameworks.md, SKILL-react-test-frameworks.md
 - Testing E2E (Playwright por defecto): SKILL-e2e-playwright.md
 - Orquestación local con Aspire (AppHost, service discovery, dashboard — soluciones con 2+ servicios): SKILL-aspire-orchestration.md
-- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → frontend-design/SKILL-animation-microinteractions.md → frontend-design/SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
+- Frontend (HTML/JS vanilla, sin framework/npm): SKILL-frontend-design.md (tokens, tipografía, layout, componentes) → SKILL-animation-microinteractions.md → SKILL-gradient-accents.md → frontend-design/SKILL-accessibility-a11y.md. Sin Bootstrap en output final, sin build step, sin React/Vue/Alpine. Google Fonts vía `<link>` permitido, CSS en archivo propio.
 - Backend .NET: SKILL-dotnet-best-practices.md (incluye "Documentación API": OpenAPI nativo + Scalar), SKILL-dotnet-design-pattern-review.md, SKILL-dotnet-test-frameworks.md, SKILL-dotnet-upgrade.md (incluye salir de .NET 8/9, fuera de soporte)
 - Backend .NET — skills oficiales de Microsoft (complementarias, en `IA_Skill/dotnet-official/`, en inglés). Leer primero la skill propia; si una oficial contradice a la plantilla, gana la plantilla (conflictos en su README.md). Rutas relativas a esa carpeta:
   - Web API: dotnet-aspnetcore/dotnet-webapi
@@ -77,7 +84,7 @@ Mapa rápido:
 - Autenticación/autorización (elegir o implementar perfil A: OIDC + PKCE + BFF; perfil B: Identity API endpoints; políticas) — leer antes que las de seguridad por stack: SKILL-auth-patterns.md
 - Seguridad: SKILL-security-angular.md, SKILL-security-dotnet.md, SKILL-security-nestjs.md, SKILL-security-python.md, SKILL-security-owasp-checklist.md, SKILL-agent-owasp-compliance.md
 - Triage de hallazgos (SCA/legado/secretos/zona de riesgo — usar en vez de las de arriba cuando el hallazgo no es de código propio en el stack aprobado): SKILL-dependency-vulnerability-triage.md, SKILL-legacy-stack-security-baseline.md, SKILL-secrets-scanning.md, SKILL-risk-zone-policy.md (fuente única de zonas, las demás la referencian)
-- Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md, SKILL-technical-memory.md (memoria técnica formal .docx para cliente de gobierno/externo)
+- Texto/Docs: SKILL-humanizer.md, SKILL-docs-feature.md, SKILL-technical-memory.md (memoria técnica formal .docx para cliente de gobierno/externo), technical-audit-spec-generic.md (.docx para auditorías), document-artifacts/SKILL.md (entregables Word/PDF)
 - Soporte: SKILL-web-search.md, SKILL-caveman.md, SKILL-pr-review-fixes.md
 
 Cuándo NO consultar skills:
@@ -95,7 +102,7 @@ Cuándo NO consultar skills:
 - OAuth 2.1: Authorization Code + PKCE; sin implicit ni password grant; cada API valida issuer, audience, expiración y firma (JWKS)
 - Autorización por políticas; denegar por defecto (fallback policy) — solo login, callbacks OIDC y health checks anónimos
 - Documentación API: Microsoft.AspNetCore.OpenApi + Scalar (sin Swashbuckle para generar el documento); solo en Development o protegida con auth
-- E2E nuevos en Playwright; proyectos con Cypress lo conservan (no migrar sin ticket)
+- E2E nuevos en Playwright (tooling en la raíz del workspace: package.json, playwright.config.ts, tests/e2e/; playwright-cli para automatización interactiva); proyectos con Cypress lo conservan (no migrar sin ticket)
 - Soluciones con 2+ servicios: AppHost de Aspire en local; Docker Compose sigue siendo el artefacto de despliegue en VM
 - Migraciones versionadas para todo cambio de BD
 - IDs UUID/GUID (no enteros secuenciales)
@@ -106,6 +113,18 @@ Cuándo NO consultar skills:
 Ver `IA_Skill/SKILL-risk-zone-policy.md` — fuente única de la política de zonas
 (verde/ámbar/roja). No se redefine aquí para evitar que las 4 copias
 (esta, CLAUDE.md, AGENTS.md, GEMINI.md) diverjan entre sí.
+
+## Reglas de módulo completo
+
+Cuando una capacidad tenga frontend, la entrega incluye pantalla/flujo de
+usuario y validación Playwright del happy path y del error principal. Compilar
+o pasar tests unitarios no basta. Para un worker, API interna o servicio sin
+frontend, documentar la excepción y ejecutar pruebas de contrato, integración
+o smoke test.
+
+En el roadmap maestro, leer `IA_Skill/SKILL-spec-generator.md`: se permite
+generar épicas y specs hijas en la misma sesión; las decisiones pendientes
+mantienen la spec en `draft` o `needs-clarification`.
 
 ## NUNCA hacer sin confirmación explícita
 - Modificar .env, appsettings.json o archivos de entorno

@@ -5,7 +5,7 @@ por el equipo de .NET de Microsoft, formato [Agent Skills](https://agentskills.i
 `references/`). Licencia MIT, copyright .NET Foundation and Contributors (ver `LICENSE`).
 
 - **Versión instalada:** ver `SOURCE.txt` (commit, fecha, cantidad).
-- **Qué se instala:** `skills.manifest` es la única lista. 28 de las 110 skills del repo.
+- **Qué se instala:** `skills.manifest` es la única lista. 30 de las 110 skills del repo.
 - **Idioma:** inglés, sin modificar. **No editar** los archivos dentro de `dotnet*/`: el script de
   sincronización los sobrescribe. Las adaptaciones a la plantilla van en este README o en las
   skills propias de `IA_Skill/`.
@@ -31,10 +31,15 @@ Estas skills **complementan** a las skills propias de `IA_Skill/`; no las reempl
 | `dotnet-upgrade/migrate-dotnet8-to-dotnet9` | Migrar a .NET 9 | Política de versiones: solo LTS. Aplicar `8→9` y luego `9→10` **en el mismo upgrade** con destino `net10.0`; nunca liberar en .NET 9 |
 | `dotnet-test/*` | Ejemplos con MSTest, NUnit, TUnit | El framework del stack es **xUnit**. Ignorar sugerencias de migrar a otro framework |
 | Varias | Mencionan skills que **no** están instaladas (`find-untested-sources`, `test-tagging`, `writing-mstest-tests`, skills de `dotnet-msbuild`…) | Ignorar esas menciones, o agregarlas al manifest con aprobación |
+| `dotnet-ai/technology-selection` | Proveedores `Azure.AI.OpenAI` / `OpenAI` / `Azure.AI.Inference` detrás de `IChatClient` | Las librerías están aprobadas, pero el **proveedor** es un servicio externo que recibe datos: se aprueba por proyecto y se registra en `IA_Memoria/arquitectura.md`. Datos confidenciales o personales solo a proveedores aprobados para ese nivel de dato |
+| `dotnet-ai/technology-selection` | `Microsoft.Agents.AI` (prerelease), `Microsoft.Extensions.AI.DataIngestion` (preview) | Política de versiones estables: un paquete prerelease/preview requiere **aprobación explícita por proyecto** mientras no tenga versión estable |
+| `dotnet-ai/technology-selection` | Vector stores: Azure AI Search, Milvus, MongoDB, Pinecone, Qdrant, Redis… | Aprobado: vectores dentro de la BD del stack (PostgreSQL + pgvector, o SQL Server con tipo vector cuando la versión lo soporte). Cualquier otro store requiere aprobación |
+| `dotnet-ai/technology-selection` | Entrenar modelos custom en Python (PyTorch/TensorFlow) y exportar a ONNX | Python sigue restringido a tooling interno: entrenar en Python requiere aprobación explícita. Inferencia con ONNX Runtime en .NET sí está aprobada |
+| `dotnet-diag/microbenchmarking` | Crear proyectos de benchmark y `dotnet add package BenchmarkDotNet` sin versión | BenchmarkDotNet aprobado **solo** en proyectos de benchmark separados (`*.Benchmarks`), nunca referenciado por código productivo. Con Central Package Management, la versión va en `Directory.Packages.props`. Benchmarks en CI = cambio de pipeline → confirmación |
 
-Cualquier herramienta o paquete que una skill oficial sugiera instalar (BenchmarkDotNet,
-dotnet-trace, ReportGenerator, etc.) sigue la regla de la plantilla: **confirmación explícita**
-antes de instalar.
+Cualquier otra herramienta o paquete que una skill oficial sugiera instalar (dotnet-trace,
+ReportGenerator, un vector store fuera de la BD del stack, etc.) sigue la regla de la plantilla:
+**confirmación explícita** antes de instalar.
 
 ---
 
@@ -54,6 +59,8 @@ antes de instalar.
 | `dotnet-diag/analyzing-dotnet-performance` | Revisión de código por ~50 anti-patrones de rendimiento |
 | `dotnet-diag/dotnet-trace-collect` | Elegir y capturar trazas de rendimiento en entornos desplegados |
 | `dotnet-diag/dump-collect` | Configurar/capturar crash dumps (incluye Docker) |
+| `dotnet-diag/microbenchmarking` | Diseñar, ejecutar y comparar microbenchmarks con BenchmarkDotNet |
+| `dotnet-ai/technology-selection` | Elegir e implementar IA/ML en .NET: ML.NET, LLM con Microsoft.Extensions.AI, agentes con Microsoft Agent Framework, RAG, ONNX Runtime, Ollama, Copilot SDK |
 | `dotnet-test/run-tests` (+ `platform-detection`, `filter-syntax`) | Ejecutar tests y armar el comando `dotnet test` con filtros (VSTest/MTP) |
 | `dotnet-test/code-testing` (+ `code-testing-extensions`) | Generar, reparar o reforzar tests de código existente |
 | `dotnet-test/test-anti-patterns`, `assertion-quality`, `test-gap-analysis` (+ `test-analysis-extensions`) | Auditar la calidad de una suite de tests |
@@ -80,8 +87,6 @@ cualquier script antes de ejecutarlo.
 | `dotnet/csharp-expert` | Es un enrutador hacia el marketplace de plugins; aquí el ruteo lo hace `CLAUDE.md` |
 | `dotnet/setup-local-sdk` | Orientada a SDKs preview; la política es LTS estable |
 | `dotnet-data/create-datadriven-aspnetcore` | Genera Razor Pages/Blazor/MVC y no sigue la arquitectura en capas de la plantilla |
-| `dotnet-diag/microbenchmarking` | Requiere BenchmarkDotNet (librería no aprobada) — agregar si se aprueba |
-| `dotnet-ai/*` | Tecnologías de IA fuera del stack aprobado |
 | `dotnet-advanced/*`, `dotnet-upgrade/dotnet-aot-compat`, `thread-abort-migration`, `dotnet-template-engine/*`, `dotnet-test/find-untested-sources`, `test-smell-detection`, `test-tagging`, `test-value-evidence`, `grade-tests`, testability wrappers, `dotnet-experimental/*` | Nicho para este stack, dependencias externas (tree-sitter) o experimentales. Candidatas a agregar si un proyecto las necesita |
 
 ---

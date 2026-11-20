@@ -25,6 +25,10 @@ dotnet-nuget/convert-to-cpm
 dotnet-diag/analyzing-dotnet-performance
 dotnet-diag/dotnet-trace-collect
 dotnet-diag/dump-collect
+dotnet-diag/microbenchmarking
+
+# --- IA / ML en .NET (librerías aprobadas con reglas: ver CLAUDE.md "IA / ML (.NET)") ---
+dotnet-ai/technology-selection
 
 # --- Testing (agnóstico de framework; el stack usa xUnit) ---
 dotnet-test/run-tests

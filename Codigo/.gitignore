@@ -1,4 +1,11 @@
 # ─── Dependencias ───────────────────────────────────────────────
+# El repositorio de este template no versiona proyectos copiados en Codigo/.
+# Mantener cada proyecto en su propio repositorio Git; Repomix lo escanea sin
+# aplicar este archivo (ver Codigo/repomix.config.json).
+/*
+!.gitignore
+!repomix.config.json
+
 node_modules/
 .pnp
 .pnp.js

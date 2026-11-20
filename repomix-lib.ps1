@@ -69,7 +69,8 @@ function New-RepomixContext {
         CompressEnabled = $compressEnabled
         Style           = "markdown"
         Timestamp       = Get-Date -Format "yyyy-MM-ddTHH:mm:ssK"
-        RepomixArgsBase = @("repomix@latest")
+        # Version fijada: evita que un snapshot cambie por una actualizacion no revisada.
+        RepomixArgsBase = @("repomix@1.18.0")
     }
 }
 
@@ -85,7 +86,8 @@ function Invoke-RepomixScan {
         [string]$IgnorePatterns = ""
     )
 
-    $npxArgs = @($Context.RepomixArgsBase) + @($SourcePath, "--output", $OutputPath)
+    # --yes evita el prompt de instalacion de npx en la primera ejecucion.
+    $npxArgs = @("--yes") + @($Context.RepomixArgsBase) + @($SourcePath, "--output", $OutputPath)
     $tempConfigPath = $null
 
     if (Test-Path $Context.ConfigPath) {
@@ -116,11 +118,17 @@ function Invoke-RepomixScan {
         $npxArgs += @("--ignore", $IgnorePatterns)
     }
 
-    Write-Info "Escaneando $Label ..."
+    Write-Info "Escaneando $Label con Repomix 1.18.0 ..."
+    Write-Info "La primera ejecucion puede descargar Repomix a la cache de npm."
 
     Push-Location $Context.CodigoDir
     try {
-        & npx @npxArgs
+        # Write-Host conserva la salida de progreso aunque el caller descarte
+        # el objeto de resultado de esta funcion.
+        & npx @npxArgs 2>&1 | ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -ne 0) {
+            throw "Repomix termino con codigo de salida $LASTEXITCODE."
+        }
     }
     finally {
         Pop-Location

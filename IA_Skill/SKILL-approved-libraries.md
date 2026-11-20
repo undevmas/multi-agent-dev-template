@@ -14,6 +14,11 @@ candidata razonable — de lo contrario, preguntar antes de sumarla.
 
 ---
 
+## E2E y automatización de navegador
+
+- Playwright Test (`@playwright/test`), instalado en la raíz del workspace, y `playwright-cli` para automatización interactiva del navegador — ver `SKILL-e2e-playwright.md`.
+- Las versiones de `package.json` y del lockfile son la fuente de verdad. No elevar versiones sin una tarea explícita.
+
 ## Tabla resumen por track
 
 | Categoría | Angular | React | HTML vanilla |

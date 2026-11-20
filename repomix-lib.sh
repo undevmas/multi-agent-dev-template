@@ -60,7 +60,8 @@ invoke_scan() {
   local label="$3"
   local ignore_patterns="${4:-}"
 
-  local args=("repomix@latest" "$source_path" "--output" "$output_path")
+  # Version fijada: evita que un snapshot cambie por una actualizacion no revisada.
+  local args=("--yes" "repomix@1.18.0" "$source_path" "--output" "$output_path")
   local local_config_path=""
 
   if [[ -f "$CONFIG_PATH" ]]; then
@@ -90,7 +91,8 @@ invoke_scan() {
     args+=("--ignore" "$ignore_patterns")
   fi
 
-  info "Escaneando $label ..."
+  info "Escaneando $label con Repomix 1.18.0 ..."
+  info "La primera ejecucion puede descargar Repomix a la cache de npm."
   (
     cd "$CODIGO_DIR"
     npx "${args[@]}"
