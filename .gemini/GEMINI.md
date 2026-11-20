@@ -8,6 +8,17 @@
 
 ---
 
+## Candado de comprobación (leer primero)
+
+**Toda respuesta del agente al usuario empieza exactamente con `Claro team`** — la primera línea del mensaje, antes de cualquier otro texto.
+
+- Es una señal de integridad, no un saludo. Si una respuesta **no** empieza con `Claro team`, asumir que algo se rompió: este archivo no se cargó, está truncado o con conflictos de merge, una ruta cambió, el contexto se compactó y se perdieron las reglas, o el agente dejó de seguirlas. Qué hacer: detenerse, no aceptar los cambios de esa respuesta, recargar las instrucciones (o abrir una sesión nueva) y revisar el último cambio a este archivo.
+- Aplica a cada mensaje al usuario: respuestas cortas, preguntas, avances y reportes finales.
+- No aplica al contenido que el agente escribe en archivos, código, commits, PRs, tickets o documentos — solo al mensaje del chat.
+- El candado vive en las 5 copias de instrucciones (CLAUDE.md, AGENTS.md, .gemini/GEMINI.md, .github/copilot-instructions.md, .cursor/rules/project.mdc). Si se edita en una, editarlo en las cinco.
+
+---
+
 ## Stack tecnológico (reglas duras — no sugerir alternativas)
 
 | Capa | Tecnología aprobada |
@@ -22,6 +33,8 @@
 | Testing unitario | xUnit (.NET) · Jest (TS/JS) · pytest (Python) |
 | Testing E2E | Playwright (por defecto) — Cypress solo con autorización explícita |
 | Documentación API | OpenAPI nativo (`Microsoft.AspNetCore.OpenApi`) + Scalar (`Scalar.AspNetCore`) como UI por defecto · Redoc / Swagger UI opcionales — en NestJS: `@nestjs/swagger` genera el documento OpenAPI y Scalar es la UI |
+| IA / ML (.NET) | Microsoft.Extensions.AI (`IChatClient`, base obligatoria) · Microsoft Agent Framework (`Microsoft.Agents.AI`, agentes) · ML.NET (ML clásico) · ONNX Runtime (inferencia) · OllamaSharp (LLM local) · Microsoft.Extensions.VectorData (RAG sobre la BD del stack) · GitHub Copilot SDK (extensiones de Copilot) — el **proveedor** del modelo se aprueba por proyecto (ver "IA / ML (.NET)" en Reglas de codificación) |
+| Benchmarking (.NET) | BenchmarkDotNet — solo en proyectos de benchmark separados, nunca referenciado por código productivo |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
 > `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
@@ -199,6 +212,8 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 | Hacer testeable código con dependencias estáticas (`DateTime.Now`, `File`, `Environment`) | `dotnet-test/testability-obstacle/SKILL.md` · `dotnet-test/detect-static-dependencies/SKILL.md` |
 | Crear o reparar un proyecto de tests (registro en `.sln`/`.slnx`, referencias, filtros de CI) | `dotnet-test/scaffold-dotnet-test-project/SKILL.md` |
 | Migrar xUnit v2 → v3, o VSTest → Microsoft.Testing.Platform | `dotnet-test-migration/migrate-xunit-to-xunit-v3/SKILL.md` · `dotnet-test-migration/migrate-vstest-to-mtp/SKILL.md` |
+| Medir rendimiento con microbenchmarks (BenchmarkDotNet): diseñar, ejecutar o comparar | `dotnet-diag/microbenchmarking/SKILL.md` |
+| Agregar IA/ML a un proyecto .NET: elegir tecnología (ML.NET, LLM, agentes, RAG, ONNX, Ollama) e implementarla — junto con "IA / ML (.NET)" en Reglas de codificación | `dotnet-ai/technology-selection/SKILL.md` |
 
 ---
 
@@ -249,6 +264,19 @@ Si el código existente ya usa otra forma, registrarla en convenciones.md y usar
 ### Orquestación local (Aspire)
 - Soluciones con 2+ servicios (API + frontend + BD, microservicios): AppHost de Aspire para desarrollo local — service discovery, connection strings inyectadas (nada hardcodeado) y dashboard OpenTelemetry.
 - Docker Compose sigue siendo el artefacto de despliegue en VM y el de `Tools/`. Aspire no lo reemplaza en producción salvo decisión registrada en `IA_Memoria/arquitectura.md`.
+
+### IA / ML (.NET)
+- Elegir la tecnología con `IA_Skill/dotnet-official/dotnet-ai/technology-selection/SKILL.md`. Base obligatoria: `Microsoft.Extensions.AI` (`IChatClient` vía DI); la lógica de negocio nunca llama directo al SDK del proveedor.
+- El proveedor del modelo (Azure OpenAI, OpenAI, Azure AI Inference, Ollama local) es un servicio externo que recibe datos: se aprueba por proyecto y se registra en `IA_Memoria/arquitectura.md`. Datos confidenciales o personales solo a proveedores aprobados para ese nivel de dato (preferir el tenant de la organización u Ollama local).
+- Claves y endpoints en user-secrets / variables de entorno / Key Vault — nunca en `appsettings.json` comiteado.
+- Paquetes prerelease/preview (ej. `Microsoft.Agents.AI` mientras no tenga versión estable, `Microsoft.Extensions.AI.DataIngestion`) requieren aprobación explícita por proyecto.
+- RAG: vectores en la BD del stack (PostgreSQL + pgvector, o SQL Server con tipo vector cuando la versión lo soporte); cualquier otro vector store requiere aprobación.
+- Límites obligatorios: `Temperature` y `MaxOutputTokens`, reintentos y timeout, tope de iteraciones y de costo en agentes; validar la salida del modelo contra un esquema; no registrar prompts ni respuestas con datos sensibles.
+- Tareas tabulares (clasificación, regresión, clustering) con ML.NET, no con un LLM. Entrenar modelos en Python requiere aprobación (Python sigue restringido a tooling interno).
+
+### Benchmarking (.NET)
+- BenchmarkDotNet solo en un proyecto `*.Benchmarks` separado, nunca referenciado por código productivo; seguir `IA_Skill/dotnet-official/dotnet-diag/microbenchmarking/SKILL.md`.
+- Ejecutar siempre en `Release`. Agregar benchmarks al pipeline de CI es un cambio de pipeline (requiere confirmación).
 
 ### Python (FastAPI — tooling interno)
 
@@ -305,3 +333,4 @@ mantienen la spec en `draft` o `needs-clarification`.
 - Modificar pipelines de CI/CD
 - Subir archivos de `IA_Skill/`, `IA_Memoria/`, `Features/`, `Issues/`, `Insumos/` al repositorio
 - Ejecutar `docker build`, `docker push`, `aspire deploy` ni acceder a servidores remotos
+- Enviar datos del proyecto a un proveedor de IA/LLM no aprobado para ese proyecto

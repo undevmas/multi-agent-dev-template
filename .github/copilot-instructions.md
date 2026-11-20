@@ -1,5 +1,9 @@
 # GitHub Copilot — Instrucciones del Proyecto (Compacto)
 
+## Candado de comprobación (leer primero)
+
+Toda respuesta al usuario empieza exactamente con `Claro team` (primera línea del mensaje). Es una señal de integridad, no un saludo: si una respuesta no empieza así, asumir que estas instrucciones no se cargaron, están truncadas o con conflictos, o se dejaron de seguir — detenerse, no aceptar esos cambios y recargar las instrucciones. Aplica solo al mensaje del chat, nunca a archivos, código, commits, PRs ni documentos. El mismo candado vive en CLAUDE.md, AGENTS.md, .gemini/GEMINI.md, .github/copilot-instructions.md y .cursor/rules/project.mdc: si se edita en uno, editarlo en los cinco.
+
 ## Prioridad de instrucciones (desempate)
 Si hay conflicto entre instrucciones, aplicar este orden:
 1. CLAUDE.md
@@ -23,6 +27,8 @@ Usar solo:
 - Testing unitario: xUnit (.NET), Jest (TS/JS), pytest (Python)
 - Testing E2E: Playwright (por defecto) — Cypress solo con autorización explícita
 - API docs: OpenAPI nativo (Microsoft.AspNetCore.OpenApi) + Scalar (Scalar.AspNetCore) por defecto; Redoc / Swagger UI opcionales; NestJS: @nestjs/swagger + Scalar
+- IA / ML (.NET): Microsoft.Extensions.AI (base obligatoria), Microsoft Agent Framework, ML.NET, ONNX Runtime, OllamaSharp, Microsoft.Extensions.VectorData, GitHub Copilot SDK — el proveedor del modelo se aprueba por proyecto; paquetes prerelease/preview con aprobación
+- Benchmarking (.NET): BenchmarkDotNet, solo en proyectos *.Benchmarks separados
 
 No sugerir ni instalar tecnologías fuera de este stack sin confirmación explícita.
 Python (FastAPI) se aprobó el 2026-07-02 solo para `Codigo/Reportes/` (ReporteadorV2) — no usarlo como backend de nuevas apps de negocio sin la misma aprobación explícita.
@@ -78,6 +84,8 @@ Mapa rápido:
   - Rendimiento: dotnet-diag/analyzing-dotnet-performance; dotnet-diag/dotnet-trace-collect y dump-collect (en servidores el dev ejecuta)
   - Tests: dotnet-test/run-tests, code-testing, test-anti-patterns, assertion-quality, test-gap-analysis, coverage-analysis, crap-score, testability-obstacle, detect-static-dependencies, scaffold-dotnet-test-project
   - Migración de tests: dotnet-test-migration/migrate-xunit-to-xunit-v3, migrate-vstest-to-mtp
+  - Benchmarks: dotnet-diag/microbenchmarking (BenchmarkDotNet)
+  - IA / ML: dotnet-ai/technology-selection (con las reglas de IA / ML de este archivo)
 - Backend NestJS: SKILL-nestjs-best-practices.md, SKILL-nestjs-clean-typescript.md, SKILL-nestjs-patterns.md, SKILL-nestjs-test-frameworks.md
 - Backend Python (FastAPI, solo tooling interno de ReporteadorV2): SKILL-python-fastapi-best-practices.md, SKILL-python-test-frameworks.md
 - Full stack / BD: SKILL-implementation.md (con spec ready), SKILL-mvc-feature.md (sin spec), SKILL-database-migrations.md
@@ -104,6 +112,8 @@ Cuándo NO consultar skills:
 - Documentación API: Microsoft.AspNetCore.OpenApi + Scalar (sin Swashbuckle para generar el documento); solo en Development o protegida con auth
 - E2E nuevos en Playwright (tooling en la raíz del workspace: package.json, playwright.config.ts, tests/e2e/; playwright-cli para automatización interactiva); proyectos con Cypress lo conservan (no migrar sin ticket)
 - Soluciones con 2+ servicios: AppHost de Aspire en local; Docker Compose sigue siendo el artefacto de despliegue en VM
+- IA / ML (.NET): base Microsoft.Extensions.AI (dotnet-official/dotnet-ai/technology-selection); proveedor del modelo aprobado por proyecto y registrado en IA_Memoria/arquitectura.md; datos confidenciales solo a proveedores aprobados; claves en secretos; prerelease/preview con aprobación; vectores en la BD del stack; límites de tokens/iteraciones/costo y validación de la salida
+- BenchmarkDotNet solo en proyectos *.Benchmarks separados y en Release; agregar benchmarks a CI es cambio de pipeline
 - Migraciones versionadas para todo cambio de BD
 - IDs UUID/GUID (no enteros secuenciales)
 - Python (FastAPI, tooling interno): Dockerfile y docker-compose.yml obligatorios, deploy documentado en README.md dentro del proyecto, deploy real lo ejecuta el dev manualmente (el agente no hace push ni accede a servidores remotos), frontend servido por FastAPI en HTML/JS vanilla únicamente
@@ -134,6 +144,7 @@ mantienen la spec en `draft` o `needs-clarification`.
 - Modificar pipelines de CI/CD
 - Incluir en commits archivos de IA_Skill, IA_Memoria, Features, Issues, Insumos
 - Ejecutar docker build, docker push, aspire deploy o acceder a servidores remotos
+- Enviar datos del proyecto a un proveedor de IA/LLM no aprobado para ese proyecto
 
 ## Contexto adicional
 Para detalles extendidos y excepciones, usar:

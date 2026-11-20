@@ -81,5 +81,56 @@ foreach ($forbiddenRule in $forbiddenRules) {
     }
 }
 
+# --- Candado de comprobacion: la frase `Claro team` debe estar una sola vez por copia ---
+$canaryFiles = @('CLAUDE.md', 'AGENTS.md', '.gemini/GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/project.mdc')
+$canaryErrors = foreach ($canaryFile in $canaryFiles) {
+    $canaryPath = Join-Path $workspaceRoot $canaryFile
+    $headingCount = @(Select-String -LiteralPath $canaryPath -Pattern '^## Candado de comprobaci').Count
+    $phraseFound = Select-String -LiteralPath $canaryPath -SimpleMatch '`Claro team`' -Quiet
+    if ($headingCount -ne 1 -or -not $phraseFound) {
+        "$canaryFile (secciones: $headingCount, frase: $phraseFound)"
+    }
+}
+if ($canaryErrors) {
+    throw "Canary 'Claro team' missing or duplicated: $($canaryErrors -join ', ')"
+}
+
+# --- Marcadores de conflicto de merge en instrucciones, router y skills de politica ---
+$markerFiles = $canaryFiles + @('IA_Skill/SKILL-instruction-router.md') + $policyFiles | Select-Object -Unique
+foreach ($markerFile in $markerFiles) {
+    $markerPath = Join-Path $workspaceRoot $markerFile
+    if (Select-String -LiteralPath $markerPath -Pattern '^(<<<<<<<|>>>>>>>)( |$)' -Quiet) {
+        throw "Merge conflict markers found in $markerFile"
+    }
+}
+
+# --- Rutas de skills citadas en las 5 copias (rutas rotas) ---
+$skillNames = @{}
+Get-ChildItem -LiteralPath (Join-Path $workspaceRoot 'IA_Skill') -Recurse -File -Filter 'SKILL*.md' |
+    ForEach-Object { $skillNames[$_.Name] = $true }
+$brokenRoutes = foreach ($canaryFile in $canaryFiles) {
+    $text = Get-Content -LiteralPath (Join-Path $workspaceRoot $canaryFile) -Raw -Encoding UTF8
+    foreach ($match in [regex]::Matches($text, 'IA_Skill/[A-Za-z0-9_./-]+\.md')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $workspaceRoot $match.Value) -PathType Leaf)) {
+            "${canaryFile}: $($match.Value)"
+        }
+    }
+    foreach ($match in [regex]::Matches($text, 'SKILL-[a-z0-9-]+\.md')) {
+        if (-not $skillNames.ContainsKey($match.Value)) {
+            "${canaryFile}: $($match.Value)"
+        }
+    }
+    foreach ($match in [regex]::Matches($text, '`(dotnet[a-z0-9-]*/[a-z0-9-]+/SKILL\.md)`')) {
+        $officialPath = Join-Path $workspaceRoot ('IA_Skill/dotnet-official/' + $match.Groups[1].Value)
+        if (-not (Test-Path -LiteralPath $officialPath -PathType Leaf)) {
+            "${canaryFile}: dotnet-official/$($match.Groups[1].Value)"
+        }
+    }
+}
+if ($brokenRoutes) {
+    throw "Broken skill routes: $(@($brokenRoutes | Select-Object -Unique) -join ', ')"
+}
+
+Write-Output 'Canary, merge markers and skill routes are OK.'
 Write-Output 'Instruction autonomy policy is synchronized.'
 

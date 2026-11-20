@@ -19,6 +19,23 @@ candidata razonable — de lo contrario, preguntar antes de sumarla.
 - Playwright Test (`@playwright/test`), instalado en la raíz del workspace, y `playwright-cli` para automatización interactiva del navegador — ver `SKILL-e2e-playwright.md`.
 - Las versiones de `package.json` y del lockfile son la fuente de verdad. No elevar versiones sin una tarea explícita.
 
+## Backend .NET — librerías aprobadas con reglas
+
+Fuera de los tracks de UI. Las reglas completas viven en `CLAUDE.md` ("IA / ML (.NET)" y "Benchmarking (.NET)").
+
+| Necesidad | Librería aprobada | Condiciones |
+|---|---|---|
+| LLM (prompt → respuesta, function calling acotado) | `Microsoft.Extensions.AI` (`IChatClient`) | Base obligatoria de toda integración de IA; el proveedor va detrás vía `AddChatClient` |
+| Proveedor de modelo | `Azure.AI.OpenAI` · `OpenAI` · `Azure.AI.Inference` · `OllamaSharp` (local) | El **proveedor** (servicio externo que recibe datos) se aprueba por proyecto y se registra en `IA_Memoria/arquitectura.md` |
+| Agentes / tool calling multi-paso | Microsoft Agent Framework (`Microsoft.Agents.AI`) | Mientras sea prerelease, aprobación explícita por proyecto; tope de iteraciones y de costo |
+| ML clásico (clasificación, regresión, clustering) | ML.NET (`Microsoft.ML`) | Semilla fija, métricas reales, `PredictionEnginePool` |
+| Inferencia de modelos propios/pre-entrenados | ONNX Runtime (`Microsoft.ML.OnnxRuntime`) | Entrenar en Python requiere aprobación aparte |
+| RAG / búsqueda semántica | `Microsoft.Extensions.VectorData` + pgvector (PostgreSQL) o vector de SQL Server | Otro vector store requiere aprobación; `Microsoft.Extensions.AI.DataIngestion` es preview → aprobación |
+| Extensiones de GitHub Copilot | GitHub Copilot SDK (`GitHub.Copilot.SDK`) | Solo para extensiones de Copilot |
+| Microbenchmarks | BenchmarkDotNet | Solo en proyectos `*.Benchmarks` separados, en `Release`; nunca referenciado por código productivo |
+
+Skills de apoyo: `dotnet-official/dotnet-ai/technology-selection/SKILL.md` y `dotnet-official/dotnet-diag/microbenchmarking/SKILL.md`.
+
 ## Tabla resumen por track
 
 | Categoría | Angular | React | HTML vanilla |

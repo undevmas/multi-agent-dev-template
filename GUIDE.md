@@ -412,7 +412,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-54 skills propias organizadas por dominio, más 28 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `CLAUDE.md`. El agente lee solo la que corresponde a la tarea actual.
+58 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `CLAUDE.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
@@ -422,13 +422,37 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 | **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
 | **Testing frontend** | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md` |
 | **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
-| **.NET — oficiales de Microsoft** | `dotnet-official/` — 28 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |
+| **.NET — oficiales de Microsoft** | `dotnet-official/` — 30 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, benchmarks, IA/ML, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
 | **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
 | **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
 | **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` |
 
 Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` antes del prompt.
+
+---
+
+## Candado de comprobación ("Claro team")
+
+Las 5 copias de instrucciones (`CLAUDE.md`, `AGENTS.md`, `.gemini/GEMINI.md`,
+`.github/copilot-instructions.md`, `.cursor/rules/project.mdc`) obligan al agente a empezar
+**cada respuesta** con `Claro team`. No es un saludo: es una señal de integridad.
+
+**Si una respuesta del agente no empieza con `Claro team`, sospechar que algo se rompió:**
+el archivo de instrucciones no se cargó, quedó truncado o con conflictos de merge, una ruta
+cambió, o el contexto se compactó y el agente perdió las reglas. Qué hacer:
+
+1. No aceptar los cambios de esa respuesta.
+2. Correr la verificación de integridad:
+   ```powershell
+   .\IA_Skill\check-instruction-policy-sync.ps1
+   ```
+   Verifica que el candado esté en las 5 copias, que no haya marcadores de conflicto de merge y
+   que todas las skills citadas existan (además de la política de autonomía).
+3. Corregir lo que reporte y abrir una sesión nueva del agente.
+
+El candado aplica solo a los mensajes del chat: el agente nunca lo escribe en archivos, código,
+commits ni PRs. Si se cambia la frase, cambiarla en las 5 copias y en el script.
 
 ---
 
