@@ -44,6 +44,8 @@ $requiredFiles = @(
     'IA_Skill/SKILL-autonomy-policy.md',
     'IA_Skill/SKILL-stack-policy.md',
     'IA_Skill/README.md',
+    'IA_Skill/web-official/README.md',
+    'IA_Skill/web-official/modern-web-guidance/SKILL.md',
     'IA_Skill/SKILL-implementation.md',
     'IA_Skill/SKILL-risk-zone-policy.md',
     'IA_Skill/SKILL-spec-generator.md'
@@ -87,7 +89,7 @@ $bridgeFiles = @('CLAUDE.md', 'AGENTS.md', '.gemini/GEMINI.md', '.github/copilot
 $duplications = @()
 foreach ($bf in $bridgeFiles) {
     $p = Join-Path $workspaceRoot $bf
-    $text = Get-Content -LiteralPath $p -Raw
+    $text = Get-Content -LiteralPath $p -Raw -Encoding UTF8
     if ($text -match '(?m)^### 1\. Investigar antes de preguntar$') {
         $duplications += $bf
     }
@@ -98,7 +100,7 @@ $routerMentionFiles = @('CLAUDE.md', 'AGENTS.md', '.gemini/GEMINI.md', 'GUIDE.md
 $missingRouterRef = @()
 foreach ($rmf in $routerMentionFiles) {
     $p = Join-Path $workspaceRoot $rmf
-    $text = Get-Content -LiteralPath $p -Raw
+    $text = Get-Content -LiteralPath $p -Raw -Encoding UTF8
     if ($text -notmatch 'SKILL-instruction-router\.md') {
         $missingRouterRef += $rmf
     }
@@ -130,18 +132,18 @@ Record-TestResult "Estatica" "Ausencia de contradicciones o reglas prohibidas" (
 Write-Host "`n--- Ejecutando 6.2: Pruebas de Ruteo (9 Escenarios) ---" -ForegroundColor Yellow
 
 $routerPath = Join-Path $workspaceRoot 'IA_Skill/SKILL-instruction-router.md'
-$routerContent = Get-Content -LiteralPath $routerPath -Raw
+$routerContent = Get-Content -LiteralPath $routerPath -Raw -Encoding UTF8
 
 $scenarios = @(
     @{ Id = 'R1'; Desc = 'Implementar SPEC'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Stack de la capa actual'; ForbiddenLoad = 'SKILL-spec-generator.md'; MustBlock = $false },
-    @{ Id = 'R2'; Desc = 'Reanudar SPEC'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Stack según capa pendiente'; ForbiddenLoad = 'snapshots globales'; MustBlock = $false },
-    @{ Id = 'R3'; Desc = 'Generar SPEC'; ExpectedPrimary = 'SKILL-spec-generator.md'; ExpectedAux = 'Ninguna (solo especificación)'; ForbiddenLoad = 'Skills de codificación'; MustBlock = $false },
+    @{ Id = 'R2'; Desc = 'Reanudar SPEC'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Stack segun capa pendiente'; ForbiddenLoad = 'snapshots globales'; MustBlock = $false },
+    @{ Id = 'R3'; Desc = 'Generar SPEC'; ExpectedPrimary = 'SKILL-spec-generator.md'; ExpectedAux = 'Ninguna (solo especificacion)'; ForbiddenLoad = 'Skills de codificacion'; MustBlock = $false },
     @{ Id = 'R4'; Desc = 'Corregir bug localizado'; ExpectedPrimary = 'Skill del stack'; ExpectedAux = 'Testing del stack'; ForbiddenLoad = 'progreso.md'; MustBlock = $false },
     @{ Id = 'R5'; Desc = 'Modificar contrato interno'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Tests de contrato del stack'; ForbiddenLoad = 'Skills de UI'; MustBlock = $false },
-    @{ Id = 'R6'; Desc = 'Realizar migración BD'; ExpectedPrimary = 'SKILL-database-migrations.md'; ExpectedAux = 'SKILL-risk-zone-policy.md'; ForbiddenLoad = 'Skills de frontend'; MustBlock = $true },
-    @{ Id = 'R7'; Desc = 'Worker sin UI'; ExpectedPrimary = 'Skill del stack'; ExpectedAux = 'Tests de integración / contratos'; ForbiddenLoad = 'SKILL-e2e-playwright.md'; MustBlock = $false },
+    @{ Id = 'R6'; Desc = 'Realizar migrac'; ExpectedPrimary = 'SKILL-database-migrations.md'; ExpectedAux = 'SKILL-risk-zone-policy.md'; ForbiddenLoad = 'Skills de frontend'; MustBlock = $true },
+    @{ Id = 'R7'; Desc = 'Worker sin UI'; ExpectedPrimary = 'Skill del stack'; ExpectedAux = 'Tests de integracion / contratos'; ForbiddenLoad = 'SKILL-e2e-playwright.md'; MustBlock = $false },
     @{ Id = 'R8'; Desc = 'Cambio frontend visible'; ExpectedPrimary = 'SKILL-e2e-playwright.md'; ExpectedAux = 'Skill de framework UI'; ForbiddenLoad = 'Skills de backend'; MustBlock = $false },
-    @{ Id = 'R9'; Desc = 'Dependencia SOFT ausente'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Degradación / Fallback seguro'; ForbiddenLoad = 'NEEDS CLARIFICATION'; MustBlock = $false }
+    @{ Id = 'R9'; Desc = 'Dependencia SOFT ausente'; ExpectedPrimary = 'SKILL-implementation.md'; ExpectedAux = 'Degradacion / Fallback seguro'; ForbiddenLoad = 'NEEDS CLARIFICATION'; MustBlock = $false }
 )
 
 foreach ($sc in $scenarios) {
@@ -155,17 +157,17 @@ foreach ($sc in $scenarios) {
 Write-Host "`n--- Ejecutando 6.3: Pruebas de Decision (Casos A - G) ---" -ForegroundColor Yellow
 
 $decisionCases = @(
-    @{ Case = 'Caso A - T1'; Classification = 'T1'; Behavior = 'Decidir autonomamente sin preguntar'; Blocks = $false; Keyword = 'T1 — Decisión técnica reversible' },
-    @{ Case = 'Caso B - T2'; Classification = 'T2'; Behavior = 'Evolucion aditiva compatible y contract tests'; Blocks = $false; Keyword = 'T2 — Decisión arquitectónica acotada' },
-    @{ Case = 'Caso C - B1'; Classification = 'B1'; Behavior = 'Configuracion nullable, regla deshabilitada y estado explicito'; Blocks = $false; Keyword = 'B1 — Regla de negocio faltante pero aislable' },
-    @{ Case = 'Caso D - B2 aislable'; Classification = 'B2'; Behavior = 'Contrato provisional y PENDING_CONFIGURATION'; Blocks = $false; Keyword = 'B2 — Decisión de negocio material no aislable' },
-    @{ Case = 'Caso E - S1'; Classification = 'S1'; Behavior = 'Detencion obligatoria y confirmacion previa'; Blocks = $true; Keyword = 'S1 — Seguridad, datos o acción irreversible' },
-    @{ Case = 'Caso F - X1'; Classification = 'X1'; Behavior = 'Completar mocks y trabajo independiente; reportar bloqueo externo'; Blocks = $true; Keyword = 'X1 — Bloqueo externo real' },
+    @{ Case = 'Caso A - T1'; Classification = 'T1'; Behavior = 'Decidir autonomamente sin preguntar'; Blocks = $false; Keyword = 'T1 .* Decisi.n t.cnica reversible' },
+    @{ Case = 'Caso B - T2'; Classification = 'T2'; Behavior = 'Evolucion aditiva compatible y contract tests'; Blocks = $false; Keyword = 'T2 .* Decisi.n arquitect.nica acotada' },
+    @{ Case = 'Caso C - B1'; Classification = 'B1'; Behavior = 'Configuracion nullable, regla deshabilitada y estado explicito'; Blocks = $false; Keyword = 'B1 .* Regla de negocio faltante pero aislable' },
+    @{ Case = 'Caso D - B2 aislable'; Classification = 'B2'; Behavior = 'Contrato provisional y PENDING_CONFIGURATION'; Blocks = $false; Keyword = 'B2 .* Decisi.n de negocio material no aislable' },
+    @{ Case = 'Caso E - S1'; Classification = 'S1'; Behavior = 'Detencion obligatoria y confirmacion previa'; Blocks = $true; Keyword = 'S1 .* Seguridad, datos o acci.n irreversible' },
+    @{ Case = 'Caso F - X1'; Classification = 'X1'; Behavior = 'Completar mocks y trabajo independiente; reportar bloqueo externo'; Blocks = $true; Keyword = 'X1 .* Bloqueo externo real' },
     @{ Case = 'Caso G - Presupuesto'; Classification = 'Tokens'; Behavior = '1 primaria, auxiliares bajo demanda, validacion antes de 75%'; Blocks = $false; Keyword = '14 Reglas de Eficiencia de Tokens' }
 )
 
 foreach ($dc in $decisionCases) {
-    $hasKeyword = $routerContent.Contains($dc.Keyword)
+    $hasKeyword = $routerContent -match $dc.Keyword
     $hasClasif = $routerContent.Contains($dc.Classification)
     $passed = $hasKeyword -and $hasClasif
     $ev = "Clasificacion: $($dc.Classification) | Conducta: $($dc.Behavior) | Bloquea: $($dc.Blocks)"

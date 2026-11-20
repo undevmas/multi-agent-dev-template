@@ -32,7 +32,9 @@ Actívala cuando la spec incluya:
 | Acciones destructivas (`DELETE`, `revoke`) | `<ConfirmDialog>` + `<Button variant="danger">` |
 | Datos sensibles (`otpUri`, `challengeToken`) | `<SensitiveData>` con toggle show/hide |
 | Tablas de datos de admin | `<DataTable>` con sort, filter, y estados vacíos |
-| Código de 6 dígitos (TOTP) | `<OtpInput>` con 6 celdas individuales |
+| Código de 6 dígitos (TOTP) | `<OtpInput>` — un solo `<input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6">` estilizado (evitar 6 `<input>` separados con auto-advance, que rompen lectores de pantalla, pegado y WebOTP; ver `IA_Skill/web-official/modern-web-guidance/guides/forms/forms.md` y `sms-otp-form.md`) |
+
+> **Referencia de plataforma web (`IA_Skill/web-official/`):** antes de construir overlays, menús, tabs, accordions o cards desde cero, revisar la guía correspondiente en `IA_Skill/web-official/modern-web-guidance/guides/ui-components/` (`dialog.md`, `menu.md`, `tabs.md`, `accordion.md`, `card.md`, `persistent-toast-notifications.md`) respetando la arquitectura de cada track definida en `IA_Skill/SKILL-approved-libraries.md`.
 
 ---
 

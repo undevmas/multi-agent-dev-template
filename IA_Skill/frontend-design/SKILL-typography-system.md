@@ -291,3 +291,4 @@ const Typography = {
 - [ ] Las tablas con números usan `font-variant-numeric: tabular-nums`
 - [ ] Los flujos multi-paso tienen eyebrow (`type-eyebrow`) con indicador de paso
 - [ ] El modo oscuro no requiere ajustes adicionales (los colores vienen de tokens ya configurados)
+- [ ] Los titulares multi-línea sin caja visible usan `text-wrap: balance` y los párrafos de lectura `text-wrap: pretty` + ancho máximo `60–75ch`; las fórmulas `clamp()` mantienen `max <= 2.5 * min` para respetar el zoom de 200% WCAG 1.4.4 (ver `IA_Skill/web-official/modern-web-guidance/guides/visual-design/typography.md`)

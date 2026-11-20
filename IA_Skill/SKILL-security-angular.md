@@ -486,7 +486,7 @@ async onSubmit(): Promise<void> {
 ## Checklist seguridad Angular antes de PR
 
 ### XSS
-- [ ] Sin uso de bypassSecurityTrust* sin sanitizar con DOMPurify primero
+- [ ] Sin uso de bypassSecurityTrust* sin sanitizar con DOMPurify primero (o Sanitizer API `element.setHTML()` con fallback a `DOMPurify` + Trusted Types `require-trusted-types-for 'script'`; ver `IA_Skill/web-official/modern-web-guidance/guides/security/sanitize-untrusted-html.md` y `trusted-types.md`)
 - [ ] Sin [innerHTML] con datos del usuario sin sanitizar
 - [ ] URLs dinámicas validadas (solo http/https)
 

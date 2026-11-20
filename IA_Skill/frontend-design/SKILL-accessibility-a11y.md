@@ -399,3 +399,5 @@ Radix ya lo resuelve al usarlo.
 - [ ] Ningún estado se comunica SOLO con color (todos los badges tienen texto legible)
 - [ ] El foco se mueve al heading del nuevo paso en flujos multi-paso
 - [ ] El Escape cierra modales y devuelve el foco al elemento que los abrió
+- [ ] Si se usa `<dialog>` nativo con `showModal()`, NO agregar `role="dialog"`, `aria-modal="true"` ni focus trap manual (el navegador ya los provee; ver `IA_Skill/web-official/modern-web-guidance/guides/ui-components/dialog.md`)
+- [ ] La validación visual y `aria-invalid` solo se activan tras la interacción del usuario (`blur`/`submit` o `:user-invalid`), nunca al cargar el formulario vacío (ver `IA_Skill/web-official/modern-web-guidance/guides/accessibility/accessible-error-announcement.md`)

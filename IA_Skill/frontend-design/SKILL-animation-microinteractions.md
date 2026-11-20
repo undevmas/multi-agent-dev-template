@@ -359,3 +359,4 @@ function StepFlow({ step, direction }: { step: number; direction: number }) {
 - [ ] Ninguna animación de UI feedback supera 300ms
 - [ ] Los toasts tienen slide-in + auto-dismiss
 - [ ] El checkmark de éxito usa animación SVG path-draw, no solo un fade
+- [ ] Para animar entrada/salida de `<dialog>`, `[popover]` o elementos con `display: none`, preferir `@starting-style` + `transition-behavior: allow-discrete` (declarado separado después de `transition`) + `overlay` (ver `IA_Skill/web-official/modern-web-guidance/guides/ui-behaviors/animate-to-from-top-layer.md` y `motion.md`)

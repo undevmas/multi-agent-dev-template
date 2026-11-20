@@ -412,7 +412,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-59 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
+59 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/` y 210 guías oficiales de la plataforma web moderna (GoogleChrome) en `IA_Skill/web-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
@@ -420,6 +420,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 | **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` · `SKILL-aspire-orchestration.md` (orquestación local con Aspire) |
 | **Testing E2E** | `SKILL-e2e-playwright.md` (Playwright por defecto; Cypress solo con autorización) |
 | **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
+| **Frontend — plataforma web moderna (GoogleChrome)** | `web-official/` — 210 guías curadas de [GoogleChrome/modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) (CSS moderno, `@layer`/`@scope`/`@container`/`subgrid`, `<dialog>`/`[popover]`, Anchor Positioning, formularios `:user-invalid`, `light-dark()`, Core Web Vitals LCP/INP/CLS, accesibilidad WCAG, seguridad/CSP/Trusted Types/Sanitizer API y JS moderno). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `web-official/sync-web-skills.ps1` / `.sh` (ver su `README.md`) |
 | **Testing frontend** | `SKILL-angular-test-frameworks.md` · `SKILL-react-test-frameworks.md` |
 | **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
 | **.NET — oficiales de Microsoft** | `dotnet-official/` — 30 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, benchmarks, IA/ML, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |

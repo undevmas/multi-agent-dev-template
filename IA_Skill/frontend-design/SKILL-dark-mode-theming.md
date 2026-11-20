@@ -342,3 +342,4 @@ Los tokens del sistema ya están calibrados para cumplir estos ratios en ambos m
 - [ ] El theming de tenant sobreescribe SOLO los tokens de acción (`--color-action-primary`)
 - [ ] `localStorage` persiste la preferencia del usuario entre sesiones
 - [ ] Los tests E2E incluyen un caso con `data-theme="dark"` para verificar contraste
+- [ ] `index.html` incluye `<meta name="color-scheme" content="light dark">` y `:root` define `color-scheme: light` / `[data-theme="dark"] { color-scheme: dark; }` para que scrollbars, inputs y controles nativos del navegador sigan el tema sin FOUC (ver `IA_Skill/web-official/modern-web-guidance/guides/visual-design/dark-mode.md`)

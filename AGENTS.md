@@ -113,6 +113,7 @@ Librerías de UI y backend aprobadas: `IA_Skill/SKILL-approved-libraries.md`.
 | Política de autonomía y ambigüedades | `IA_Skill/SKILL-autonomy-policy.md` |
 | Zonas de riesgo y código legado | `IA_Skill/SKILL-risk-zone-policy.md` |
 | Skills oficiales de Microsoft (.NET) y su precedencia | `IA_Skill/dotnet-official/README.md` |
+| Skills oficiales de plataforma web (GoogleChrome) y su precedencia | `IA_Skill/web-official/README.md` |
 | Estado, arquitectura y convenciones del proyecto | `IA_Memoria/progreso.md` · `IA_Memoria/arquitectura.md` · `IA_Memoria/convenciones.md` |
 | Plantilla de `AGENTS.md` por proyecto | `IA_Skill/templates/AGENTS.project.md` |
 | Guía para humanos del template | `GUIDE.md` |

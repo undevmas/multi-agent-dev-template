@@ -226,9 +226,9 @@ En mobile (`max-width: 768px`): `.app-shell` colapsa a una columna, sidebar se v
   border-radius: var(--radius-sm);
   font: 600 12px var(--font-sans);
 }
-.badge-critical { color: var(--color-status-critical); background: color-mix(in srgb, var(--color-status-critical) 12%, white); }
-.badge-high     { color: var(--color-status-high);     background: color-mix(in srgb, var(--color-status-high) 12%, white); }
-.badge-medium   { color: var(--color-status-medium);   background: color-mix(in srgb, var(--color-status-medium) 12%, white); }
+.badge-critical { color: var(--color-status-critical); background: color-mix(in oklab, var(--color-status-critical) 12%, white); }
+.badge-high     { color: var(--color-status-high);     background: color-mix(in oklab, var(--color-status-high) 12%, white); }
+.badge-medium   { color: var(--color-status-medium);   background: color-mix(in oklab, var(--color-status-medium) 12%, white); }
 .badge-closed   { color: var(--color-status-closed);   background: var(--color-surface-sunken); }
 ```
 
@@ -254,8 +254,19 @@ select {
   background: var(--color-surface-card);
   color: var(--color-text-primary);
 }
-select:focus { outline: none; border-color: var(--color-action-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-action-primary) 20%, transparent); }
+select:focus-visible { outline: none; border-color: var(--color-action-primary); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-action-primary) 20%, transparent); }
 ```
+
+---
+
+## 5. Estándares modernos de la plataforma web (`IA_Skill/web-official/`)
+
+Para componentes nativos sin framework (modales, popovers, accordions, formularios, tablas adaptativas y rendimiento), complementar esta skill con las guías oficiales de `IA_Skill/web-official/modern-web-guidance/guides/` (ver `IA_Skill/web-official/README.md`):
+
+- **Modales y overlays nativos:** usar `<dialog>` con `.showModal()`, `closedby="any"` (o `"closerequest"`) y `overscroll-behavior: contain` tanto en `dialog:modal` como en `dialog::backdrop` (`overflow: hidden`) en lugar de bloquear `body` con `overflow: hidden` — ver `guides/ui-components/dialog.md`.
+- **Popovers y dropdowns sin JS:** usar `[popover]` con Invoker Commands (`commandfor` / `command="toggle-popover"`) o `popovertarget` y CSS Anchor Positioning (`position-area`, `position-try-fallbacks: flip-block, flip-inline`) — ver `guides/ui-atoms/viewport-aware-dropdowns.md` y `guides/ui-behaviors/declarative-dialog-popover-control.md`.
+- **Formularios y validación tardía:** estilizar errores con `:user-invalid` (nunca `:invalid` crudo, que marca campos vacíos antes de que el usuario interactúe) y usar `field-sizing: content` en inputs/textareas auto-ajustables — ver `guides/forms/forms.md` y `guides/forms/validate-input-after-interaction.md`.
+- **Color scheme y mezclas:** declarar `<meta name="color-scheme" content="light dark">` + `color-scheme: light dark` en `:root`, y usar `color-mix(in oklab, ...)` (nunca `in oklch` con neutros por el bug de matiz rosado en Chromium) — ver `guides/visual-design/dark-mode.md` y `guides/visual-design/color.md`.
 
 ---
 

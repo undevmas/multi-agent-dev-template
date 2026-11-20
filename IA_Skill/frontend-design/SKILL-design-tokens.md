@@ -292,3 +292,4 @@ Antes de dar por completado el sistema de tokens para una feature:
 - [ ] El espaciado usa la escala de 4px (`--space-*`) sin valores intermedios inventados
 - [ ] Los datos sensibles (tokens, secretos, códigos) usan `--color-surface-sensitive`
 - [ ] La integración con el framework (Angular SCSS / React Tailwind) consume los tokens CSS, no redefine valores
+- [ ] Si se generan tintes dinámicos con `color-mix()`, usar `color-mix(in oklab, ...)` y nunca `in oklch` al mezclar con neutros (evita el bug de desvío de matiz en Chromium; ver `IA_Skill/web-official/modern-web-guidance/guides/visual-design/color.md`)

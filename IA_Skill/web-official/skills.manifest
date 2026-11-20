@@ -1,0 +1,9 @@
+# Skills oficiales de la Plataforma Web (github.com/GoogleChrome/modern-web-guidance)
+# instaladas en esta plantilla.
+# Formato: <skill> — una por línea (bajo skills/<skill>/ en el repo origen).
+# Fuente única que leen sync-web-skills.ps1 / .sh.
+# Para agregar o quitar una skill: editar esta lista, correr el script y actualizar
+# el catálogo IA_Skill/README.md (sección "Frontend — plataforma web moderna").
+# Criterios de selección, precedencia y exclusiones (ej. chrome-extensions): ver README.md de esta carpeta.
+
+modern-web-guidance

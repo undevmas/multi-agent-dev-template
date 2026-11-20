@@ -142,6 +142,11 @@ $brokenRoutes = foreach ($routeFile in $routeFiles) {
             "${routeFile}: dotnet-official/$($match.Groups[1].Value)"
         }
     }
+    foreach ($match in [regex]::Matches($text, '`(?:web-official/)?(modern-web-guidance/(?:SKILL\.md|guides/[a-z0-9-]+/[a-z0-9-]+\.md))`')) {
+        if (-not (Test-Path -LiteralPath (Get-WorkspacePath ('IA_Skill/web-official/' + $match.Groups[1].Value)) -PathType Leaf)) {
+            "${routeFile}: web-official/$($match.Groups[1].Value)"
+        }
+    }
 }
 if ($brokenRoutes) {
     throw "Broken skill routes: $(@($brokenRoutes | Select-Object -Unique) -join ', ')"

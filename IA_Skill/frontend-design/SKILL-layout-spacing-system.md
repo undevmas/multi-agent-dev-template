@@ -354,4 +354,5 @@ export class DashboardLayoutComponent {
 - [ ] El sistema de densidad está implementado con `data-density` en el root del layout
 - [ ] El espaciado entre elementos usa `gap` en flex/grid y `padding` para contenido interno
 - [ ] Los `main` de contenido tienen `id="main-content"` y `tabindex="-1"` para skip links (a11y)
-- [ ] Ningún componente hijo asume el ancho disponible — todos son fluidos dentro de su contexto
+- [ ] Ningún componente hijo asume el ancho disponible — todos son fluidos dentro de su contexto (usar `@container` con `container-type: inline-size` y `subgrid` para alinear cards hermanas; ver `IA_Skill/web-official/modern-web-guidance/guides/css/css-layout.md`)
+- [ ] Las áreas con scroll interno (`app-shell__content`, drawers, modales) usan `overscroll-behavior: contain` y `scrollbar-gutter: stable` cuando el contenido cambia dinámicamente
