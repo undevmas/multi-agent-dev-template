@@ -58,8 +58,20 @@ if (-not (Test-Path ".env")) {
     Write-Ok ".env ya existe, no se sobreescribe"
 }
 
+$workspaceRootName = (Split-Path -Parent $PSScriptRoot | Split-Path -Leaf).ToLowerInvariant() -replace '[^a-z0-9_-]', '-'
+$defaultComposeName = "$workspaceRootName-tools"
+$envContent = Get-Content ".env" -Raw -Encoding UTF8
+if ($envContent -match '(?m)^\s*COMPOSE_PROJECT_NAME\s*=\s*$') {
+    $envContent = $envContent -replace '(?m)^\s*COMPOSE_PROJECT_NAME\s*=\s*$', "COMPOSE_PROJECT_NAME=$defaultComposeName"
+    Set-Content -Path ".env" -Value $envContent -Encoding UTF8 -NoNewline
+    Write-Ok "COMPOSE_PROJECT_NAME autocompletado en .env: $defaultComposeName"
+} elseif ($envContent -notmatch '(?m)^\s*COMPOSE_PROJECT_NAME\s*=') {
+    Add-Content -Path ".env" -Value "`nCOMPOSE_PROJECT_NAME=$defaultComposeName" -Encoding UTF8
+    Write-Ok "COMPOSE_PROJECT_NAME agregado en .env: $defaultComposeName"
+}
+
 $envVars = @{}
-Get-Content ".env" | ForEach-Object {
+Get-Content ".env" -Encoding UTF8 | ForEach-Object {
     if ($_ -match '^\s*([A-Z_]+)\s*=\s*(.*?)\s*$') {
         $envVars[$matches[1]] = $matches[2]
     }
@@ -68,6 +80,7 @@ $sonarPort  = if ($envVars.ContainsKey("SONARQUBE_HOST_PORT") -and $envVars["SON
 $trivyPort  = if ($envVars.ContainsKey("TRIVY_HOST_PORT") -and $envVars["TRIVY_HOST_PORT"]) { $envVars["TRIVY_HOST_PORT"] } else { "14954" }
 $zapPort    = if ($envVars.ContainsKey("ZAP_HOST_PORT") -and $envVars["ZAP_HOST_PORT"]) { $envVars["ZAP_HOST_PORT"] } else { "18080" }
 $sonarToken = if ($envVars.ContainsKey("SONAR_TOKEN")) { $envVars["SONAR_TOKEN"] } else { "" }
+$nvdApiKey  = if ($envVars.ContainsKey("DEPCHECK_NVD_API_KEY")) { $envVars["DEPCHECK_NVD_API_KEY"] } else { "" }
 
 Write-Host ""
 Write-Host "=== Paso 3/4 -- Levantando servicios ==="
@@ -137,8 +150,9 @@ Write-Host "Trivy:      http://localhost:$trivyPort"
 Write-Host "ZAP:        http://localhost:$zapPort  (el daemon ya esta listo, pero NINGUNA ruta responde bien desde fuera por el remapeo de puerto -- ver nota arriba. Para confirmar: 'docker compose ps' (STATUS healthy) o 'docker compose logs zap'. Para que otro contenedor de este compose llame su API, usa http://zap:8080, no localhost:$zapPort)"
 Write-Host ""
 Write-Host "Herramientas on-demand (no quedan corriendo, se invocan cuando se usan):"
-Write-Host "  docker compose --profile tools run --rm semgrep --config=auto /src"
-Write-Host "  docker compose --profile tools run --rm gitleaks detect --source /src --log-opts=`"--all`""
+Write-Host "  docker compose --profile tools run --rm semgrep --config=auto --json --output=/report/semgrep-report.json /src"
+Write-Host "  docker compose --profile tools run --rm gitleaks detect --source /src/Codigo/<proyecto> --log-opts=`"--all`" --redact --report-format json --report-path /report/gitleaks-report.json"
+Write-Host "  docker compose --profile tools run --rm dependency-check --scan /src --format JSON --out /report --project `"preprod-audit`""
 Write-Host "  docker compose --profile tools run --rm pa11y http://host.docker.internal:<puerto>"
 
 if ([string]::IsNullOrWhiteSpace($sonarToken)) {
@@ -146,6 +160,12 @@ if ([string]::IsNullOrWhiteSpace($sonarToken)) {
     Write-Warn2 "SONAR_TOKEN no esta configurado en Tools\.env"
     Write-Host "   Paso manual unico (no automatizable): entra a http://localhost:$sonarPort,"
     Write-Host "   cambia el password de admin, genera un token en My Account > Security, y pegalo en Tools\.env"
+}
+
+if ([string]::IsNullOrWhiteSpace($nvdApiKey)) {
+    Write-Host ""
+    Write-Warn2 "DEPCHECK_NVD_API_KEY no esta configurado en Tools\.env (opcional)"
+    Write-Host "   Sin API key de NVD, la primera corrida de Dependency-Check puede tardar 10-40 min."
 }
 
 Write-Host ""

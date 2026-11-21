@@ -47,6 +47,16 @@ else
   ok ".env ya existe, no se sobreescribe"
 fi
 
+WORKSPACE_ROOT_NAME="$(basename "$(cd .. && pwd)" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]/-/g')"
+DEFAULT_COMPOSE_NAME="${WORKSPACE_ROOT_NAME}-tools"
+if grep -qE '^\s*COMPOSE_PROJECT_NAME\s*=\s*$' .env; then
+  sed -i.bak "s|^\s*COMPOSE_PROJECT_NAME\s*=\s*$|COMPOSE_PROJECT_NAME=${DEFAULT_COMPOSE_NAME}|" .env && rm -f .env.bak
+  ok "COMPOSE_PROJECT_NAME autocompletado en .env: ${DEFAULT_COMPOSE_NAME}"
+elif ! grep -qE '^\s*COMPOSE_PROJECT_NAME\s*=' .env; then
+  printf '\nCOMPOSE_PROJECT_NAME=%s\n' "${DEFAULT_COMPOSE_NAME}" >> .env
+  ok "COMPOSE_PROJECT_NAME agregado en .env: ${DEFAULT_COMPOSE_NAME}"
+fi
+
 # shellcheck disable=SC1091
 source .env 2>/dev/null || true
 SONARQUBE_HOST_PORT="${SONARQUBE_HOST_PORT:-19000}"
@@ -103,8 +113,9 @@ echo "Trivy:      http://localhost:${TRIVY_HOST_PORT}"
 echo "ZAP:        http://localhost:${ZAP_HOST_PORT}  (el daemon ya está listo, pero NINGUNA ruta responde bien desde fuera por el remapeo de puerto -- ver nota arriba. Para confirmar: 'docker compose ps' (STATUS healthy) o 'docker compose logs zap'. Para que otro contenedor de este compose llame su API, usa http://zap:8080, no localhost:${ZAP_HOST_PORT})"
 echo ""
 echo "Herramientas on-demand (no quedan corriendo, se invocan cuando se usan):"
-echo "  docker compose --profile tools run --rm semgrep --config=auto /src"
-echo "  docker compose --profile tools run --rm gitleaks detect --source /src --log-opts=\"--all\""
+echo "  docker compose --profile tools run --rm semgrep --config=auto --json --output=/report/semgrep-report.json /src"
+echo "  docker compose --profile tools run --rm gitleaks detect --source /src/Codigo/<proyecto> --log-opts=\"--all\" --redact --report-format json --report-path /report/gitleaks-report.json"
+echo "  docker compose --profile tools run --rm dependency-check --scan /src --format JSON --out /report --project \"preprod-audit\""
 echo "  docker compose --profile tools run --rm pa11y http://host.docker.internal:<puerto>"
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then
@@ -112,6 +123,12 @@ if [[ -z "${SONAR_TOKEN:-}" ]]; then
   warn "SONAR_TOKEN no está configurado en Tools/.env"
   echo "   Paso manual único (no automatizable): entra a http://localhost:${SONARQUBE_HOST_PORT},"
   echo "   cambia el password de admin, genera un token en My Account > Security, y pégalo en Tools/.env"
+fi
+
+if [[ -z "${DEPCHECK_NVD_API_KEY:-}" ]]; then
+  echo ""
+  warn "DEPCHECK_NVD_API_KEY no está configurado en Tools/.env (opcional)"
+  echo "   Sin API key de NVD, la primera corrida de Dependency-Check puede tardar 10-40 min."
 fi
 
 echo ""

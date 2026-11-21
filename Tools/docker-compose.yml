@@ -9,7 +9,7 @@
 #
 # Servicios persistentes (se quedan arriba): sonarqube, sonarqube-db, trivy, zap
 # Servicios on-demand (un solo uso, requieren --profile tools): semgrep,
-# gitleaks, pa11y, sonar-scanner — no arrancan con `docker compose up`.
+# gitleaks, dependency-check, sonar-scanner, pa11y — no arrancan con `docker compose up`.
 
 services:
   # ============================================================
@@ -108,6 +108,7 @@ services:
     working_dir: /src
     volumes:
       - ../Codigo:/src
+      - ../Insumos:/report
     entrypoint: ["semgrep"]
 
   gitleaks:
@@ -116,6 +117,7 @@ services:
     working_dir: /src
     volumes:
       - ../:/src
+      - ../Insumos:/report
     entrypoint: ["gitleaks"]
 
   # ============================================================
@@ -137,13 +139,15 @@ services:
       - dependency_check_data:/usr/share/dependency-check/data
 
   pa11y:
-    image: pa11y/pa11y
+    image: mcr.microsoft.com/playwright:v1.52.0-noble
     profiles: ["tools"]
-    # pa11y necesita alcanzar la app corriendo en el host — usar
-    # http://host.docker.internal:<puerto> como URL objetivo, no localhost
+    # Usa la imagen oficial de Playwright (con Chromium y dependencias de SO preinstaladas)
+    # y ejecuta `npx --yes pa11y` porque `pa11y/pa11y` no existe en Docker Hub público.
+    # Alternativa recomendada sin Docker: Playwright + @axe-core/playwright o npx pa11y desde la raíz.
+    # La app objetivo debe estar corriendo en el host: usar http://host.docker.internal:<puerto>.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    entrypoint: ["pa11y"]
+    entrypoint: ["npx", "--yes", "pa11y"]
 
   sonar-scanner:
     image: sonarsource/sonar-scanner-cli

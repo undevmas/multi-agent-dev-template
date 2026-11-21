@@ -15,6 +15,17 @@ AGENTS.override.md
 .claude/settings.local.json
 .claude/*.lock
 
+# Credenciales locales de herramientas de auditoría
+Tools/.env
+
+# Reportes crudos de la auditoría pre-productiva en Insumos/ (hallazgos sensibles; no se versionan)
+/Insumos/*-report.json
+/Insumos/*-report.txt
+/Insumos/sonar-issues.json
+/Insumos/zap-alerts.json
+/Insumos/tracked-secret-files.txt
+/Insumos/coverage-output.txt
+
 # Entregables generados (documentos y evidencias de proyectos reales; no se versionan en la plantilla)
 /Entregables/*
 !/Entregables/README.md

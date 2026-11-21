@@ -35,7 +35,8 @@ por el script, corre el script al menos una vez primero (o define
 ```bash
 curl -s http://localhost:${SONARQUBE_HOST_PORT:-19000}/api/system/status
 curl -s http://localhost:${TRIVY_HOST_PORT:-14954}/healthz
-curl -s http://localhost:${ZAP_HOST_PORT:-18080}/
+# ZAP valida el Host header contra su puerto interno (8080); consultarlo siempre desde dentro del contenedor:
+docker compose exec -T zap curl -s http://localhost:8080/JSON/core/view/version/
 ```
 
 `SKILL-preprod-security-audit.md` hace este mismo chequeo antes de correr
@@ -78,20 +79,23 @@ comando falla con `path does not exist` — confirmado corriendo
 Dependency-Check real en este entorno. No-op en Linux/Mac/PowerShell.
 
 ```bash
-# Semgrep — SAST
-docker compose --profile tools run --rm semgrep --config=auto /src
+# Semgrep — SAST (escribe reporte en Insumos/semgrep-report.json)
+docker compose --profile tools run --rm semgrep --config=auto --json --output=/report/semgrep-report.json /src
 
-# Gitleaks — secretos, todo el historial
-docker compose --profile tools run --rm gitleaks detect --source /src --log-opts="--all"
+# Gitleaks — secretos en todo el historial del repo del proyecto (Codigo/ no es repo git; si el
+# proyecto no tiene .git, usar --no-git). Reporte sin secretos en claro en Insumos/gitleaks-report.json
+docker compose --profile tools run --rm gitleaks detect --source /src/Codigo/<proyecto> --log-opts="--all" --redact \
+  --report-format json --report-path /report/gitleaks-report.json
 
-# pa11y — accesibilidad real (la app objetivo debe estar corriendo en tu host)
+# pa11y — accesibilidad real sobre contenedor Playwright (la app objetivo debe estar corriendo en tu host)
 docker compose --profile tools run --rm pa11y http://host.docker.internal:4200
 
 # OWASP Dependency-Check — SCA, segundo motor como confirmación cruzada de
 # Trivy (ver SKILL-dependency-vulnerability-triage.md). El reporte queda en
-# Insumos/dependency-check-report.json.
+# Insumos/dependency-check-report.json. Si definiste DEPCHECK_NVD_API_KEY en .env, pásala con --nvdApiKey:
 docker compose --profile tools run --rm dependency-check \
-  --scan /src --format JSON --out /report --project "nombre-del-proyecto"
+  --scan /src --format JSON --out /report --project "nombre-del-proyecto" \
+  ${DEPCHECK_NVD_API_KEY:+--nvdApiKey "$DEPCHECK_NVD_API_KEY"}
 ```
 
 **Primer arranque de Dependency-Check — lento, no es una falla:** la primera
@@ -112,13 +116,22 @@ Usa `docker compose run` (no `docker run --network ...`) para que se
 conecte automáticamente a la red del proyecto correcto — el nombre de esa
 red varía según `COMPOSE_PROJECT_NAME` (ver sección de aislamiento arriba).
 
-## Atacar con ZAP (la app objetivo debe estar corriendo y ser alcanzable)
+## Escanear con ZAP (la app objetivo debe estar corriendo y ser alcanzable)
+
+Por política de seguridad del template (`SKILL-preprod-security-audit.md`), ZAP se ejecuta por defecto **únicamente en modo `spider` + `passive scan`** y consultando su puerto interno `8080` vía `docker compose exec -T zap`:
 
 ```bash
-curl "http://localhost:${ZAP_HOST_PORT:-18080}/JSON/spider/action/scan/?url=http://host.docker.internal:4200"
-# luego, tras esperar a que termine el spider:
-curl "http://localhost:${ZAP_HOST_PORT:-18080}/JSON/ascan/action/scan/?url=http://host.docker.internal:4200"
+# 1. Iniciar spider (el passive scan analiza en paralelo todo lo que el spider descubre)
+docker compose exec -T zap curl -s "http://localhost:8080/JSON/spider/action/scan/?url=http://host.docker.internal:4200"
+
+# 2. Consultar progreso del spider (esperar a {"status":"100"})
+docker compose exec -T zap curl -s "http://localhost:8080/JSON/spider/view/status/"
+
+# 3. Exportar alertas pasivas a Insumos/zap-alerts.json
+docker compose exec -T zap curl -s "http://localhost:8080/JSON/core/view/alerts/" > ../Insumos/zap-alerts.json
 ```
+
+> **Advertencia sobre Active Scan (`ascan`):** nunca ejecutar `/JSON/ascan/action/scan/` por defecto. Active Scan inyecta payloads reales (SQLi, XSS, fuzzing) que pueden mutar datos o disparar notificaciones reales; requiere autorización explícita sobre un entorno 100% aislado.
 
 ## Apagar todo
 

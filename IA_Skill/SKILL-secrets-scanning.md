@@ -17,7 +17,7 @@ historial, no solo el HEAD actual:
 
 ```bash
 # Escaneo completo del historial (no solo el commit actual)
-gitleaks detect --source . --report-format json --report-path gitleaks-report.json --log-opts="--all"
+gitleaks detect --source . --redact --report-format json --report-path gitleaks-report.json --log-opts="--all"
 
 # Verificación rápida de qué está trackeado que no debería
 git ls-files | grep -E '\.env$|\.env\.|\.pem$|\.key$|id_rsa|credentials\.json'
@@ -37,16 +37,15 @@ llegó a un remoto compartido (GitHub, Azure DevOps), ya se considera
 comprometida — el historial de git puede reescribirse, pero no hay
 garantía de que nadie la haya visto o clonado antes.
 
-Procedimiento, en orden:
+Procedimiento, en orden (alineado con `SKILL-risk-zone-policy.md` y `SKILL-autonomy-policy.md` — **AUTONOMY_POLICY_VERSION: 1**):
 
-1. **Rotar la credencial primero, antes que cualquier otra cosa.** Generar
-   una nueva API key/password/token y revocar la expuesta. Esto es zona
-   verde siempre (`SKILL-risk-zone-policy.md`) — nunca requiere ticket,
-   se hace de inmediato.
+1. **Contención local inmediata (🟢 Zona Verde) vs. Rotación externa (`S1`):**
+   - **Contención local (🟢 Zona Verde):** retirar de inmediato la credencial expuesta del código, logs o artefactos locales, sacarla del tracking (`git rm --cached`) y asegurar su patrón en `.gitignore` para evitar seguir propagándola.
+   - **Revocación / rotación en el proveedor externo (`S1`):** generar una nueva API key/password/token y revocar la expuesta en el proveedor externo o entorno productivo es la prioridad #1 del plan de remediación, pero por tratarse de una acción sobre credenciales reales (`S1`), **el agente no debe ejecutarla por su cuenta sin autorización humana separada, actual y específica** (o debe instruir al operador humano para que la ejecute de inmediato como paso 1).
 2. Confirmar en los logs del proveedor (Azure DevOps, AWS, etc.) si hubo
    uso no autorizado de la credencial mientras estuvo expuesta.
 3. Limpiar el historial de git (`git filter-repo` o BFG Repo-Cleaner) —
-   esto es limpieza, no reemplaza el paso 1.
+   esto es limpieza (y si implica reescribir un remoto compartido, requiere coordinación/confirmación explícita con el equipo), no reemplaza la rotación del paso 1.
 4. Documentar el incidente: qué credencial, cuánto tiempo estuvo expuesta,
    si se detectó uso indebido. Esto no es opcional aunque la rotación
    ya haya cerrado el riesgo activo.
