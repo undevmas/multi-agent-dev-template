@@ -51,6 +51,28 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
 
+    /* Evidencias para entregables (memoria técnica, manual de usuario): capturas y diagramas a PNG.
+       No es parte de los E2E: correr con `npm run evidencias` y EVIDENCIAS_DIR=Entregables/<Proyecto>/evidencias. */
+    {
+      name: 'evidencias',
+      testDir: './tests/evidencias',
+      testMatch: /.*\.capture\.ts/,
+      fullyParallel: false,
+      retries: 0,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 2,
+        colorScheme: 'light',
+        locale: process.env.EVIDENCIAS_LOCALE ?? 'es-MX',
+        timezoneId: process.env.EVIDENCIAS_TZ ?? 'America/Mexico_City',
+        acceptDownloads: true,
+        trace: 'off',
+        video: 'off',
+        screenshot: 'off',
+      },
+    },
+
     /* Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',

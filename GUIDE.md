@@ -412,7 +412,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-59 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/` y 210 guías oficiales de la plataforma web moderna (GoogleChrome) en `IA_Skill/web-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
+63 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/` archify para diagramas en `IA_Skill/archify-official/`, y 210 guías oficiales de la plataforma web moderna (GoogleChrome) en `IA_Skill/web-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
@@ -426,10 +426,37 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 | **.NET — oficiales de Microsoft** | `dotnet-official/` — 30 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, benchmarks, IA/ML, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
 | **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
-| **Texto y docs** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` |
+| **Texto y docs / entregables** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` · `SKILL-technical-memory.md` · `SKILL-user-manual.md` · `SKILL-visual-evidence.md` (diagramas archify + capturas Playwright) · `document-artifacts/SKILL.md` |
 | **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` · `SKILL-execution-principles.md` (principios de ejecución basados en Karpathy; resumen siempre activo en `AGENTS.md`) |
 
 Para invocar cualquier skill con Copilot: `#file:IA_Skill/SKILL-[nombre].md` antes del prompt.
+
+---
+
+## Entregables: memoria técnica y manual de usuario
+
+El agente escribe el contenido en Markdown y la plantilla aplica el formato institucional; los
+diagramas salen del código (archify) y las capturas de la app real (Playwright).
+
+```powershell
+# Una vez por máquina
+npm install; npx playwright install chromium; npm install --prefix Tools/entregables
+node Tools/entregables/archify.mjs doctor
+
+# Por entregable (el agente lo hace siguiendo la skill)
+$env:EVIDENCIAS_DIR = 'Entregables/<Proyecto>/evidencias'; $env:EVIDENCIAS_REPO = 'Codigo/<proyecto>'
+npm run evidencias                                    # diagramas → PNG y capturas reales
+node Tools/entregables/build-docx.mjs Entregables/<Proyecto>/memoria-tecnica/memoria-tecnica.md
+```
+
+| Pide al agente | Skill | Resultado |
+|---|---|---|
+| "Genera la memoria técnica de <Proyecto>" | `SKILL-technical-memory.md` | `Memoria_Tecnica_<Sistema>_v1.0.docx` con diagramas de arquitectura, ERD, secuencias y anexo de trazabilidad |
+| "Genera el manual de usuario de <Proyecto>" | `SKILL-user-manual.md` | `Manual_de_Usuario_<Sistema>_v1.0.docx` con procedimientos paso a paso y capturas reales |
+
+Al abrir el `.docx`, Word pide actualizar campos: aceptar para completar índice e índice de
+figuras. Las capturas se toman solo contra local/QA con datos de prueba y datos sensibles
+enmascarados. `Entregables/` no se versiona (contiene documentos de sistemas reales).
 
 ---
 

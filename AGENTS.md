@@ -40,6 +40,7 @@ No sugerir, instalar ni implementar nada fuera de esta tabla sin aprobación exp
 | Documentación API | `Microsoft.AspNetCore.OpenApi` + Scalar (Redoc / Swagger UI opcionales) |
 | IA / ML (.NET) | Microsoft.Extensions.AI (base) · Agent Framework · ML.NET · ONNX Runtime · OllamaSharp · VectorData · Copilot SDK — proveedor del modelo aprobado por proyecto |
 | Benchmarks | BenchmarkDotNet (solo proyectos `*.Benchmarks`) |
+| Entregables | archify (diagramas desde el código) · Playwright (capturas) · `docx` vía `Tools/entregables/build-docx.mjs` |
 
 Versiones, perfiles de auth y de datos, y reglas por tecnología: `IA_Skill/SKILL-stack-policy.md` — leer antes de crear
 un proyecto, fijar una versión, implementar auth/IA/OpenAPI/E2E/Aspire o agregar una dependencia.
@@ -116,4 +117,5 @@ Librerías de UI y backend aprobadas: `IA_Skill/SKILL-approved-libraries.md`.
 | Skills oficiales de plataforma web (GoogleChrome) y su precedencia | `IA_Skill/web-official/README.md` |
 | Estado, arquitectura y convenciones del proyecto | `IA_Memoria/progreso.md` · `IA_Memoria/arquitectura.md` · `IA_Memoria/convenciones.md` |
 | Plantilla de `AGENTS.md` por proyecto | `IA_Skill/templates/AGENTS.project.md` |
+| Memoria técnica, manual de usuario, diagramas y capturas | `IA_Skill/SKILL-technical-memory.md` · `IA_Skill/SKILL-user-manual.md` · `IA_Skill/SKILL-visual-evidence.md` |
 | Guía para humanos del template | `GUIDE.md` |

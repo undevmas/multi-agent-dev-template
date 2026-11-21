@@ -47,7 +47,7 @@ src/modules/[nombre-feature]/
   [feature].controller.ts      → endpoints, decoradores, guards
   [feature].service.ts         → lógica implementada
   dto/                         → DTOs con validaciones
-  entities/                    → entidad TypeORM
+  entities/ · schema/          → modelo del ORM del proyecto (Prisma / Drizzle / Kysely; TypeORM solo en proyectos existentes)
 ```
 
 #### Frontend Angular
@@ -81,7 +81,7 @@ Cada sección debe reflejar el código real, no el plan original.
 ```markdown
 # Feature: [Nombre del Feature]
 
-**Estado:** ✅ Completado
+**Estado:** En revisión (`in-review`) — el dev lo cambia a ✅ Completado al aprobar
 **Fecha:** [fecha actual]
 **Stack:** [Angular | .NET | NestJS | BD] — solo los que aplican
 
@@ -138,7 +138,7 @@ o cosa que el próximo dev debe saber antes de tocar este módulo.]
 # API Endpoints — [Nombre del Feature]
 
 **Base URL:** `/api/v1/[recurso]`
-**Autenticación:** JWT Bearer Token requerido en todos los endpoints
+**Autenticación:** según el perfil registrado en `IA_Memoria/arquitectura.md` (A: OIDC + BFF / B: ASP.NET Core Identity) — requerida en todos los endpoints salvo los anónimos explícitos
 **Roles requeridos:** [listar si aplica]
 
 ---
@@ -211,7 +211,7 @@ curl -X [VERBO] https://api.dominio.com/api/v1/[ruta] \
 # Base de Datos — [Nombre del Feature]
 
 **Motor:** SQL Server / PostgreSQL (según entorno)
-**ORM:** Entity Framework Core (.NET) / TypeORM (NestJS)
+**ORM:** según el perfil de acceso a datos (EF Core + Dapper en .NET; Prisma / Drizzle / Kysely en NestJS)
 
 ---
 
@@ -251,13 +251,13 @@ curl -X [VERBO] https://api.dominio.com/api/v1/[ruta] \
 |---|---|---|
 | [NombreMigracion] | [fecha] | [qué cambió en la BD] |
 
-**Comando para revertir si es necesario:**
+**Cómo revertir si es necesario** (detalle por ORM en `IA_Skill/SKILL-database-migrations.md`; nunca borrar una migración ya aplicada):
 ```bash
-# .NET EF Core
-dotnet ef migrations remove
+# .NET EF Core — volver a la migración anterior aplicada
+dotnet ef database update [MigracionAnterior]
 
-# TypeORM
-npx typeorm migration:revert
+# Prisma / Drizzle — no tienen down nativo: aplicar el script de rollback versionado
+# database/scripts/rollback/[NombreMigracion].sql
 ```
 
 ---
@@ -283,7 +283,7 @@ ORDER BY CreatedAt DESC;
 
 **Ruta base:** `/[ruta-en-la-app]`
 **Módulo:** `[nombre-feature].module.ts` (o standalone routes)
-**Guard requerido:** AuthGuard + RoleGuard (roles: [lista])
+**Guard requerido:** guards de autenticación y de rol del proyecto (`canActivate` funcionales) — roles: [lista]
 
 ---
 
@@ -366,14 +366,20 @@ export interface Create[Nombre]Dto {
 Después de generar los documentos, actualizar automáticamente:
 
 #### IA_Memoria/progreso.md
-- Mover la feature de "En progreso" a "Completado"
-- Agregar fecha de completado
+- Mover la feature de "En progreso" a "En revisión (`in-review`)" — solo el dev la pasa a "Completado"
+- Agregar la fecha de entrega a revisión
 - Actualizar "Próximos pasos" si corresponde
 
 #### IA_Memoria/arquitectura.md
 - Agregar nuevos endpoints a la tabla de la capa correspondiente
 - Agregar nuevas tablas a la sección de base de datos
 - Actualizar el diagrama de flujo si el módulo agrega una nueva pieza
+
+#### Diagrama del flujo (opcional, recomendado si la feature cruza frontend → API → BD)
+Generar con archify un `sequence` del flujo principal siguiendo `IA_Skill/SKILL-visual-evidence.md`
+(evidencia con `--repo-root Codigo/<proyecto>`), exportarlo a PNG y guardar solo el PNG en
+`Codigo/docs/features/[nombre-feature]/flujo.png` (el `.html` interactivo pesa ~1 MB; se queda en
+`Entregables/`). Referenciarlo desde el README del feature: `![Flujo principal](flujo.png)`.
 
 ---
 

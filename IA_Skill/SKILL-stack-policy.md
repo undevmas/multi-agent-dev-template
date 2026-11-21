@@ -22,6 +22,7 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
 | **Documentación API** | OpenAPI nativo (`Microsoft.AspNetCore.OpenApi`) + Scalar (`Scalar.AspNetCore`) como UI por defecto · Redoc / Swagger UI opcionales — en NestJS: `@nestjs/swagger` genera el documento OpenAPI y Scalar es la UI |
 | **IA / ML (.NET)** | Microsoft.Extensions.AI (`IChatClient`, base obligatoria) · Microsoft Agent Framework (`Microsoft.Agents.AI`, agentes) · ML.NET (ML clásico) · ONNX Runtime (inferencia) · OllamaSharp (LLM local) · Microsoft.Extensions.VectorData (RAG sobre la BD del stack) · GitHub Copilot SDK (extensiones de Copilot) — el **proveedor** del modelo se aprueba por proyecto (ver "IA / ML (.NET)" en Reglas de codificación) |
 | **Benchmarking (.NET)** | BenchmarkDotNet — solo en proyectos de benchmark separados, nunca referenciado por código productivo |
+| **Entregables (documentación)** | archify (`IA_Skill/archify-official`, vía `node Tools/entregables/archify.mjs`, sin red) para diagramas desde el código · Playwright (proyecto `evidencias`) para capturas y exportar diagramas a PNG · `docx` (npm, fijado en `Tools/entregables`) para generar `.docx` institucionales desde Markdown — procedimiento en `IA_Skill/SKILL-visual-evidence.md` |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
 > `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python

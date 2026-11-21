@@ -138,9 +138,11 @@ Copia curada de [dotnet/skills](https://github.com/dotnet/skills) en `IA_Skill/d
 |---|---|
 | Escribir texto visible al usuario final (mensajes UI, emails, empty states) | IA_Skill/SKILL-humanizer.md |
 | Documentar una feature terminada | IA_Skill/SKILL-docs-feature.md |
-| Generar una memoria técnica formal (.docx) para cliente de gobierno/externo | IA_Skill/SKILL-technical-memory.md |
+| Generar una memoria técnica formal (.docx) para cliente de gobierno/externo, con diagramas del código | IA_Skill/SKILL-technical-memory.md |
+| Generar un manual de usuario (.docx) con capturas reales de pantallas | IA_Skill/SKILL-user-manual.md |
+| Generar diagramas desde el código (archify) o capturas reales (Playwright) para un entregable | IA_Skill/SKILL-visual-evidence.md — archify copiado en `IA_Skill/archify-official/` (reglas en su README.md) |
 | Generar especificaciones técnicas formales (.docx) para auditorías | IA_Skill/technical-audit-spec-generic.md |
-| Crear, editar o inspeccionar entregables en Word o PDF | IA_Skill/document-artifacts/SKILL.md |
+| Crear, editar o inspeccionar entregables en Word o PDF (documentos nuevos: Markdown + `Tools/entregables/build-docx.mjs`) | IA_Skill/document-artifacts/SKILL.md |
 
 ### Especificaciones
 

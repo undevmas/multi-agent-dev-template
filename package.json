@@ -5,10 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test:e2e": "playwright test --project=chromium",
-    "test:e2e:all": "playwright test",
+    "test:e2e:all": "playwright test --project=chromium --project=firefox --project=webkit",
     "test:e2e:ui": "playwright test --project=chromium --ui",
     "test:e2e:debug": "playwright test --project=chromium --debug",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "evidencias": "playwright test --project=evidencias",
+    "archify": "node Tools/entregables/archify.mjs",
+    "entregable:docx": "node Tools/entregables/build-docx.mjs"
   },
   "keywords": [],
   "author": "",

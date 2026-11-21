@@ -1,0 +1,6 @@
+﻿repo: https://github.com/tt-a1i/archify
+commit: 44781293f38728baf04dbad33ce1a0cef8c39cca
+fecha_commit: 2026-11-17T20:02:10+08:00
+version: 3.2.0
+sincronizado: 2026-11-21T00:43:26Z
+excluido: archify/examples/*.html (renderizados de ejemplo)

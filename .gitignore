@@ -14,3 +14,10 @@ AGENTS.override.md
 **/AGENTS.override.md
 .claude/settings.local.json
 .claude/*.lock
+
+# Entregables generados (documentos y evidencias de proyectos reales; no se versionan en la plantilla)
+/Entregables/*
+!/Entregables/README.md
+
+# Salida por defecto de archify fuera del flujo de la plantilla
+.archify/

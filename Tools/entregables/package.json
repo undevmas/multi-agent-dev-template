@@ -1,0 +1,17 @@
+{
+  "name": "entregables",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Herramientas de la plantilla para entregables: Markdown -> .docx institucional y archify sin red.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "docx": "node build-docx.mjs",
+    "archify": "node archify.mjs"
+  },
+  "dependencies": {
+    "docx": "9.16.0"
+  }
+}
