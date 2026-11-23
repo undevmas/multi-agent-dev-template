@@ -87,7 +87,8 @@ docker compose --profile tools run --rm semgrep --config=auto --json --output=/r
 docker compose --profile tools run --rm gitleaks detect --source /src/Codigo/<proyecto> --log-opts="--all" --redact \
   --report-format json --report-path /report/gitleaks-report.json
 
-# pa11y — accesibilidad real sobre contenedor Playwright (la app objetivo debe estar corriendo en tu host)
+# pa11y — accesibilidad real sobre contenedor Playwright (la app objetivo debe estar corriendo en tu host).
+# Exit 0 = sin hallazgos · 2 = hay hallazgos · otro = falló la herramienta. Config: Tools/pa11y.json
 docker compose --profile tools run --rm pa11y http://host.docker.internal:4200
 
 # OWASP Dependency-Check — SCA, segundo motor como confirmación cruzada de

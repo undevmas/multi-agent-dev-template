@@ -41,6 +41,7 @@ No sugerir, instalar ni implementar nada fuera de esta tabla sin aprobación exp
 | IA / ML (.NET) | Microsoft.Extensions.AI (base) · Agent Framework · ML.NET · ONNX Runtime · OllamaSharp · VectorData · Copilot SDK — proveedor del modelo aprobado por proyecto |
 | Benchmarks | BenchmarkDotNet (solo proyectos `*.Benchmarks`) |
 | Entregables | archify (diagramas desde el código) · Playwright (capturas) · `docx` vía `Tools/entregables/build-docx.mjs` |
+| Seguridad (auditoría) | SonarQube · Semgrep · Trivy · OWASP Dependency-Check · Gitleaks · ZAP (solo spider + pasivo) · pa11y — en Docker vía `Tools/docker-compose.yml` |
 
 Versiones, perfiles de auth y de datos, y reglas por tecnología: `IA_Skill/SKILL-stack-policy.md` — leer antes de crear
 un proyecto, fijar una versión, implementar auth/IA/OpenAPI/E2E/Aspire o agregar una dependencia.

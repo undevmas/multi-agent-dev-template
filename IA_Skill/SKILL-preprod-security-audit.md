@@ -282,9 +282,15 @@ docker compose exec -T zap curl -s "http://localhost:8080/JSON/core/view/alerts/
   > ../Insumos/zap-alerts.json || echo "No se pudieron leer las alertas de ZAP"
 
 # --- Accesibilidad real (requiere la app corriendo en el host) ---
-# Corre sobre imagen oficial de Playwright configurada en Tools/docker-compose.yml
-docker compose --profile tools run --rm pa11y "${TARGET_URL}" \
-  > ../Insumos/pa11y-report.txt 2>&1 || echo "pa11y reportó hallazgos de accesibilidad o la app no respondió en ${TARGET_URL}"
+# Corre sobre imagen oficial de Playwright configurada en Tools/docker-compose.yml.
+# Distinguir el código de salida: solo 2 significa hallazgos; cualquier otro distinto de 0
+# es una falla de la herramienta y la categoría queda "no evaluado", nunca "con hallazgos".
+docker compose --profile tools run --rm pa11y "${TARGET_URL}" > ../Insumos/pa11y-report.txt 2>&1
+case $? in
+  0) echo "pa11y: sin hallazgos en ${TARGET_URL}" ;;
+  2) echo "pa11y: hallazgos de accesibilidad (ver Insumos/pa11y-report.txt)" ;;
+  *) echo "pa11y FALLÓ (no evaluado): revisar Insumos/pa11y-report.txt y que la app responda en ${TARGET_URL}" ;;
+esac
 
 cd ..
 

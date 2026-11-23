@@ -425,7 +425,7 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 | **Backend .NET** | `SKILL-dotnet-best-practices.md` · `SKILL-dotnet-design-pattern-review.md` · `SKILL-dotnet-test-frameworks.md` · `SKILL-dotnet-upgrade.md` |
 | **.NET — oficiales de Microsoft** | `dotnet-official/` — 30 skills curadas de [dotnet/skills](https://github.com/dotnet/skills) (Web API, EF Core, upgrade 8→10, MSBuild, rendimiento, benchmarks, IA/ML, calidad de tests). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `dotnet-official/sync-dotnet-skills.ps1` / `.sh` (ver su `README.md`) |
 | **Backend NestJS** | `SKILL-nestjs-best-practices.md` · `SKILL-nestjs-patterns.md` · `SKILL-nestjs-clean-typescript.md` · `SKILL-nestjs-test-frameworks.md` |
-| **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` |
+| **Seguridad** | `SKILL-auth-patterns.md` (perfiles de autenticación A/B) · `SKILL-security-angular.md` · `SKILL-security-dotnet.md` · `SKILL-security-nestjs.md` · `SKILL-security-owasp-checklist.md` · `SKILL-agent-owasp-compliance.md` · `SKILL-preprod-security-audit.md` (auditoría pre-productiva con los escáneres de `Tools/`) · `SKILL-secrets-scanning.md` · `SKILL-dependency-vulnerability-triage.md` |
 | **Texto y docs / entregables** | `SKILL-humanizer.md` · `SKILL-docs-feature.md` · `SKILL-technical-memory.md` · `SKILL-user-manual.md` · `SKILL-visual-evidence.md` (diagramas archify + capturas Playwright) · `document-artifacts/SKILL.md` |
 | **Soporte del agente** | `SKILL-web-search.md` · `SKILL-caveman.md` · `SKILL-pr-review-fixes.md` · `SKILL-execution-principles.md` (principios de ejecución basados en Karpathy; resumen siempre activo en `AGENTS.md`) |
 
@@ -457,6 +457,30 @@ node Tools/entregables/build-docx.mjs Entregables/<Proyecto>/memoria-tecnica/mem
 Al abrir el `.docx`, Word pide actualizar campos: aceptar para completar índice e índice de
 figuras. Las capturas se toman solo contra local/QA con datos de prueba y datos sensibles
 enmascarados. `Entregables/` no se versiona (contiene documentos de sistemas reales).
+
+---
+
+## Auditoría pre-productiva de seguridad
+
+El agente corre escáneres reales en contenedores de `Tools/` (SonarQube, Semgrep, Trivy,
+Dependency-Check, Gitleaks, ZAP y pa11y) sobre un proyecto de `Codigo/` y consolida los
+hallazgos; no se limita a leer el código.
+
+```powershell
+# Una vez por máquina (Docker Desktop en modo contenedores Linux)
+.\Tools\setup-tools.ps1      # Linux/macOS: ./Tools/setup-tools.sh — crea Tools/.env y levanta SonarQube, Trivy y ZAP
+# Paso manual único: entrar a SonarQube (URL que imprime el script), cambiar el password de admin,
+# generar un token en My Account > Security y pegarlo en Tools/.env como SONAR_TOKEN
+```
+
+| Pide al agente | Skill | Resultado |
+|---|---|---|
+| "Actúa como agente analista pre-productivo. Proyecto: <proyecto>. Corre el análisis pre-prod completo" | `SKILL-preprod-security-audit.md` | `hallazgos-preprod.md` y `hallazgos-preprod.html` en `Entregables/<Proyecto>/auditoria-preprod/<YYYYMMDD_HHmm>/` |
+
+Para ZAP y pa11y la app debe estar corriendo en tu máquina (el agente verifica el puerto).
+ZAP solo hace spider + escaneo pasivo; el Active Scan requiere autorización explícita. Los
+reportes crudos quedan en `Insumos/` y no se versionan (Gitleaks los genera con `--redact`).
+Puertos, comandos sueltos y apagado: `Tools/README.md`.
 
 ---
 

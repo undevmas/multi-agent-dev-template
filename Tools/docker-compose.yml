@@ -142,12 +142,21 @@ services:
     image: mcr.microsoft.com/playwright:v1.52.0-noble
     profiles: ["tools"]
     # Usa la imagen oficial de Playwright (con Chromium y dependencias de SO preinstaladas)
-    # y ejecuta `npx --yes pa11y` porque `pa11y/pa11y` no existe en Docker Hub público.
+    # y ejecuta pa11y con npx porque `pa11y/pa11y` no existe en Docker Hub público.
+    # pa11y (puppeteer) no trae navegador: usa el Chromium de la imagen. La ruta chromium-<rev>
+    # depende de la etiqueta de la imagen; si se cambia la etiqueta, actualizarla
+    # (`docker run --rm --entrypoint ls <imagen> /ms-playwright`).
+    # pa11y.json pasa --no-sandbox: el contenedor corre como root y Chromium no arranca sin él.
+    # Salida: 0 = sin hallazgos · 2 = hay hallazgos · otro = falló la herramienta (no evaluado).
     # Alternativa recomendada sin Docker: Playwright + @axe-core/playwright o npx pa11y desde la raíz.
     # La app objetivo debe estar corriendo en el host: usar http://host.docker.internal:<puerto>.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    entrypoint: ["npx", "--yes", "pa11y"]
+    environment:
+      PUPPETEER_EXECUTABLE_PATH: /ms-playwright/chromium-1169/chrome-linux/chrome
+    volumes:
+      - ./pa11y.json:/pa11y.json:ro
+    entrypoint: ["npx", "--yes", "pa11y@10.0.0", "--config", "/pa11y.json"]
 
   sonar-scanner:
     image: sonarsource/sonar-scanner-cli
