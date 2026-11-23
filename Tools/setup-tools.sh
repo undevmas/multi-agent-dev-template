@@ -113,9 +113,9 @@ echo "Trivy:      http://localhost:${TRIVY_HOST_PORT}"
 echo "ZAP:        http://localhost:${ZAP_HOST_PORT}  (el daemon ya está listo, pero NINGUNA ruta responde bien desde fuera por el remapeo de puerto -- ver nota arriba. Para confirmar: 'docker compose ps' (STATUS healthy) o 'docker compose logs zap'. Para que otro contenedor de este compose llame su API, usa http://zap:8080, no localhost:${ZAP_HOST_PORT})"
 echo ""
 echo "Herramientas on-demand (no quedan corriendo, se invocan cuando se usan):"
-echo "  docker compose --profile tools run --rm semgrep --config=auto --json --output=/report/semgrep-report.json /src"
+echo "  docker compose --profile tools run --rm -w /src/<proyecto> semgrep --config p/security-audit --config p/owasp-top-ten --metrics=off --json --output=/report/semgrep-report.json ."
 echo "  docker compose --profile tools run --rm gitleaks detect --source /src/Codigo/<proyecto> --log-opts=\"--all\" --redact --report-format json --report-path /report/gitleaks-report.json"
-echo "  docker compose --profile tools run --rm dependency-check --scan /src --format JSON --out /report --project \"preprod-audit\""
+echo "  docker compose --profile tools run --rm dependency-check --scan /src/<proyecto> --format JSON --out /report --project \"<proyecto>\""
 echo "  docker compose --profile tools run --rm pa11y http://host.docker.internal:<puerto>"
 
 if [[ -z "${SONAR_TOKEN:-}" ]]; then

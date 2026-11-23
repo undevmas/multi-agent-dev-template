@@ -475,7 +475,7 @@ hallazgos; no se limita a leer el código.
 
 | Pide al agente | Skill | Resultado |
 |---|---|---|
-| "Actúa como agente analista pre-productivo. Proyecto: <proyecto>. Corre el análisis pre-prod completo" | `SKILL-preprod-security-audit.md` | `hallazgos-preprod.md` y `hallazgos-preprod.html` en `Entregables/<Proyecto>/auditoria-preprod/<YYYYMMDD_HHmm>/` |
+| "Actúa como agente analista pre-productivo. Proyecto: <proyecto>. Corre el análisis pre-prod completo" | `SKILL-preprod-security-audit.md` | Veredicto (Apto / No apto / Indeterminado) con `hallazgos-preprod.md`, `hallazgos-preprod.html` y el inventario de componentes `sbom.cdx.json` en `Entregables/<Proyecto>/auditoria-preprod/<YYYYMMDD_HHmm>/` |
 
 Para ZAP y pa11y la app debe estar corriendo en tu máquina (el agente verifica el puerto).
 ZAP solo hace spider + escaneo pasivo; el Active Scan requiere autorización explícita. Los

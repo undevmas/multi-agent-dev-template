@@ -79,8 +79,11 @@ comando falla con `path does not exist` — confirmado corriendo
 Dependency-Check real en este entorno. No-op en Linux/Mac/PowerShell.
 
 ```bash
-# Semgrep — SAST (escribe reporte en Insumos/semgrep-report.json)
-docker compose --profile tools run --rm semgrep --config=auto --json --output=/report/semgrep-report.json /src
+# Semgrep — SAST con reglas explícitas y sin telemetría (--config=auto exige enviar métricas a
+# semgrep.dev). Corre desde la raíz del proyecto; reporte en Insumos/semgrep-report.json
+docker compose --profile tools run --rm -w /src/<proyecto> semgrep \
+  --config p/security-audit --config p/owasp-top-ten --metrics=off \
+  --json --output=/report/semgrep-report.json .
 
 # Gitleaks — secretos en todo el historial del repo del proyecto (Codigo/ no es repo git; si el
 # proyecto no tiene .git, usar --no-git). Reporte sin secretos en claro en Insumos/gitleaks-report.json
@@ -95,7 +98,7 @@ docker compose --profile tools run --rm pa11y http://host.docker.internal:4200
 # Trivy (ver SKILL-dependency-vulnerability-triage.md). El reporte queda en
 # Insumos/dependency-check-report.json. Si definiste DEPCHECK_NVD_API_KEY en .env, pásala con --nvdApiKey:
 docker compose --profile tools run --rm dependency-check \
-  --scan /src --format JSON --out /report --project "nombre-del-proyecto" \
+  --scan /src/<proyecto> --format JSON --out /report --project "<proyecto>" \
   ${DEPCHECK_NVD_API_KEY:+--nvdApiKey "$DEPCHECK_NVD_API_KEY"}
 ```
 
@@ -110,7 +113,14 @@ la base completa — solo la actualización incremental.
 ## Escanear con Trivy (ya corriendo como servidor)
 
 ```bash
-docker compose run --rm -v "$(pwd)/../Codigo:/src" trivy fs --server http://trivy:4954 /src
+# Vulnerabilidades + licencias del proyecto (requiere archivos de bloqueo: sin package-lock.json /
+# packages.lock.json Trivy no ve dependencias y reporta 0)
+docker compose run --rm -v "$(pwd)/../Codigo:/src" trivy fs --server http://trivy:4954 --scanners vuln,license /src/<proyecto>
+
+# SBOM CycloneDX y revisión de Dockerfile (comandos completos con salida a Insumos/:
+# IA_Skill/SKILL-preprod-security-audit.md, Paso 1d)
+docker compose run --rm -v "$(pwd)/../Codigo:/src" trivy fs --server http://trivy:4954 --format cyclonedx /src/<proyecto>
+docker compose run --rm -v "$(pwd)/../Codigo:/src" trivy config /src/<proyecto>
 ```
 
 Usa `docker compose run` (no `docker run --network ...`) para que se

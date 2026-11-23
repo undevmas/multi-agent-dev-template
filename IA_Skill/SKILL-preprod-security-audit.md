@@ -77,10 +77,10 @@ pasó por el mismo nivel de cobertura automatizada, y no es cierto.
 
 | # | Categoría | Skill / acción |
 |---|---|---|
-| 1 | Dependencias (SCA) | Trivy + OWASP Dependency-Check (`Tools/`, confirmación cruzada — un CVE reportado por cualquiera de los dos entra al triage; pasa `--nvdApiKey` si `DEPCHECK_NVD_API_KEY` está definido en `Tools/.env`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`) como respaldo si Docker no está disponible, luego `SKILL-dependency-vulnerability-triage.md` |
-| 2 | SAST / código propio | Semgrep + SonarQube (`Tools/`, correr `sonar-scanner` de verdad — no asumir que "revisar el código" reemplaza el análisis) para el hallazgo bruto, leído vía `/api/issues/search`. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
+| 1 | Dependencias (SCA) | Trivy + OWASP Dependency-Check (`Tools/`, confirmación cruzada — un CVE reportado por cualquiera de los dos entra al triage; pasa `--nvdApiKey` si `DEPCHECK_NVD_API_KEY` está definido en `Tools/.env`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`) como respaldo si Docker no está disponible, luego `SKILL-dependency-vulnerability-triage.md` (prioridad CISA KEV incluida). **Trivy solo ve dependencias con archivo de bloqueo** (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `packages.lock.json`): sin él reporta 0 (falso limpio). Los manifiestos sin lockfile se listan; en .NET se cubren con `dotnet list package --vulnerable --include-transitive` y en Node quedan "no evaluado" + hallazgo 🟡 (builds no reproducibles). Además: licencias (`--scanners vuln,license`, política en `SKILL-stack-policy.md`) y SBOM CycloneDX como anexo del entregable |
+| 2 | SAST / código propio | Semgrep (reglas `p/security-audit` + `p/owasp-top-ten` con `--metrics=off`; nunca `--config=auto`, que exige enviar telemetría a semgrep.dev) + SonarQube (`Tools/`, correr `sonar-scanner` de verdad — no asumir que "revisar el código" reemplaza el análisis) para el hallazgo bruto, leído vía `/api/issues/search`. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
 | 3 | Secretos | Gitleaks (`Tools/`, escaneando el repo del proyecto `--source /src/Codigo/<proyecto>` con `--log-opts="--all"` y `--redact`) + verificación de archivos sensibles trackeados (`git ls-files`), triage con `SKILL-secrets-scanning.md` (contención local inmediata 🟢 vs. rotación externa `S1`) |
-| 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, modo `spider` + `passive scan` únicamente — **sin Active Scan por decisión del proyecto**, previa verificación de que el puerto objetivo sirve al proyecto bajo auditoría) + `SKILL-security-owasp-checklist.md` para interpretar |
+| 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, modo `spider` + `passive scan` únicamente — **sin Active Scan por decisión del proyecto**, previa verificación de que el puerto objetivo sirve al proyecto bajo auditoría) + `trivy config` sobre los Dockerfile (imagen `latest`, usuario root, sin healthcheck; no analiza `docker-compose.yml` ni `azure-pipelines.yml`) + `SKILL-security-owasp-checklist.md` para interpretar |
 | 5 | Testing / cobertura | Correr el comando de cobertura del stack (`npm test -- --coverage`, `dotnet test --collect:"XPlat Code Coverage"`, `pytest --cov`) — importable a SonarQube si se desea, pero el número real es lo que se reporta, nunca se asume (si no hay framework de pruebas configurado, reportar `0%` como hallazgo 🟡 ámbar) |
 | 6 | Accesibilidad (solo frontend) | pa11y (`Tools/`, contenedor sobre imagen oficial de Playwright, requiere la app objetivo corriendo) para el hallazgo real, `SKILL-accessibility-a11y.md` para interpretar/priorizar. Si el proyecto no tiene frontend: estado "No aplica" (distinto de "no evaluado") |
 | 7 | Rendimiento | **NO EVALUADO — sin skill de referencia** (fuera del alcance de medición dinámica pre-prod; para optimización estática de Core Web Vitals durante desarrollo usar `IA_Skill/web-official/modern-web-guidance/guides/performance/performance.md`) |
@@ -188,9 +188,9 @@ check_sonar_project_analizado() {
   return 0
 }
 
-if check_sonarqube && ! check_sonar_project_analizado "mi-proyecto"; then
-  echo "Proyecto sin análisis previo en Sonar. Correr:"
-  echo "  cd Tools && docker compose --profile tools run --rm sonar-scanner -Dsonar.projectKey=mi-proyecto -Dsonar.sources=."
+# La clave del proyecto en Sonar es la carpeta de Codigo/ (una por proyecto, sin mezclar historiales)
+if check_sonarqube && ! check_sonar_project_analizado "<carpeta-del-proyecto>"; then
+  echo "Proyecto sin análisis previo en Sonar: el Paso 1d lo crea con el primer sonar-scanner."
 fi
 ```
 
@@ -202,6 +202,7 @@ fi
 ```bash
 # Carpeta del proyecto auditado dentro de Codigo/ (cada proyecto es su propio repo git)
 PROYECTO="<carpeta-del-proyecto>"
+PROYECTO="${PROYECTO%/}"   # sin "/" final: la búsqueda de lockfiles se detiene en la raíz del proyecto
 
 cd Tools
 
@@ -212,30 +213,76 @@ cd Tools
 # real en este entorno. No-op en Linux/Mac, seguro dejarlo siempre.
 export MSYS_NO_PATHCONV=1
 
-# --- SCA: dos motores, confirmación cruzada ---
+# Todos los escáneres apuntan a Codigo/${PROYECTO}, nunca a Codigo/ completo (mezclaría proyectos).
+
+# --- SCA 0: archivos de bloqueo. Sin ellos Trivy no resuelve dependencias y reporta 0 (falso limpio) ---
+RAIZ="../Codigo/${PROYECTO}"
+find "$RAIZ" \( -name node_modules -o -name bin -o -name obj -o -name .git \) -prune -o \( -name '*.csproj' -o -name package.json \) -print |
+while read -r m; do
+  d=$(dirname "$m")
+  case "$m" in
+    *.csproj) [ -f "$d/packages.lock.json" ] || echo "$m" ;;
+    *) until [ -f "$d/package-lock.json" ] || [ -f "$d/yarn.lock" ] || [ -f "$d/pnpm-lock.yaml" ] || [ "$d" = "$RAIZ" ] || [ "$d" = "." ]; do d=$(dirname "$d"); done
+       [ -f "$d/package-lock.json" ] || [ -f "$d/yarn.lock" ] || [ -f "$d/pnpm-lock.yaml" ] || echo "$m" ;;
+  esac
+done > ../Insumos/sca-sin-lockfile-report.txt
+
+# .NET sin packages.lock.json: respaldo con el SDK (restore genera obj/, ya ignorado por .NET).
+# Node sin lockfile: no hay respaldo confiable -> "no evaluado" + hallazgo 🟡 (builds no reproducibles).
+grep '\.csproj$' ../Insumos/sca-sin-lockfile-report.txt | while read -r p; do
+  echo "=== $p"; dotnet restore "$p" >/dev/null 2>&1 || echo "restore falló (no evaluado): $p"
+  dotnet list "$p" package --vulnerable --include-transitive 2>&1
+done > ../Insumos/dotnet-vulnerable-report.txt
+
+# --- SCA 1: dos motores, confirmación cruzada. Supresiones aprobadas del proyecto si existen ---
+TRIVY_IGN=(); [ -f "$RAIZ/.trivyignore.yaml" ] && TRIVY_IGN=(--ignorefile "/src/${PROYECTO}/.trivyignore.yaml")
 docker compose run --rm -v "$(pwd)/../Codigo:/src" -v "$(pwd)/../Insumos:/report" \
-  trivy fs --server http://trivy:4954 --format json --output /report/trivy-report.json /src \
+  trivy fs --server http://trivy:4954 --scanners vuln,license "${TRIVY_IGN[@]}" \
+  --format json --output /report/trivy-report.json "/src/${PROYECTO}" \
   || echo "Trivy (Tools/) falló — verificar Docker, o correr localmente si está instalado"
+
+# SBOM CycloneDX (anexo del entregable; misma limitación de lockfiles que el escaneo)
+docker compose run --rm -v "$(pwd)/../Codigo:/src" -v "$(pwd)/../Insumos:/report" \
+  trivy fs --server http://trivy:4954 --format cyclonedx --output /report/sbom-cyclonedx-report.json "/src/${PROYECTO}" \
+  || echo "SBOM (Trivy) falló"
+
+# Dockerfile del proyecto (no analiza docker-compose.yml ni azure-pipelines.yml)
+docker compose run --rm -v "$(pwd)/../Codigo:/src" -v "$(pwd)/../Insumos:/report" \
+  trivy config --format json --output /report/trivy-config-report.json "/src/${PROYECTO}" \
+  || echo "trivy config falló"
 
 # Si DEPCHECK_NVD_API_KEY está en Tools/.env, se pasa como --nvdApiKey para evitar
 # rate-limiting de NIST NVD (reduce la descarga inicial de ~40 min a pocos minutos):
+DC_SUP=(); [ -f "$RAIZ/dependency-check-suppression.xml" ] && DC_SUP=(--suppression "/src/${PROYECTO}/dependency-check-suppression.xml")
 docker compose --profile tools run --rm dependency-check \
-  --scan /src --format JSON --out /report --project "preprod-audit" \
+  --scan "/src/${PROYECTO}" --format JSON --out /report --project "${PROYECTO}" "${DC_SUP[@]}" \
   ${DEPCHECK_NVD_API_KEY:+--nvdApiKey "$DEPCHECK_NVD_API_KEY"} \
   || echo "Dependency-Check (Tools/) falló — ver Tools/README.md (primera corrida puede tardar por la descarga NVD)"
 
+# Catálogo CISA KEV (CVE explotadas activamente). Público: solo se descarga, no se envía nada del proyecto
+curl -sf https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json \
+  -o ../Insumos/cisa-kev-report.json || echo "No se pudo descargar CISA KEV — prioridad por explotación sin evaluar"
+
 # --- SAST: correr el análisis real, no asumir que "leer el código" lo reemplaza ---
+# Clave Sonar = carpeta del proyecto. qualitygate.wait espera el cálculo del quality gate;
+# si el gate no pasa, el scanner termina con error: leer el estado real antes de concluir.
 docker compose --profile tools run --rm sonar-scanner \
-  -Dsonar.projectKey=preprod-audit -Dsonar.sources=. \
-  || echo "sonar-scanner falló — revisar SONAR_TOKEN en Tools/.env y que el proyecto ya tenga un análisis previo (Paso 1c)"
+  -Dsonar.projectKey="${PROYECTO}" -Dsonar.projectBaseDir="/usr/src/${PROYECTO}" -Dsonar.sources=. \
+  -Dsonar.qualitygate.wait=true \
+  || echo "sonar-scanner terminó con error o el quality gate no pasó — revisar SONAR_TOKEN y el estado del gate"
 
 curl -sf -u "${SONAR_TOKEN}:" \
-  "http://localhost:${SONARQUBE_HOST_PORT}/api/issues/search?componentKeys=preprod-audit&resolved=false&ps=500" \
+  "http://localhost:${SONARQUBE_HOST_PORT}/api/issues/search?componentKeys=${PROYECTO}&resolved=false&ps=500" \
   > ../Insumos/sonar-issues.json || echo "No se pudo leer /api/issues/search — revisar SONAR_TOKEN"
+curl -sf -u "${SONAR_TOKEN}:" \
+  "http://localhost:${SONARQUBE_HOST_PORT}/api/qualitygates/project_status?projectKey=${PROYECTO}" \
+  > ../Insumos/sonar-qualitygate-report.json || echo "No se pudo leer el quality gate — criterio 'Indeterminado'"
 
-# Semgrep — usa el volumen ../Insumos:/report montado en docker-compose.yml
-docker compose --profile tools run --rm semgrep \
-  --config=auto --json --output=/report/semgrep-report.json /src \
+# Semgrep con reglas explícitas y sin telemetría (--config=auto exige enviar métricas a semgrep.dev).
+# Corre desde la raíz del proyecto para respetar su .semgrepignore y su .gitignore.
+docker compose --profile tools run --rm -w "/src/${PROYECTO}" semgrep \
+  --config p/security-audit --config p/owasp-top-ten --metrics=off \
+  --json --output=/report/semgrep-report.json . \
   || echo "semgrep (Tools/) falló — verificar Docker, o correr localmente si está instalado"
 
 # --- Secretos ---
@@ -323,6 +370,48 @@ Para cada reporte generado en el Paso 1:
 4. Aplicar `SKILL-security-{framework}.md` o `SKILL-legacy-stack-security-baseline.md`
    a los hallazgos de Semgrep, según el stack detectado en el Paso 1
 5. Clasificar cada uno con `SKILL-risk-zone-policy.md`
+6. Licencias: comparar las de `trivy-report.json` (`Class: license`) con la política de
+   licencias de `SKILL-stack-policy.md`
+7. Emitir el veredicto (abajo)
+
+### Veredicto de salida a producción
+
+El agente no concluye "se ve bien": aplica estos criterios y emite uno de tres estados.
+
+| Criterio bloqueante | Fuente | Se cumple si |
+|---|---|---|
+| Secretos | Gitleaks | 0 hallazgos vigentes |
+| Dependencias | Trivy + Dependency-Check + respaldo .NET + CISA KEV | 0 críticas/altas con corrección disponible y 0 CVE del catálogo KEV sin mitigación documentada |
+| Licencias | Trivy | 0 licencias restringidas sin aprobación |
+| Código (SAST) | SonarQube + Semgrep | Quality gate `OK` (`sonar-qualitygate-report.json`) y 0 hallazgos `ERROR` de Semgrep confirmados |
+| Cobertura | Comando del stack | ≥ mínimo de `IA_Memoria/arquitectura.md`; sin mínimo definido no bloquea y se reporta "umbral sin definir" |
+
+- **Apto:** todos los criterios se cumplen.
+- **No apto:** al menos uno falla; nombrar el criterio y el hallazgo que lo causa.
+- **Indeterminado:** una fuente bloqueante no corrió o tuvo cobertura parcial (herramienta caída,
+  manifiestos sin lockfile ni respaldo, sin token de Sonar). "No evaluado" nunca se convierte en "Apto".
+
+ZAP, pa11y y las categorías 7–10 se reportan pero no bloquean, salvo que `arquitectura.md` del
+proyecto diga lo contrario. Solo el dev puede aceptar una excepción a un criterio bloqueante; se
+registra en el entregable con nombre, fecha y motivo. El agente nunca la acepta por su cuenta.
+
+### Supresiones (falsos positivos y riesgos aceptados)
+
+Viven versionadas en el repo del proyecto (`Codigo/<proyecto>/`) para no volver a triar lo ya
+decidido. Usar el ID exacto que reporta cada herramienta (Dependency-Check identifica npm por GHSA,
+no por CVE).
+
+| Herramienta | Archivo (raíz del proyecto) | Justificación y caducidad |
+|---|---|---|
+| Gitleaks | `.gitleaksignore` (un fingerprint por línea) | Línea `#` previa: motivo, quién aprobó, fecha de revisión |
+| Trivy | `.trivyignore.yaml` (`vulnerabilities: - id:`) | `statement:` con motivo y aprobador · `expired_at:` obligatoria |
+| Dependency-Check | `dependency-check-suppression.xml` | `<notes>` con motivo y aprobador · atributo `until` obligatorio · `<cve>` para CVE, `<vulnerabilityName>` para GHSA |
+| Semgrep | `.semgrepignore` (rutas) o `// nosemgrep: <regla>` en la línea | Comentario con el motivo junto a la supresión |
+| SonarQube | Marcar el issue como "False positive" o "Accepted" | Comentario en el issue |
+
+Reglas: caducidad máxima de 6 meses (al vencer, el hallazgo reaparece y se vuelve a triar). El
+agente propone la supresión; una crítica o alta solo la suprime el dev. El entregable informa
+cuántos hallazgos se suprimieron y en qué archivo: suprimir no es ocultar.
 
 ---
 
@@ -335,6 +424,8 @@ Crear la carpeta con timestamp exacto `YYYYMMDD_HHmm`, dentro del proyecto (estr
 PROYECTO="<carpeta-del-proyecto>"   # el mismo del Paso 1d
 TS=$(date +"%Y%m%d_%H%M")
 mkdir -p "Entregables/${PROYECTO}/auditoria-preprod/${TS}"
+# Anexo: inventario de componentes (SBOM) de esta versión
+cp Insumos/sbom-cyclonedx-report.json "Entregables/${PROYECTO}/auditoria-preprod/${TS}/sbom.cdx.json"
 ```
 
 ### Entregable 1 — `Entregables/<Proyecto>/auditoria-preprod/{TS}/hallazgos-preprod.md`
@@ -362,7 +453,8 @@ distinto sin cambiar una palabra, está mal escrito.
 # Auditoría Pre-Productiva — [Proyecto] — [fecha legible]
 
 ## Resumen ejecutivo
-- Total hallazgos: [N] (🟢 [N] verde · 🟡 [N] ámbar · 🔴 [N] roja)
+- **Veredicto: [Apto | No apto | Indeterminado]** — [criterio(s) que fallan o fuentes que no corrieron]
+- Total hallazgos: [N] (🟢 [N] verde · 🟡 [N] ámbar · 🔴 [N] roja) · Suprimidos: [N] (ver archivos de supresión)
 - Categorías evaluadas: [N]/10 · No evaluadas: [N] (ver sección al final)
 - Leyenda de zonas:
   - 🟢 **Verde:** acción inmediata sin riesgo de regresión funcional (p. ej. contención local de archivos en `.gitignore`), o falso positivo confirmado tras inspección puntual (no requiere cambio de código).
@@ -472,7 +564,8 @@ code { font-family:var(--font-mono); font-size:12.5px; background:rgba(15,23,42,
 </head>
 <body>
 <h1>Auditoría Pre-Productiva — [Proyecto]</h1>
-<p>[fecha] · [N] hallazgos totales · Categorías evaluadas: [N]/10</p>
+<p><strong>Veredicto: [Apto | No apto | Indeterminado]</strong> — [criterio(s) que fallan o fuentes que no corrieron]</p>
+<p>[fecha] · [N] hallazgos totales · [N] suprimidos · Categorías evaluadas: [N]/10</p>
 
 <div class="summary-bar">
   <span class="pill">🔴 [N] Zona Roja</span>
@@ -532,9 +625,10 @@ function copyFinding(id, btn) {
 ## Paso 4 — Reporte final al usuario (en el chat, no en el entregable)
 
 ```
-Auditoría completa. [N] hallazgos (🟢[N] 🟡[N] 🔴[N]).
+Auditoría completa. Veredicto: [Apto | No apto | Indeterminado] — [motivo].
+[N] hallazgos (🟢[N] 🟡[N] 🔴[N]) · [N] suprimidos.
 Categorías evaluadas: 6/10. No evaluadas: rendimiento, observabilidad, CI/CD, compliance PII.
-Entregables en: Entregables/[Proyecto]/auditoria-preprod/[TS]/
+Entregables en: Entregables/[Proyecto]/auditoria-preprod/[TS]/ (incluye sbom.cdx.json)
 ```
 
 ---

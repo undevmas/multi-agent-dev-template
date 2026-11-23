@@ -23,7 +23,7 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
 | **IA / ML (.NET)** | Microsoft.Extensions.AI (`IChatClient`, base obligatoria) · Microsoft Agent Framework (`Microsoft.Agents.AI`, agentes) · ML.NET (ML clásico) · ONNX Runtime (inferencia) · OllamaSharp (LLM local) · Microsoft.Extensions.VectorData (RAG sobre la BD del stack) · GitHub Copilot SDK (extensiones de Copilot) — el **proveedor** del modelo se aprueba por proyecto (ver "IA / ML (.NET)" en Reglas de codificación) |
 | **Benchmarking (.NET)** | BenchmarkDotNet — solo en proyectos de benchmark separados, nunca referenciado por código productivo |
 | **Entregables (documentación)** | archify (`IA_Skill/archify-official`, vía `node Tools/entregables/archify.mjs`, sin red) para diagramas desde el código · Playwright (proyecto `evidencias`) para capturas y exportar diagramas a PNG · `docx` (npm, fijado en `Tools/entregables`) para generar `.docx` institucionales desde Markdown — procedimiento en `IA_Skill/SKILL-visual-evidence.md` |
-| **Seguridad (auditoría pre-productiva)** | SonarQube + sonar-scanner y Semgrep (SAST) · Trivy y OWASP Dependency-Check (SCA, confirmación cruzada) · Gitleaks (secretos, siempre con `--redact`) · ZAP (DAST solo spider + passive scan; Active Scan únicamente con autorización explícita) · pa11y (accesibilidad WCAG 2 AA) — todos como contenedores de `Tools/docker-compose.yml`, nunca instalados en el proyecto; reportes crudos en `Insumos/` y entregables en `Entregables/<Proyecto>/auditoria-preprod/`, ninguno versionado — procedimiento en `IA_Skill/SKILL-preprod-security-audit.md` |
+| **Seguridad (auditoría pre-productiva)** | SonarQube + sonar-scanner y Semgrep (SAST; reglas `p/security-audit` + `p/owasp-top-ten` con `--metrics=off`, nunca `--config=auto`) · Trivy (vulnerabilidades, licencias, SBOM CycloneDX y Dockerfile) y OWASP Dependency-Check (SCA, confirmación cruzada) · Gitleaks (secretos, siempre con `--redact`) · ZAP (DAST solo spider + passive scan; Active Scan únicamente con autorización explícita) · pa11y (accesibilidad WCAG 2 AA) — todos como contenedores de `Tools/docker-compose.yml`, nunca instalados en el proyecto; reportes crudos en `Insumos/` y entregables en `Entregables/<Proyecto>/auditoria-preprod/`, ninguno versionado — procedimiento en `IA_Skill/SKILL-preprod-security-audit.md` |
 
 > **Python (FastAPI)** se aprobó el 2026-07-02 específicamente para el proyecto de
 > `Codigo/Reportes/` (ReporteadorV2), que ya tenía lógica probada en Python
@@ -131,3 +131,17 @@ Si una librería o plugin recomendado no aparece en el stack aprobado, no descar
 4. Impacto de adoptarlo: instalación, mantenimiento, lockfile, CI/CD, superficie de ataque y migración futura.
 
 Solo después de la confirmación explícita del usuario se puede instalar o implementar una tecnología fuera del stack. Si el usuario decide no adoptarla, registrar la decisión y su razón en la memoria o spec correspondiente.
+
+## Política de licencias de dependencias
+
+Aplica a las dependencias que se distribuyen con el sistema (las de desarrollo solo se reportan).
+La auditoría pre-productiva la verifica con Trivy (`--scanners vuln,license`).
+
+| Categoría | Licencias | Regla |
+|---|---|---|
+| Permitidas | MIT · Apache-2.0 · BSD-2-Clause · BSD-3-Clause · ISC · 0BSD · Unlicense · CC0-1.0 | Sin trámite |
+| Revisar | LGPL-* · MPL-2.0 · EPL-* · CC-BY-* · sin licencia declarada o desconocida | Documentar el uso (enlace dinámico, sin modificar el componente) antes de liberar |
+| Restringidas | GPL-* · AGPL-* · SSPL-1.0 · BUSL-1.1 · Commons Clause · licencias comerciales | Bloquean la salida a producción salvo aprobación explícita del responsable del proyecto |
+
+Si el contrato del cliente define otra lista, prevalece la del contrato; registrarla en
+`IA_Memoria/arquitectura.md`.

@@ -11,7 +11,7 @@ Entregables/<Proyecto>/
 │   └── capturas/<modulo>/<NN-paso>.png · <NN-paso>.json
 ├── memoria-tecnica/      memoria-tecnica.md → Memoria_Tecnica_<Sistema>_v<ver>.docx
 ├── manual-usuario/       manual-usuario.md  → Manual_de_Usuario_<Sistema>_v<ver>.docx
-└── auditoria-preprod/<YYYYMMDD_HHmm>/   hallazgos-preprod.md · hallazgos-preprod.html
+└── auditoria-preprod/<YYYYMMDD_HHmm>/   hallazgos-preprod.md · hallazgos-preprod.html · sbom.cdx.json
 ```
 
 | Entregable | Skill |
