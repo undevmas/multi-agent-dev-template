@@ -46,6 +46,8 @@ No sugerir, instalar ni implementar nada fuera de esta tabla sin aprobación exp
 Versiones, perfiles de auth y de datos, y reglas por tecnología: `IA_Skill/SKILL-stack-policy.md` — leer antes de crear
 un proyecto, fijar una versión, implementar auth/IA/OpenAPI/E2E/Aspire o agregar una dependencia.
 Librerías de UI y backend aprobadas: `IA_Skill/SKILL-approved-libraries.md`.
+Proyecto legado con tecnología fuera de esta tabla: se mantiene y corrige con su tecnología actual sin pedir aprobación;
+lo nuevo se escribe en el stack aprobado y la modernización es una tarea propia (`IA_Skill/SKILL-legacy-modernization.md`).
 
 ## Comandos de verificación (correr antes de dar una tarea por terminada)
 
@@ -118,5 +120,6 @@ Librerías de UI y backend aprobadas: `IA_Skill/SKILL-approved-libraries.md`.
 | Skills oficiales de plataforma web (GoogleChrome) y su precedencia | `IA_Skill/web-official/README.md` |
 | Estado, arquitectura y convenciones del proyecto | `IA_Memoria/progreso.md` · `IA_Memoria/arquitectura.md` · `IA_Memoria/convenciones.md` |
 | Plantilla de `AGENTS.md` por proyecto | `IA_Skill/templates/AGENTS.project.md` |
+| Modernizar un proyecto legado (reescritura al stack aprobado) | `IA_Skill/SKILL-legacy-modernization.md` |
 | Memoria técnica, manual de usuario, diagramas y capturas | `IA_Skill/SKILL-technical-memory.md` · `IA_Skill/SKILL-user-manual.md` · `IA_Skill/SKILL-visual-evidence.md` |
 | Guía para humanos del template | `GUIDE.md` |

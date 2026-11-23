@@ -412,12 +412,12 @@ Para Copilot: `#file:IA_Skill/SKILL-mvc-feature.md` + prompt equivalente.
 
 ## Skills disponibles (validadas en el template)
 
-63 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/` archify para diagramas en `IA_Skill/archify-official/`, y 210 guías oficiales de la plataforma web moderna (GoogleChrome) en `IA_Skill/web-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
+64 skills propias organizadas por dominio, más 30 skills oficiales de Microsoft para .NET en `IA_Skill/dotnet-official/`, archify para diagramas en `IA_Skill/archify-official/`, y 210 guías oficiales de la plataforma web moderna (GoogleChrome) en `IA_Skill/web-official/`. El ruteo completo (cuándo leer cada una) está en `IA_Skill/README.md`. El agente lee solo la que corresponde a la tarea actual.
 
 | Área | Skills |
 |---|---|
 | **Especificaciones** | `SKILL-spec-generator.md` (flujo completo Features/) · `SKILL-functional-spec-elicitation.md` (armar la HU desde insumos ambiguos) · `SKILL-technical-foundations-brief.md` (fundamentos técnicos no prescriptivos a partir de una HU + código) |
-| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` · `SKILL-aspire-orchestration.md` (orquestación local con Aspire) |
+| **Implementación full stack** | `SKILL-implementation.md` · `SKILL-mvc-feature.md` · `SKILL-database-migrations.md` · `SKILL-aspire-orchestration.md` (orquestación local con Aspire) · `SKILL-legacy-modernization.md` (reescritura de un legado al stack aprobado) |
 | **Testing E2E** | `SKILL-e2e-playwright.md` (Playwright por defecto; Cypress solo con autorización) |
 | **Frontend — diseño visual** | `frontend-design/SKILL-component-patterns.md` · `frontend-design/SKILL-design-tokens.md` · `frontend-design/SKILL-typography-system.md` · `frontend-design/SKILL-layout-spacing-system.md` · `frontend-design/SKILL-visual-identity-override.md` · `frontend-design/SKILL-dark-mode-theming.md` · `frontend-design/SKILL-responsive-pwa-patterns.md` · `frontend-design/SKILL-animation-microinteractions.md` · `frontend-design/SKILL-accessibility-a11y.md` |
 | **Frontend — plataforma web moderna (GoogleChrome)** | `web-official/` — 210 guías curadas de [GoogleChrome/modern-web-guidance](https://github.com/GoogleChrome/modern-web-guidance) (CSS moderno, `@layer`/`@scope`/`@container`/`subgrid`, `<dialog>`/`[popover]`, Anchor Positioning, formularios `:user-invalid`, `light-dark()`, Core Web Vitals LCP/INP/CLS, accesibilidad WCAG, seguridad/CSP/Trusted Types/Sanitizer API y JS moderno). Complementan a las propias; si chocan, gana la plantilla. Se actualizan con `web-official/sync-web-skills.ps1` / `.sh` (ver su `README.md`) |

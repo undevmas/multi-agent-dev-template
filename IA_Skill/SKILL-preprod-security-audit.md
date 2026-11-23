@@ -77,9 +77,9 @@ pasó por el mismo nivel de cobertura automatizada, y no es cierto.
 
 | # | Categoría | Skill / acción |
 |---|---|---|
-| 1 | Dependencias (SCA) | Trivy + OWASP Dependency-Check (`Tools/`, confirmación cruzada — un CVE reportado por cualquiera de los dos entra al triage; pasa `--nvdApiKey` si `DEPCHECK_NVD_API_KEY` está definido en `Tools/.env`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`) como respaldo si Docker no está disponible, luego `SKILL-dependency-vulnerability-triage.md` (prioridad CISA KEV incluida). **Trivy solo ve dependencias con archivo de bloqueo** (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `packages.lock.json`): sin él reporta 0 (falso limpio). Los manifiestos sin lockfile se listan; en .NET se cubren con `dotnet list package --vulnerable --include-transitive` y en Node quedan "no evaluado" + hallazgo 🟡 (builds no reproducibles). Además: licencias (`--scanners vuln,license`, política en `SKILL-stack-policy.md`) y SBOM CycloneDX como anexo del entregable |
+| 1 | Dependencias (SCA) | Trivy + OWASP Dependency-Check (`Tools/`, confirmación cruzada — un CVE reportado por cualquiera de los dos entra al triage; pasa `--nvdApiKey` si `DEPCHECK_NVD_API_KEY` está definido en `Tools/.env`) + scanner nativo del stack (`npm audit`/`dotnet list package --vulnerable`/`pip-audit`) como respaldo si Docker no está disponible, luego `SKILL-dependency-vulnerability-triage.md` (prioridad CISA KEV incluida). **Trivy solo ve dependencias con archivo de bloqueo** (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `packages.lock.json`, o `packages.config` en .NET Framework): sin él reporta 0 (falso limpio). Los manifiestos sin lockfile se listan; en .NET se cubren con `dotnet list package --vulnerable --include-transitive` y en Node quedan "no evaluado" + hallazgo 🟡 (builds no reproducibles). Además: licencias (`--scanners vuln,license`, política en `SKILL-stack-policy.md`) y SBOM CycloneDX como anexo del entregable |
 | 2 | SAST / código propio | Semgrep (reglas `p/security-audit` + `p/owasp-top-ten` con `--metrics=off`; nunca `--config=auto`, que exige enviar telemetría a semgrep.dev) + SonarQube (`Tools/`, correr `sonar-scanner` de verdad — no asumir que "revisar el código" reemplaza el análisis) para el hallazgo bruto, leído vía `/api/issues/search`. Interpretación: si el stack está en la tabla aprobada, `SKILL-security-{angular,dotnet,nestjs,python}.md`; si no, `SKILL-legacy-stack-security-baseline.md` |
-| 3 | Secretos | Gitleaks (`Tools/`, escaneando el repo del proyecto `--source /src/Codigo/<proyecto>` con `--log-opts="--all"` y `--redact`) + verificación de archivos sensibles trackeados (`git ls-files`), triage con `SKILL-secrets-scanning.md` (contención local inmediata 🟢 vs. rotación externa `S1`) |
+| 3 | Secretos | Gitleaks (`Tools/`, escaneando el repo del proyecto `--source /src/Codigo/<proyecto>` con `--redact`: todo el historial si tiene `.git`, solo los archivos actuales con `--no-git` si no) + verificación de archivos sensibles trackeados (`git ls-files`), triage con `SKILL-secrets-scanning.md` (contención local inmediata 🟢 vs. rotación externa `S1`) |
 | 4 | OWASP (revisión general) | SonarQube (reglas de seguridad) + ZAP (`Tools/`, modo `spider` + `passive scan` únicamente — **sin Active Scan por decisión del proyecto**, previa verificación de que el puerto objetivo sirve al proyecto bajo auditoría) + `trivy config` sobre los Dockerfile (imagen `latest`, usuario root, sin healthcheck; no analiza `docker-compose.yml` ni `azure-pipelines.yml`) + `SKILL-security-owasp-checklist.md` para interpretar |
 | 5 | Testing / cobertura | Correr el comando de cobertura del stack (`npm test -- --coverage`, `dotnet test --collect:"XPlat Code Coverage"`, `pytest --cov`) — importable a SonarQube si se desea, pero el número real es lo que se reporta, nunca se asume (si no hay framework de pruebas configurado, reportar `0%` como hallazgo 🟡 ámbar) |
 | 6 | Accesibilidad (solo frontend) | pa11y (`Tools/`, contenedor sobre imagen oficial de Playwright, requiere la app objetivo corriendo) para el hallazgo real, `SKILL-accessibility-a11y.md` para interpretar/priorizar. Si el proyecto no tiene frontend: estado "No aplica" (distinto de "no evaluado") |
@@ -221,13 +221,14 @@ find "$RAIZ" \( -name node_modules -o -name bin -o -name obj -o -name .git \) -p
 while read -r m; do
   d=$(dirname "$m")
   case "$m" in
-    *.csproj) [ -f "$d/packages.lock.json" ] || echo "$m" ;;
+    *.csproj) [ -f "$d/packages.lock.json" ] || [ -f "$d/packages.config" ] || echo "$m" ;;   # packages.config (.NET Framework) ya fija todas las versiones
     *) until [ -f "$d/package-lock.json" ] || [ -f "$d/yarn.lock" ] || [ -f "$d/pnpm-lock.yaml" ] || [ "$d" = "$RAIZ" ] || [ "$d" = "." ]; do d=$(dirname "$d"); done
        [ -f "$d/package-lock.json" ] || [ -f "$d/yarn.lock" ] || [ -f "$d/pnpm-lock.yaml" ] || echo "$m" ;;
   esac
 done > ../Insumos/sca-sin-lockfile-report.txt
 
 # .NET sin packages.lock.json: respaldo con el SDK (restore genera obj/, ya ignorado por .NET).
+# No aplica a packages.config: Trivy lo lee y `dotnet list package` lo rechaza.
 # Node sin lockfile: no hay respaldo confiable -> "no evaluado" + hallazgo 🟡 (builds no reproducibles).
 grep '\.csproj$' ../Insumos/sca-sin-lockfile-report.txt | while read -r p; do
   echo "=== $p"; dotnet restore "$p" >/dev/null 2>&1 || echo "restore falló (no evaluado): $p"
@@ -287,16 +288,20 @@ docker compose --profile tools run --rm -w "/src/${PROYECTO}" semgrep \
 
 # --- Secretos ---
 # Escanea el repo del proyecto, no Codigo/: Codigo/ no es repo git y gitleaks leería el
-# historial de la plantilla (falso negativo comprobado). Si el proyecto no tiene .git,
-# cambiar --log-opts="--all" por --no-git. --redact: el reporte no guarda secretos en claro.
+# historial de la plantilla (falso negativo comprobado). Con .git revisa todo el historial;
+# sin .git (p. ej. legado copiado de TFVC) solo los archivos actuales: anotarlo en la nota
+# metodológica. --redact: el reporte no guarda secretos en claro.
 # JSON en /report/gitleaks-report.json (../Insumos/gitleaks-report.json)
+if [ -d "$RAIZ/.git" ]; then GL_MODO=(--log-opts="--all"); else GL_MODO=(--no-git); fi
 docker compose --profile tools run --rm gitleaks detect \
-  --source "/src/Codigo/${PROYECTO}" --log-opts="--all" --redact \
+  --source "/src/Codigo/${PROYECTO}" "${GL_MODO[@]}" --redact \
   --report-format json --report-path /report/gitleaks-report.json \
-  || echo "gitleaks (Tools/) revisó historial (exit != 0 indica leaks encontrados o error de ejecución)"
+  || echo "gitleaks (Tools/) revisó el proyecto (exit != 0 indica leaks encontrados o error de ejecución)"
 
-# Verificación complementaria de archivos sensibles trackeados en git (SKILL-secrets-scanning.md)
-git -C "../Codigo/${PROYECTO}" ls-files | grep -E '\.env$|\.env\.|\.pem$|\.key$|\.pfx$|id_rsa|credentials\.json|secrets\.json' \
+# Verificación complementaria de archivos sensibles (SKILL-secrets-scanning.md):
+# versionados si hay .git; presentes en la carpeta si no lo hay
+if [ -d "$RAIZ/.git" ]; then git -C "$RAIZ" ls-files; else (cd "$RAIZ" && find . -type f -not -path '*/node_modules/*'); fi \
+  | grep -E '\.env$|\.env\.|\.pem$|\.key$|\.pfx$|id_rsa|credentials\.json|secrets\.json' \
   > ../Insumos/tracked-secret-files.txt || true
 
 # --- OWASP dinámico: ZAP en modo spider + passive únicamente (sin Active Scan,
@@ -343,10 +348,19 @@ cd ..
 
 # Cobertura — local, dentro del proyecto en Codigo/ (no requiere Tools/). La raíz de la
 # plantilla no tiene script "test": correrlo ahí falla y el reporte queda sin cobertura.
-# Node / Angular / React / NestJS:
-npm --prefix "Codigo/${PROYECTO}" test -- --coverage 2>&1 | tee Insumos/coverage-output.txt || true
-# .NET:
+# Requiere dependencias instaladas; si no corre, la categoría queda "no evaluado".
+APP="Codigo/${PROYECTO}"   # o la subcarpeta con el package.json / la solución
+if [ -f "$APP/angular.json" ]; then
+  # Angular (Karma): sin --watch=false se queda esperando cambios y la auditoría no termina.
+  # Angular legado (webpack 4) en Node >= 17: exportar NODE_OPTIONS=--openssl-legacy-provider
+  npm --prefix "$APP" test -- --watch=false --code-coverage --browsers=ChromeHeadless 2>&1 | tee Insumos/coverage-output.txt || true
+elif [ -f "$APP/package.json" ]; then
+  # Jest / Vitest (React, NestJS): CI=true evita el modo watch
+  CI=true npm --prefix "$APP" test -- --coverage 2>&1 | tee Insumos/coverage-output.txt || true
+fi
+# .NET (proyectos SDK):
 # dotnet test "Codigo/${PROYECTO}" --collect:"XPlat Code Coverage" 2>&1 | tee Insumos/coverage-output.txt || true
+# .NET Framework (proyectos de prueba no SDK): `dotnet test` no los ejecuta -> "no evaluado"
 # Python:
 # (cd "Codigo/${PROYECTO}" && pytest --cov) 2>&1 | tee Insumos/coverage-output.txt || true
 ```
@@ -485,7 +499,7 @@ vez de output de herramienta, ver principio v2 de esta skill.*
 [mismo formato, o "Evaluado, sin hallazgos" si no se detectó nada]
 
 ## 3. Secretos
-*Motor usado: Gitleaks [versión] (historial completo de git) + inspección de archivos trackeados (`git ls-files`).*
+*Motor usado: Gitleaks [versión] ([historial completo de git | solo archivos actuales: el proyecto no tiene .git]) + inspección de archivos sensibles.*
 [mismo formato — distinguir siempre en "Acción sugerida" la contención local inmediata (`git rm --cached`, `.gitignore`) de la revocación/rotación en el proveedor externo, que debe ejecutar el responsable humano de infraestructura/seguridad como prioridad #1]
 
 ## 4. OWASP

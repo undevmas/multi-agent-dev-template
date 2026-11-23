@@ -39,6 +39,7 @@ No sugerir, instalar ni implementar tecnologías fuera de esta tabla sin aprobac
   - Paquetes atados al runtime van en la misma versión mayor: EF Core, `Microsoft.AspNetCore.*` y `Microsoft.Extensions.*` = versión de .NET; `@angular/*` alineados entre sí.
 - **Verificar antes de fijar una versión:** el conocimiento del modelo puede estar desfasado. Confirmar la versión vigente en la fuente oficial (`IA_Skill/SKILL-web-search.md`) y registrarla en `IA_Memoria/arquitectura.md`.
 - **Proyecto existente:** no subir de versión como efecto colateral de otra tarea. Si usa una versión fuera de soporte oficial (ej. .NET 8 y .NET 9 terminaron soporte el 2026-11-10), registrarlo en `IA_Memoria/deuda-tecnica.md` y proponer el upgrade como tarea propia (`IA_Skill/SKILL-dotnet-upgrade.md`).
+- **Proyecto legado (tecnología fuera del stack aprobado, p. ej. .NET Framework 4.x, una versión de Angular sin soporte oficial, log4net):** mantenerlo y corregirlo con su tecnología actual está permitido y no requiere aprobación; no se le agregan dependencias nuevas fuera del stack salvo para corregir una vulnerabilidad. Lo nuevo se escribe en el stack aprobado. La salida es la reescritura de `IA_Skill/SKILL-legacy-modernization.md` (de .NET Framework a .NET moderno no existe un upgrade en sitio que `SKILL-dotnet-upgrade.md` cubra).
 - Python queda en 3.11+ por la aprobación de ReporteadorV2 — esta política no lo modifica.
 
 ### Perfiles de autenticación

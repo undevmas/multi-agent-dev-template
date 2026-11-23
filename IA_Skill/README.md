@@ -62,6 +62,7 @@ Copia curada de [GoogleChrome/modern-web-guidance](https://github.com/GoogleChro
 | Escribir tests unitarios o de integración en .NET | IA_Skill/SKILL-dotnet-test-frameworks.md |
 | Configurar la documentación de la API (OpenAPI nativo + Scalar) | IA_Skill/SKILL-dotnet-best-practices.md — sección "Documentación API" |
 | Migrar el proyecto a una nueva versión de .NET (incluye salir de .NET 8/9, fuera de soporte) | IA_Skill/SKILL-dotnet-upgrade.md |
+| Reescribir un proyecto legado (.NET Framework 4.x, Angular sin soporte, TFVC) en el stack aprobado; mantener el legado mientras tanto | IA_Skill/SKILL-legacy-modernization.md |
 
 ### Backend .NET — skills oficiales de Microsoft (complementarias)
 
